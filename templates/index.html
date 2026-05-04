@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FINEX - Sistema Contable Profesional</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <div class="auth-page">
+      <div class="auth-background"></div>
+
+      <div class="auth-container">
+        <div class="auth-grid">
+          <!-- COLUMNA IZQUIERDA - BRANDING -->
+          <div class="auth-left-panel">
+            <div class="brand-content">
+              <img src="/assets/logo-finex.png4" alt="FINEX" class="logo" />
+
+              <div class="badge">Acceso seguro</div>
+
+              <h1 class="brand-title">FINEX</h1>
+
+              <p class="brand-description">
+                Plataforma de acceso para usuarios personales y empresas. Crea
+                tu cuenta fácilmente e inicia sesión de forma rápida.
+              </p>
+            </div>
+          </div>
+
+          <!-- COLUMNA DERECHA - FORMULARIOS -->
+          <div class="auth-right-panel">
+            <!-- Login Form -->
+            <div class="form-container active" id="loginForm">
+              <div class="form-header">
+                <span class="form-tab-label">Inicio</span>
+                <h2>Iniciar sesión</h2>
+                <p class="form-subtitle">
+                  Ingresa con tu correo y contraseña para acceder a tu cuenta.
+                </p>
+              </div>
+
+              <form id="formLogin">
+                <div class="form-group">
+                  <label for="loginEmail">Correo electrónico</label>
+                  <input
+                    type="email"
+                    id="loginEmail"
+                    name="email"
+                    placeholder="correo@ejemplo.com"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="loginPassword">Contraseña</label>
+                  <input
+                    type="password"
+                    id="loginPassword"
+                    name="contraseña"
+                    placeholder="Tu contraseña"
+                    required
+                  />
+                </div>
+
+                <div class="form-group checkbox">
+                  <input type="checkbox" id="rememberMe" name="remember" />
+                  <label for="rememberMe">Recordar contraseña</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Entrar</button>
+              </form>
+
+              <div class="form-footer">
+                <p>
+                  ¿No tienes cuenta?
+                  <a href="#" onclick="toggleForms(event)">Crear una ahora</a>
+                </p>
+              </div>
+
+              <div id="loginMessage" class="message"></div>
+            </div>
+
+            <!-- Registro Form - Selector de Tipo -->
+            <div class="form-container" id="registerTypeSelector">
+              <div class="form-header">
+                <span class="form-tab-label">Registro</span>
+                <h2>¿Cómo deseas registrarte?</h2>
+              </div>
+
+              <div class="register-type-selector">
+                <button
+                  type="button"
+                  class="type-option persona-btn"
+                  onclick="selectRegisterType('persona')"
+                >
+                  <div class="type-icon">👤</div>
+                  <div class="type-title">Cuenta Personal</div>
+                  <div class="type-description">Para usuarios individuales</div>
+                </button>
+
+                <button
+                  type="button"
+                  class="type-option empresa-btn"
+                  onclick="selectRegisterType('empresa')"
+                >
+                  <div class="type-icon">🏢</div>
+                  <div class="type-title">Cuenta Empresa</div>
+                  <div class="type-description">
+                    Para negocios y emprendimientos
+                  </div>
+                </button>
+              </div>
+
+              <div class="form-footer">
+                <p>
+                  <a href="#" onclick="toggleForms(event)"
+                    >← Volver al inicio</a
+                  >
+                </p>
+              </div>
+            </div>
+
+            <!-- Registro Form - Cuenta Personal -->
+            <div class="form-container" id="registerPersonaForm">
+              <div class="form-header">
+                <span class="form-tab-label">Registro</span>
+                <h2>Crear cuenta personal</h2>
+              </div>
+
+              <form id="formRegisterPersona">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="personaNombre">Nombre</label>
+                    <input
+                      type="text"
+                      id="personaNombre"
+                      name="nombre"
+                      placeholder="Juan"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="personaApellido">Apellido</label>
+                    <input
+                      type="text"
+                      id="personaApellido"
+                      name="apellido"
+                      placeholder="Pérez"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="personaDocumento">Documento de Identidad</label>
+                  <input
+                    type="text"
+                    id="personaDocumento"
+                    name="documento_identidad"
+                    placeholder="1234567890"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="personaEmail">Correo electrónico</label>
+                  <input
+                    type="email"
+                    id="personaEmail"
+                    name="email"
+                    placeholder="correo@ejemplo.com"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="personaPassword">Contraseña</label>
+                  <input
+                    type="password"
+                    id="personaPassword"
+                    name="contraseña"
+                    placeholder="Mínimo 6 caracteres"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="personaPasswordConfirm"
+                    >Confirmar Contraseña</label
+                  >
+                  <input
+                    type="password"
+                    id="personaPasswordConfirm"
+                    name="confirmar"
+                    placeholder="Repite tu contraseña"
+                    required
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  Crear Cuenta Personal
+                </button>
+              </form>
+
+              <div class="form-footer">
+                <p>
+                  <a href="#" onclick="backToTypeSelector(event)">← Atrás</a>
+                </p>
+              </div>
+
+              <div id="registerPersonaMessage" class="message"></div>
+            </div>
+
+            <!-- Registro Form - Cuenta Empresa -->
+            <div class="form-container" id="registerEmpresaForm">
+              <div class="form-header">
+                <span class="form-tab-label">Registro</span>
+                <h2>Crear cuenta empresa</h2>
+              </div>
+
+              <form id="formRegisterEmpresa">
+                <div class="form-group">
+                  <label for="empresaRazonSocial">Razón Social</label>
+                  <input
+                    type="text"
+                    id="empresaRazonSocial"
+                    name="razon_social"
+                    placeholder="Nombre de la empresa"
+                    required
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="empresaNIT">NIT / RUC</label>
+                    <input
+                      type="text"
+                      id="empresaNIT"
+                      name="nit"
+                      placeholder="123456789"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="empresaTelefono">Teléfono</label>
+                    <input
+                      type="tel"
+                      id="empresaTelefono"
+                      name="telefono"
+                      placeholder="+57 1 2345678"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="empresaCiudad">Ciudad</label>
+                  <input
+                    type="text"
+                    id="empresaCiudad"
+                    name="ciudad"
+                    placeholder="Bogotá, D.C."
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="empresaContacto">Nombre del Contacto</label>
+                  <input
+                    type="text"
+                    id="empresaContacto"
+                    name="nombre_contacto"
+                    placeholder="Juan Pérez"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="empresaEmail">Correo electrónico</label>
+                  <input
+                    type="email"
+                    id="empresaEmail"
+                    name="email"
+                    placeholder="correo@empresa.com"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="empresaPassword">Contraseña</label>
+                  <input
+                    type="password"
+                    id="empresaPassword"
+                    name="contraseña"
+                    placeholder="Mínimo 6 caracteres"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="empresaPasswordConfirm"
+                    >Confirmar Contraseña</label
+                  >
+                  <input
+                    type="password"
+                    id="empresaPasswordConfirm"
+                    name="confirmar"
+                    placeholder="Repite tu contraseña"
+                    required
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  Crear Cuenta Empresa
+                </button>
+              </form>
+
+              <div class="form-footer">
+                <p>
+                  <a href="#" onclick="backToTypeSelector(event)">← Atrás</a>
+                </p>
+              </div>
+
+              <div id="registerEmpresaMessage" class="message"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+  </body>
+</html>
