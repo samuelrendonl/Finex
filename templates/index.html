@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FINEX - Sistema Contable Profesional</title>
     <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="icon" type="image/png" href="/static/img/Logo-White.jpeg" />
   </head>
+
   <body>
     <div class="auth-page">
       <div class="auth-background"></div>
@@ -15,11 +17,9 @@
           <!-- COLUMNA IZQUIERDA - BRANDING -->
           <div class="auth-left-panel">
             <div class="brand-content">
-              <img src="/assets/logo-finex.png4" alt="FINEX" class="logo" />
+              <img src="/static/img/logo-finex.png" alt="FINEX" class="logo" />
 
               <div class="badge">Acceso seguro</div>
-
-              <h1 class="brand-title">FINEX</h1>
 
               <p class="brand-description">
                 Plataforma de acceso para usuarios personales y empresas. Crea
@@ -30,297 +30,350 @@
 
           <!-- COLUMNA DERECHA - FORMULARIOS -->
           <div class="auth-right-panel">
-            <!-- Login Form -->
-            <div class="form-container active" id="loginForm">
-              <div class="form-header">
-                <span class="form-tab-label">Inicio</span>
-                <h2>Iniciar sesión</h2>
-                <p class="form-subtitle">
-                  Ingresa con tu correo y contraseña para acceder a tu cuenta.
-                </p>
-              </div>
-
-              <form id="formLogin">
-                <div class="form-group">
-                  <label for="loginEmail">Correo electrónico</label>
-                  <input
-                    type="email"
-                    id="loginEmail"
-                    name="email"
-                    placeholder="correo@ejemplo.com"
-                    required
-                  />
+            <div class="forms-wrapper">
+              <!-- Login Form -->
+              <div class="form-container active" id="loginForm">
+                <div class="form-header">
+                  <span class="form-tab-label">Inicio</span>
+                  <h2>Iniciar sesión</h2>
+                  <p class="form-subtitle">
+                    Ingresa con tu correo y contraseña para acceder a tu cuenta.
+                  </p>
                 </div>
 
-                <div class="form-group">
-                  <label for="loginPassword">Contraseña</label>
-                  <input
-                    type="password"
-                    id="loginPassword"
-                    name="contraseña"
-                    placeholder="Tu contraseña"
-                    required
-                  />
-                </div>
-
-                <div class="form-group checkbox">
-                  <input type="checkbox" id="rememberMe" name="remember" />
-                  <label for="rememberMe">Recordar contraseña</label>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Entrar</button>
-              </form>
-
-              <div class="form-footer">
-                <p>
-                  ¿No tienes cuenta?
-                  <a href="#" onclick="toggleForms(event)">Crear una ahora</a>
-                </p>
-              </div>
-
-              <div id="loginMessage" class="message"></div>
-            </div>
-
-            <!-- Registro Form - Selector de Tipo -->
-            <div class="form-container" id="registerTypeSelector">
-              <div class="form-header">
-                <span class="form-tab-label">Registro</span>
-                <h2>¿Cómo deseas registrarte?</h2>
-              </div>
-
-              <div class="register-type-selector">
-                <button
-                  type="button"
-                  class="type-option persona-btn"
-                  onclick="selectRegisterType('persona')"
-                >
-                  <div class="type-icon">👤</div>
-                  <div class="type-title">Cuenta Personal</div>
-                  <div class="type-description">Para usuarios individuales</div>
-                </button>
-
-                <button
-                  type="button"
-                  class="type-option empresa-btn"
-                  onclick="selectRegisterType('empresa')"
-                >
-                  <div class="type-icon">🏢</div>
-                  <div class="type-title">Cuenta Empresa</div>
-                  <div class="type-description">
-                    Para negocios y emprendimientos
-                  </div>
-                </button>
-              </div>
-
-              <div class="form-footer">
-                <p>
-                  <a href="#" onclick="toggleForms(event)"
-                    >← Volver al inicio</a
-                  >
-                </p>
-              </div>
-            </div>
-
-            <!-- Registro Form - Cuenta Personal -->
-            <div class="form-container" id="registerPersonaForm">
-              <div class="form-header">
-                <span class="form-tab-label">Registro</span>
-                <h2>Crear cuenta personal</h2>
-              </div>
-
-              <form id="formRegisterPersona">
-                <div class="form-row">
+                <form id="formLogin">
                   <div class="form-group">
-                    <label for="personaNombre">Nombre</label>
+                    <label for="loginEmail">Correo electrónico</label>
                     <input
-                      type="text"
-                      id="personaNombre"
-                      name="nombre"
-                      placeholder="Juan"
+                      type="email"
+                      id="loginEmail"
+                      name="email"
+                      placeholder="correo@ejemplo.com"
                       required
                     />
                   </div>
 
                   <div class="form-group">
-                    <label for="personaApellido">Apellido</label>
+                    <label for="loginPassword">Contraseña</label>
                     <input
-                      type="text"
-                      id="personaApellido"
-                      name="apellido"
-                      placeholder="Pérez"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="personaDocumento">Documento de Identidad</label>
-                  <input
-                    type="text"
-                    id="personaDocumento"
-                    name="documento_identidad"
-                    placeholder="1234567890"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="personaEmail">Correo electrónico</label>
-                  <input
-                    type="email"
-                    id="personaEmail"
-                    name="email"
-                    placeholder="correo@ejemplo.com"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="personaPassword">Contraseña</label>
-                  <input
-                    type="password"
-                    id="personaPassword"
-                    name="contraseña"
-                    placeholder="Mínimo 6 caracteres"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="personaPasswordConfirm"
-                    >Confirmar Contraseña</label
-                  >
-                  <input
-                    type="password"
-                    id="personaPasswordConfirm"
-                    name="confirmar"
-                    placeholder="Repite tu contraseña"
-                    required
-                  />
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                  Crear Cuenta Personal
-                </button>
-              </form>
-
-              <div class="form-footer">
-                <p>
-                  <a href="#" onclick="backToTypeSelector(event)">← Atrás</a>
-                </p>
-              </div>
-
-              <div id="registerPersonaMessage" class="message"></div>
-            </div>
-
-            <!-- Registro Form - Cuenta Empresa -->
-            <div class="form-container" id="registerEmpresaForm">
-              <div class="form-header">
-                <span class="form-tab-label">Registro</span>
-                <h2>Crear cuenta empresa</h2>
-              </div>
-
-              <form id="formRegisterEmpresa">
-                <div class="form-group">
-                  <label for="empresaRazonSocial">Razón Social</label>
-                  <input
-                    type="text"
-                    id="empresaRazonSocial"
-                    name="razon_social"
-                    placeholder="Nombre de la empresa"
-                    required
-                  />
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="empresaNIT">NIT / RUC</label>
-                    <input
-                      type="text"
-                      id="empresaNIT"
-                      name="nit"
-                      placeholder="123456789"
+                      type="password"
+                      id="loginPassword"
+                      name="contraseña"
+                      placeholder="Tu contraseña"
                       required
                     />
                   </div>
 
-                  <div class="form-group">
-                    <label for="empresaTelefono">Teléfono</label>
-                    <input
-                      type="tel"
-                      id="empresaTelefono"
-                      name="telefono"
-                      placeholder="+57 1 2345678"
-                    />
+                  <div class="form-group checkbox">
+                    <input type="checkbox" id="rememberMe" name="remember" />
+                    <label for="rememberMe">Recordar contraseña</label>
                   </div>
+
+                  <button type="submit" class="btn btn-primary">Entrar</button>
+                </form>
+                <div>
+                  <a href="/login/google" class="google-btn">
+                    <div class="google-icon">
+                      <svg viewBox="0 0 48 48">
+                        <path
+                          fill="#EA4335"
+                          d="M24 9.5c3.1 0 5.9 1.1 8.1 3.1l6-6C34.2 2.5 29.5 0 24 0 14.6 0 6.6 5.5 2.7 13.5l7.4 5.7C12.1 13 17.6 9.5 24 9.5z"
+                        />
+                        <path
+                          fill="#4285F4"
+                          d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 2.7-2.1 5-4.4 6.5l6.8 5.3c4-3.7 6.4-9.2 6.4-15.8z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M10.1 28.9c-.6-1.8-.9-3.6-.9-5.4s.3-3.7.9-5.4l-7.4-5.7C1 16.2 0 20 0 24s1 7.8 2.7 11.6l7.4-5.7z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M24 48c6.5 0 12-2.1 16-5.7l-6.8-5.3c-1.9 1.3-4.4 2-9.2 2-6.4 0-11.9-3.5-13.9-8.6l-7.4 5.7C6.6 42.5 14.6 48 24 48z"
+                        />
+                      </svg>
+                    </div>
+                    <span>Continuar con Google</span>
+                  </a>
                 </div>
 
-                <div class="form-group">
-                  <label for="empresaCiudad">Ciudad</label>
-                  <input
-                    type="text"
-                    id="empresaCiudad"
-                    name="ciudad"
-                    placeholder="Bogotá, D.C."
-                  />
+                <div class="form-footer">
+                  <p>
+                    ¿No tienes cuenta?
+                    <a href="#" onclick="toggleForms(event)">Crear una ahora</a>
+                  </p>
                 </div>
 
-                <div class="form-group">
-                  <label for="empresaContacto">Nombre del Contacto</label>
-                  <input
-                    type="text"
-                    id="empresaContacto"
-                    name="nombre_contacto"
-                    placeholder="Juan Pérez"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="empresaEmail">Correo electrónico</label>
-                  <input
-                    type="email"
-                    id="empresaEmail"
-                    name="email"
-                    placeholder="correo@empresa.com"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="empresaPassword">Contraseña</label>
-                  <input
-                    type="password"
-                    id="empresaPassword"
-                    name="contraseña"
-                    placeholder="Mínimo 6 caracteres"
-                    required
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label for="empresaPasswordConfirm"
-                    >Confirmar Contraseña</label
-                  >
-                  <input
-                    type="password"
-                    id="empresaPasswordConfirm"
-                    name="confirmar"
-                    placeholder="Repite tu contraseña"
-                    required
-                  />
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                  Crear Cuenta Empresa
-                </button>
-              </form>
-
-              <div class="form-footer">
-                <p>
-                  <a href="#" onclick="backToTypeSelector(event)">← Atrás</a>
-                </p>
+                <div id="loginMessage" class="message"></div>
               </div>
 
-              <div id="registerEmpresaMessage" class="message"></div>
+              <!-- Registro Form - Selector de Tipo -->
+              <div class="form-container" id="registerTypeSelector">
+                <div class="form-header">
+                  <span class="form-tab-label">Registro</span>
+                  <h2>¿Cómo deseas registrarte?</h2>
+                </div>
+
+                <div class="register-type-selector">
+                  <button
+                    type="button"
+                    class="type-option persona-btn"
+                    onclick="selectRegisterType('persona')"
+                  >
+                    <div class="type-icon">👤</div>
+                    <div class="type-title">Cuenta Personal</div>
+                    <div class="type-description">
+                      Para usuarios individuales
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="type-option empresa-btn"
+                    onclick="selectRegisterType('empresa')"
+                  >
+                    <div class="type-icon">🏢</div>
+                    <div class="type-title">Cuenta Empresa</div>
+                    <div class="type-description">
+                      Para negocios y emprendimientos
+                    </div>
+                  </button>
+                </div>
+
+                <div class="form-footer">
+                  <p>
+                    <a href="#" onclick="toggleForms(event)"
+                      >← Volver al inicio</a
+                    >
+                  </p>
+                </div>
+              </div>
+
+              <!-- Registro Form - Cuenta Personal -->
+              <div class="form-container" id="registerPersonaForm">
+                <div class="form-header">
+                  <span class="form-tab-label">Registro</span>
+                  <h2>Crear cuenta personal</h2>
+                </div>
+
+                <form id="formRegisterPersona">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="personaNombre">Nombre</label>
+                      <input
+                        type="text"
+                        id="personaNombre"
+                        name="nombre"
+                        placeholder="Juan"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="personaApellido">Apellido</label>
+                      <input
+                        type="text"
+                        id="personaApellido"
+                        name="apellido"
+                        placeholder="Pérez"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="personaDocumento">Documento de Identidad</label>
+                    <input
+                      type="text"
+                      id="personaDocumento"
+                      name="documento_identidad"
+                      placeholder="1234567890"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="personaEmail">Correo electrónico</label>
+                    <input
+                      type="email"
+                      id="personaEmail"
+                      name="email"
+                      placeholder="correo@ejemplo.com"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="personaPassword">Contraseña</label>
+                    <input
+                      type="password"
+                      id="personaPassword"
+                      name="contraseña"
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="personaPasswordConfirm"
+                      >Confirmar Contraseña</label
+                    >
+                    <input
+                      type="password"
+                      id="personaPasswordConfirm"
+                      name="confirmar"
+                      placeholder="Repite tu contraseña"
+                      required
+                    />
+                  </div>
+                  <button type="submit" class="btn btn-primary">
+                    Crear Cuenta Personal
+                  </button>
+                  <div>
+                    <a href="/login/google" class="google-btn">
+                      <div class="google-icon">
+                        <svg viewBox="0 0 48 48">
+                          <path
+                            fill="#EA4335"
+                            d="M24 9.5c3.1 0 5.9 1.1 8.1 3.1l6-6C34.2 2.5 29.5 0 24 0 14.6 0 6.6 5.5 2.7 13.5l7.4 5.7C12.1 13 17.6 9.5 24 9.5z"
+                          />
+                          <path
+                            fill="#4285F4"
+                            d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 2.7-2.1 5-4.4 6.5l6.8 5.3c4-3.7 6.4-9.2 6.4-15.8z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M10.1 28.9c-.6-1.8-.9-3.6-.9-5.4s.3-3.7.9-5.4l-7.4-5.7C1 16.2 0 20 0 24s1 7.8 2.7 11.6l7.4-5.7z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M24 48c6.5 0 12-2.1 16-5.7l-6.8-5.3c-1.9 1.3-4.4 2-9.2 2-6.4 0-11.9-3.5-13.9-8.6l-7.4 5.7C6.6 42.5 14.6 48 24 48z"
+                          />
+                        </svg>
+                      </div>
+                      <span>Continuar con Google</span>
+                    </a>
+                  </div>
+                </form>
+
+                <div class="form-footer">
+                  <p>
+                    <a href="#" onclick="backToTypeSelector(event)">← Atrás</a>
+                  </p>
+                </div>
+
+                <div id="registerPersonaMessage" class="message"></div>
+              </div>
+
+              <!-- Registro Form - Cuenta Empresa -->
+              <div class="form-container" id="registerEmpresaForm">
+                <div class="form-header">
+                  <span class="form-tab-label">Registro</span>
+                  <h2>Crear cuenta empresa</h2>
+                </div>
+
+                <form id="formRegisterEmpresa">
+                  <div class="form-group">
+                    <label for="empresaRazonSocial">Razón Social</label>
+                    <input
+                      type="text"
+                      id="empresaRazonSocial"
+                      name="razon_social"
+                      placeholder="Nombre de la empresa"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="empresaNIT">NIT / RUC</label>
+                      <input
+                        type="text"
+                        id="empresaNIT"
+                        name="nit"
+                        placeholder="123456789"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="empresaTelefono">Teléfono</label>
+                      <input
+                        type="tel"
+                        id="empresaTelefono"
+                        name="telefono"
+                        placeholder="+57 1 2345678"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="empresaCiudad">Ciudad</label>
+                    <input
+                      type="text"
+                      id="empresaCiudad"
+                      name="ciudad"
+                      placeholder="Bogotá, D.C."
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="empresaContacto">Nombre del Contacto</label>
+                    <input
+                      type="text"
+                      id="empresaContacto"
+                      name="nombre_contacto"
+                      placeholder="Juan Pérez"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="empresaEmail">Correo electrónico</label>
+                    <input
+                      type="email"
+                      id="empresaEmail"
+                      name="email"
+                      placeholder="correo@empresa.com"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="empresaPassword">Contraseña</label>
+                    <input
+                      type="password"
+                      id="empresaPassword"
+                      name="contraseña"
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="empresaPasswordConfirm"
+                      >Confirmar Contraseña</label
+                    >
+                    <input
+                      type="password"
+                      id="empresaPasswordConfirm"
+                      name="confirmar"
+                      placeholder="Repite tu contraseña"
+                      required
+                    />
+                  </div>
+
+                  <button type="submit" class="btn btn-primary">
+                    Crear Cuenta Empresa
+                  </button>
+                </form>
+
+                <div class="form-footer">
+                  <p>
+                    <a href="#" onclick="backToTypeSelector(event)">← Atrás</a>
+                  </p>
+                </div>
+
+                <div id="registerEmpresaMessage" class="message"></div>
+              </div>
             </div>
           </div>
         </div>
