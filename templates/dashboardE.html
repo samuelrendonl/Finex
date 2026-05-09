@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Empresa - FINEX</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboardE.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="dashboard-container">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo-box">
+            <div class="logo-icon"></div>
+
+            <div>
+              <h2>FINEX</h2>
+              <p class="tagline">Panel Empresarial</p>
+            </div>
+          </div>
+        </div>
+
+        <nav class="sidebar-menu">
+          <ul>
+            <li>
+              <a href="#" class="menu-item active" data-section="resumen">
+                <span class="icon">🏠</span>
+                <span>Inicio</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="menu-item" data-section="ingresos">
+                <span class="icon">💰</span>
+                <span>Ingresos</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="menu-item" data-section="gastos">
+                <span class="icon">📉</span>
+                <span>Gastos</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="menu-item" data-section="inventario">
+                <span class="icon">📦</span>
+                <span>Inventario</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="menu-item" data-section="reportes">
+                <span class="icon">📊</span>
+                <span>Reportes</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="#" class="menu-item" data-section="configuracion">
+                <span class="icon">⚙️</span>
+                <span>Configuración</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="payment-alert">
+          <h4>Pago pendiente</h4>
+
+          <p>Puedes actualizar tu método de pago para evitar interrupciones.</p>
+
+          <button class="btn-retry">Reintentar pago</button>
+        </div>
+
+        <div class="sidebar-footer">
+          <button id="btnLogout" class="btn btn-logout">Cerrar Sesión</button>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main-content">
+        <!-- HEADER -->
+        <header class="top-header">
+          <div class="search-container">
+            <input type="text" placeholder="Buscar..." />
+          </div>
+
+          <div class="header-right">
+            <button class="header-icon">＋</button>
+
+            <div class="user-menu">
+              <button id="userMenuBtn" class="user-btn">
+                <div class="avatar">{{ session.get('user_name', 'U')[0] }}</div>
+
+                <span id="userName">
+                  {{ session.get('user_name', 'Empresa') }}
+                </span>
+              </button>
+
+              <div id="userDropdown" class="user-dropdown">
+                <a href="#" onclick="openSection('configuracion', event)">
+                  Mi Perfil
+                </a>
+
+                <a href="#" onclick="changePassword(event)">
+                  Cambiar Contraseña
+                </a>
+
+                <hr />
+
+                <a href="#" onclick="logout(event)"> Cerrar Sesión </a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- CONTENT -->
+        <div class="content-area">
+          <!-- RESUMEN -->
+          <section id="resumen" class="content-section active">
+            <div class="section-title">
+              <div>
+                <h2>Resumen del negocio</h2>
+                <p>Vista general de la empresa</p>
+              </div>
+
+              <div class="actions">
+                <button class="btn btn-light">Mes actual</button>
+
+                <button class="btn btn-primary">Agregar gráfica</button>
+              </div>
+            </div>
+
+            <!-- TOP CARDS -->
+            <div class="top-grid">
+              <div class="large-card">
+                <h3>Cuentas por cobrar</h3>
+
+                <div class="big-amount">$0,00</div>
+
+                <div class="mini-grid">
+                  <div class="mini-card success">
+                    <span>Vigentes</span>
+                    <strong>$0,00</strong>
+                    <small>0 documentos</small>
+                  </div>
+
+                  <div class="mini-card danger">
+                    <span>Vencidas</span>
+                    <strong>$0,00</strong>
+                    <small>0 documentos</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="large-card">
+                <h3>Cuentas por pagar</h3>
+
+                <div class="big-amount">$44.811.680,00</div>
+
+                <div class="danger-line"></div>
+
+                <div class="mini-grid">
+                  <div class="mini-card success">
+                    <span>Vigentes</span>
+                    <strong>$0,00</strong>
+                    <small>0 documentos</small>
+                  </div>
+
+                  <div class="mini-card danger">
+                    <span>Vencidas</span>
+                    <strong>$44.811.680,00</strong>
+                    <small>5 documentos</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="side-cards">
+                <div class="small-card">
+                  <h4>Impuestos en venta</h4>
+                  <strong>$0,00</strong>
+                </div>
+
+                <div class="small-card">
+                  <h4>Productos vendidos</h4>
+                  <strong>0</strong>
+                </div>
+
+                <div class="small-card">
+                  <h4>Clientes con ventas</h4>
+                  <strong>0</strong>
+                </div>
+
+                <div class="small-card">
+                  <h4>Devoluciones</h4>
+                  <strong>$0,00</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- CHART -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <h3>Total de ventas</h3>
+
+                  <p>La gráfica muestra las ventas realizadas este mes.</p>
+                </div>
+
+                <div class="chart-result">
+                  <strong>$0,00</strong>
+                  <span>↓ 100%</span>
+                </div>
+              </div>
+
+              <div class="fake-chart">
+                <div class="chart-line"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- INGRESOS -->
+          <section id="ingresos" class="content-section">
+            <div class="section-title">
+              <h2>Ingresos</h2>
+
+              <button class="btn btn-primary">+ Nuevo ingreso</button>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Concepto</th>
+                    <th>Monto</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td colspan="4" class="empty-state">
+                      No hay ingresos registrados
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- GASTOS -->
+          <section id="gastos" class="content-section">
+            <div class="section-title">
+              <h2>Gastos</h2>
+
+              <button class="btn btn-primary">+ Nuevo gasto</button>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Proveedor</th>
+                    <th>Concepto</th>
+                    <th>Monto</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td colspan="4" class="empty-state">
+                      No hay gastos registrados
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- INVENTARIO -->
+          <section id="inventario" class="content-section">
+            <div class="section-title">
+              <h2>Inventario</h2>
+
+              <button class="btn btn-primary">+ Nuevo producto</button>
+            </div>
+
+            <div class="section-info">
+              📦 Aquí podrás administrar productos y stock.
+            </div>
+          </section>
+
+          <!-- REPORTES -->
+          <section id="reportes" class="content-section">
+            <div class="section-title">
+              <h2>Reportes</h2>
+
+              <button class="btn btn-primary">+ Generar reporte</button>
+            </div>
+
+            <div class="section-info">
+              📊 Consulta balances, estadísticas y reportes empresariales.
+            </div>
+          </section>
+
+          <!-- CONFIG -->
+          <section id="configuracion" class="content-section">
+            <div class="section-title">
+              <h2>Configuración</h2>
+            </div>
+
+            <div class="config-card">
+              <form id="formProfile">
+                <div class="form-group">
+                  <label>Empresa</label>
+
+                  <input
+                    type="text"
+                    id="profileCompany"
+                    placeholder="Nombre de la empresa"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>Email</label>
+
+                  <input
+                    type="email"
+                    id="profileEmail"
+                    placeholder="Correo empresarial"
+                  />
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  Guardar Cambios
+                </button>
+              </form>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- MODAL -->
+    <div id="messageModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+
+        <div id="modalMessage"></div>
+
+        <button onclick="closeModal()" class="btn btn-primary">Aceptar</button>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboardE.js') }}"></script>
+  </body>
+</html>
