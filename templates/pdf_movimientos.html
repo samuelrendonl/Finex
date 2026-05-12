@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial;
+        font-size: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background: #f2f2f2;
+      }
+      .ingreso {
+        color: green;
+      }
+      .egreso {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>{{ usuario.nombre }} - Estado de Cuenta</h2>
+    <p><b>Cliente:</b> {{ usuario.nombre }}</p>
+    <p><b>Correo:</b> {{ usuario.correo }}</p>
+    {% if desde or hasta %}
+    <p><b>Rango:</b> {{ desde or "" }} - {{ hasta or "" }}</p>
+    {% endif %}
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Categoría</th>
+          <th>Descripción</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in movimientos %}
+        <tr>
+          <td>{{ m.fecha }}</td>
+          <td>{{ m.categoria }}</td>
+          <td>{{ m.descripcion }}</td>
+          <td class="{{ m.tipo }}">{{ m.tipo }}</td>
+          <td>${{ m.valor }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <br />
+    <p><b>Ingresos:</b> ${{ ingresos }}</p>
+    <p><b>Egresos:</b> ${{ egresos }}</p>
+    <p><b>Saldo:</b> ${{ saldo }}</p>
+  </body>
+</html>

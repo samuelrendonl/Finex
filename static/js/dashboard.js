@@ -1,319 +1,609 @@
-// Load user information on page load
-document.addEventListener('DOMContentLoaded', () => {
-    loadUserInfo();
-    setupMenuListeners();
-    setupProfileForm();
-    setupPasswordForm();
-    setupUserMenu();
+// ======================================
+// VARIABLES
+// ======================================
+
+let financeChart;
+let pieChart;
+let movimientoEditando = null;
+
+// ======================================
+// INIT
+// ======================================
+
+document.addEventListener("DOMContentLoaded", () => {
+  showSection("inicio");
+
+  cargarDashboard();
+  cargarMovimientos();
+
+  cargarCategorias("ingreso");
+  cargarCategorias("egreso");
+
+  crearGraficas();
 });
 
-// Load user information
-async function loadUserInfo() {
-    try {
-        const response = await fetch('/api/usuario-info');
-        
-        if (!response.ok) {
-            if (response.status === 401) {
-                window.location.href = '/';
-                return;
-            }
-            throw new Error('Error al cargar información del usuario');
-        }
-        
-        const data = await response.json();
-        
-        // Update user name in header and sidebar
-        document.getElementById('userName').textContent = data.nombre;
-        
-        // Update profile form
-        document.getElementById('profileName').value = data.nombre;
-        document.getElementById('profileCompany').value = data.empresa || '';
-        document.getElementById('profileEmail').value = data.email;
-        
-    } catch (error) {
-        console.error('Error:', error);
-        showModal('Error al cargar la información del usuario');
+// ======================================
+// SECCIONES
+// ======================================
+
+function showSection(id) {
+  document.querySelectorAll(".section").forEach((section) => {
+    section.style.display = "none";
+  });
+
+  document.getElementById(id).style.display = "block";
+}
+
+// ======================================
+// FORMULARIOS
+// ======================================
+
+function toggleIngresoForm() {
+  const form = document.getElementById("ingresoForm");
+
+  form.style.display = form.style.display === "block" ? "none" : "block";
+}
+
+function toggleEgresoForm() {
+  const form = document.getElementById("egresoForm");
+
+  form.style.display = form.style.display === "block" ? "none" : "block";
+}
+
+// ======================================
+// CARGAR CATEGORIAS
+// ======================================
+
+async function cargarCategorias(tipo) {
+  try {
+    const response = await fetch(`/dashboard/api/categorias/${tipo}`);
+
+    const categorias = await response.json();
+
+    let select;
+
+    if (tipo === "ingreso") {
+      select = document.getElementById("ingresoCategoria");
+    } else {
+      select = document.getElementById("egresoCategoria");
     }
-}
 
-// Setup menu navigation
-function setupMenuListeners() {
-    const menuItems = document.querySelectorAll('.menu-item');
-    
-    menuItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            // Remove active class from all items
-            menuItems.forEach(mi => mi.classList.remove('active'));
-            
-            // Add active class to clicked item
-            item.classList.add('active');
-            
-            // Get section id
-            const sectionId = item.getAttribute('data-section');
-            
-            // Show section
-            openSection(sectionId);
-            
-            // Close user dropdown if open
-            const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown.classList.contains('show')) {
-                userDropdown.classList.remove('show');
-            }
-        });
+    select.innerHTML = `
+      <option value="">
+        Seleccionar categoría
+      </option>
+    `;
+
+    categorias.forEach((cat) => {
+      select.innerHTML += `
+        <option value="${cat.nombre}">
+          ${cat.nombre}
+        </option>
+      `;
     });
+
+    select.innerHTML += `
+      <option value="nueva">
+        + Crear nueva categoría
+      </option>
+    `;
+  } catch (error) {
+    console.error("Error cargando categorías:", error);
+  }
 }
 
-// Open section
-function openSection(sectionId, e = null) {
-    if (e) {
-        e.preventDefault();
+// ======================================
+// GUARDAR INGRESO
+// ======================================
+
+async function guardarIngreso() {
+  try {
+    let categoria = document.getElementById("ingresoCategoria").value;
+
+    if (categoria === "nueva") {
+      categoria = prompt("Nombre de la nueva categoría");
+
+      if (!categoria) return;
+
+      await fetch("/dashboard/api/categorias", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          nombre: categoria,
+          tipo: "ingreso",
+        }),
+      });
+
+      await cargarCategorias("ingreso");
     }
-    
-    // Hide all sections
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(section => {
-        section.classList.remove('active');
+
+    const data = {
+      tipo: "ingreso",
+
+      categoria: categoria,
+
+      monto: document.getElementById("ingresoMonto").value,
+
+      descripcion: document.getElementById("ingresoDescripcion").value,
+
+      fecha: document.getElementById("ingresoFecha").value,
+
+      estado: document.getElementById("ingresoEstado").value,
+    };
+
+    await fetch("/dashboard/api/movimientos", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(data),
     });
-    
-    // Show selected section
-    const selectedSection = document.getElementById(sectionId);
-    if (selectedSection) {
-        selectedSection.classList.add('active');
-        
-        // Update header title
-        const title = selectedSection.querySelector('.section-title h2');
-        if (title) {
-            document.querySelector('.header-left h1').textContent = title.textContent;
-        }
+
+    await cargarMovimientos();
+
+    await cargarDashboard();
+
+    toggleIngresoForm();
+  } catch (error) {
+    console.error("Error guardando ingreso:", error);
+  }
+}
+
+// ======================================
+// GUARDAR EGRESO
+// ======================================
+
+async function guardarEgreso() {
+  try {
+    let categoria = document.getElementById("egresoCategoria").value;
+
+    if (categoria === "nueva") {
+      categoria = prompt("Nombre de la nueva categoría");
+
+      if (!categoria) return;
+
+      await fetch("/dashboard/api/categorias", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          nombre: categoria,
+          tipo: "egreso",
+        }),
+      });
+
+      await cargarCategorias("egreso");
     }
+
+    const data = {
+      tipo: "egreso",
+
+      categoria: categoria,
+
+      monto: document.getElementById("egresoMonto").value,
+
+      descripcion: document.getElementById("egresoDescripcion").value,
+
+      fecha: document.getElementById("egresoFecha").value,
+
+      estado: document.getElementById("egresoEstado").value,
+    };
+
+    await fetch("/dashboard/api/movimientos", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(data),
+    });
+
+    await cargarMovimientos();
+
+    await cargarDashboard();
+
+    toggleEgresoForm();
+  } catch (error) {
+    console.error("Error guardando egreso:", error);
+  }
 }
 
-// User menu toggle
-function setupUserMenu() {
-    const userMenuBtn = document.getElementById('userMenuBtn');
-    const userDropdown = document.getElementById('userDropdown');
-    
-    userMenuBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        userDropdown.classList.toggle('show');
-    });
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.user-menu')) {
-            userDropdown.classList.remove('show');
-        }
-    });
-}
+// ======================================
+// CARGAR MOVIMIENTOS
+// ======================================
 
-// Setup profile form
-function setupProfileForm() {
-    const form = document.getElementById('formProfile');
-    
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const nombre = document.getElementById('profileName').value.trim();
-        const empresa = document.getElementById('profileCompany').value.trim();
-        
-        if (!nombre) {
-            showModal('Por favor ingresa tu nombre', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/actualizar-perfil', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    nombre: nombre,
-                    empresa: empresa
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                showModal(data.error || 'Error al actualizar perfil', 'error');
-                return;
-            }
-            
-            // Update user name in header
-            document.getElementById('userName').textContent = nombre;
-            
-            showModal(data.message, 'success');
-            
-        } catch (error) {
-            showModal('Error de conexión: ' + error.message, 'error');
-        }
-    });
-}
+async function cargarMovimientos(desde, hasta) {
+  let url = "/dashboard/api/movimientos";
 
-// Setup password form
-function setupPasswordForm() {
-    const form = document.getElementById('formPassword');
-    
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const actual = document.getElementById('currentPassword').value;
-        const nueva = document.getElementById('newPassword').value;
-        const confirmar = document.getElementById('confirmPassword').value;
-        
-        if (!actual || !nueva || !confirmar) {
-            showModal('Por favor completa todos los campos', 'error');
-            return;
-        }
-        
-        if (nueva.length < 6) {
-            showModal('La nueva contraseña debe tener al menos 6 caracteres', 'error');
-            return;
-        }
-        
-        if (nueva !== confirmar) {
-            showModal('Las contraseñas nuevas no coinciden', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/cambiar-contraseña', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contraseña_actual: actual,
-                    contraseña_nueva: nueva
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                showModal(data.error || 'Error al cambiar contraseña', 'error');
-                return;
-            }
-            
-            showModal(data.message, 'success');
-            
-            // Clear form
-            form.reset();
-            
-        } catch (error) {
-            showModal('Error de conexión: ' + error.message, 'error');
-        }
-    });
-}
+  if (desde === undefined || hasta === undefined) {
+    desde = document.getElementById("desde")?.value || "";
 
-// Logout
-async function logout(e) {
-    if (e) {
-        e.preventDefault();
+    hasta = document.getElementById("hasta")?.value || "";
+  }
+
+  if (desde || hasta) {
+    url += `?desde=${desde}&hasta=${hasta}`;
+  }
+
+  const response = await fetch(url);
+
+  const movimientos = await response.json();
+
+  const tablaIngresos = document.getElementById("tablaIngresos");
+
+  const tablaEgresos = document.getElementById("tablaEgresos");
+
+  const reporte = document.getElementById("reporteBody");
+
+  tablaIngresos.innerHTML = "";
+  tablaEgresos.innerHTML = "";
+  reporte.innerHTML = "";
+
+  movimientos.forEach((mov) => {
+    const fecha = new Date(mov.fecha).toLocaleDateString("es-CO");
+
+    const monto = Number(mov.valor).toLocaleString("es-CO");
+
+    // =========================
+    // REPORTE
+    // =========================
+
+    const reporteRow = `
+      <tr>
+
+        <td>${mov.tipo}</td>
+
+        <td>${mov.categoria}</td>
+
+        <td>${mov.descripcion}</td>
+
+        <td>$${monto}</td>
+
+        <td>${fecha}</td>
+
+        <td>${mov.estado}</td>
+
+      </tr>
+    `;
+
+    reporte.innerHTML += reporteRow;
+
+    // =========================
+    // TABLAS
+    // =========================
+
+    const row = `
+      <tr>
+
+        <td>${mov.categoria}</td>
+
+        <td>${mov.descripcion}</td>
+
+        <td>$${monto}</td>
+
+        <td>${fecha}</td>
+
+        <td>${mov.estado}</td>
+
+        <td class="acciones">
+
+          <button
+            class="btn-editar"
+            onclick="editarMovimiento(${mov.id})">
+            ✏️
+          </button>
+
+          <button
+            class="btn-eliminar"
+            onclick="eliminarMovimiento(${mov.id})">
+            🗑️
+          </button>
+
+        </td>
+
+      </tr>
+    `;
+
+    if (mov.tipo === "ingreso") {
+      tablaIngresos.innerHTML += row;
+    } else {
+      tablaEgresos.innerHTML += row;
     }
-    
-    try {
-        const response = await fetch('/api/logout', {
-            method: 'POST'
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            window.location.href = data.redirect;
-        }
-        
-    } catch (error) {
-        console.error('Error:', error);
-        window.location.href = '/';
-    }
+  });
 }
 
-// Alternative logout from sidebar button
-document.addEventListener('DOMContentLoaded', () => {
-    const logoutBtn = document.getElementById('btnLogout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
+// ======================================
+// ELIMINAR MOVIMIENTO
+// ======================================
+
+async function eliminarMovimiento(id) {
+  mostrarConfirmacion(
+    "¿Deseas eliminar este movimiento?",
+
+    async () => {
+      try {
+        await fetch(
+          `/dashboard/api/movimientos/${id}`,
+
+          {
+            method: "DELETE",
+          },
+        );
+
+        await cargarMovimientos();
+
+        await cargarDashboard();
+
+        mostrarToast("Movimiento eliminado correctamente");
+      } catch (error) {
+        console.error(error);
+
+        mostrarToast("Error eliminando movimiento");
+      }
+    },
+  );
+}
+
+// ======================================
+// EDITAR MOVIMIENTO
+// ======================================
+
+async function editarMovimiento(id) {
+  try {
+    const response = await fetch(`/dashboard/api/movimientos/${id}`);
+
+    const mov = await response.json();
+
+    movimientoEditando = id;
+
+    document.getElementById("editCategoria").value = mov.categoria;
+
+    document.getElementById("editMonto").value = mov.valor;
+
+    document.getElementById("editDescripcion").value = mov.descripcion;
+
+    document.getElementById("editFecha").value = mov.fecha;
+
+    document.getElementById("editEstado").value = mov.estado;
+
+    document.getElementById("modalEditar").style.display = "flex";
+  } catch (error) {
+    console.error("Error cargando movimiento:", error);
+  }
+}
+
+// ======================================
+// CERRAR MODAL
+// ======================================
+
+function cerrarModal() {
+  document.getElementById("modalEditar").style.display = "none";
+}
+
+// ======================================
+// GUARDAR EDICION
+// ======================================
+
+async function guardarEdicion() {
+  try {
+    const data = {
+      valor: document.getElementById("editMonto").value,
+
+      descripcion: document.getElementById("editDescripcion").value,
+
+      fecha: document.getElementById("editFecha").value,
+
+      estado: document.getElementById("editEstado").value,
+    };
+
+    await fetch(
+      `/dashboard/api/movimientos/${movimientoEditando}`,
+
+      {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(data),
+      },
+    );
+
+    cerrarModal();
+
+    await cargarMovimientos();
+
+    await cargarDashboard();
+  } catch (error) {
+    console.error("Error actualizando:", error);
+  }
+}
+
+// ======================================
+// DASHBOARD
+// ======================================
+
+async function cargarDashboard() {
+  try {
+    const response = await fetch("/dashboard/api/dashboard");
+
+    const data = await response.json();
+
+    const cards = document.querySelectorAll(".card h2");
+
+    cards[0].textContent = `$${Number(data.saldo).toLocaleString("es-CO")}`;
+
+    cards[1].textContent = `$${Number(data.ingresos).toLocaleString("es-CO")}`;
+
+    cards[2].textContent = `$${Number(data.egresos).toLocaleString("es-CO")}`;
+
+    cards[3].textContent = `$${Number(data.ahorros).toLocaleString("es-CO")}`;
+
+    actualizarGraficas(data.ingresos, data.egresos);
+  } catch (error) {
+    console.error("Error cargando dashboard:", error);
+  }
+}
+
+// ======================================
+// GRAFICAS
+// ======================================
+
+function crearGraficas() {
+  financeChart = new Chart(document.getElementById("financeChart"), {
+    type: "bar",
+
+    data: {
+      labels: ["Ingresos", "Egresos"],
+
+      datasets: [
+        {
+          label: "Monto",
+          data: [0, 0],
+          borderRadius: 10,
+        },
+      ],
+    },
+  });
+
+  pieChart = new Chart(document.getElementById("pieChart"), {
+    type: "doughnut",
+
+    data: {
+      labels: ["Ingresos", "Egresos"],
+
+      datasets: [
+        {
+          data: [0, 0],
+        },
+      ],
+    },
+  });
+}
+
+function actualizarGraficas(ingresos, egresos) {
+  financeChart.data.datasets[0].data = [ingresos, egresos];
+
+  financeChart.update();
+
+  pieChart.data.datasets[0].data = [ingresos, egresos];
+
+  pieChart.update();
+}
+
+// ======================================
+// MOBILE MENU
+// ======================================
+
+const menuToggle = document.querySelector(".menu-toggle");
+
+const sidebar = document.querySelector(".sidebar");
+
+const overlay = document.getElementById("overlay");
+
+const menuItems = document.querySelectorAll(".menu li");
+
+function openMenu() {
+  sidebar.classList.add("active");
+
+  overlay.classList.add("active");
+}
+
+function closeMenu() {
+  sidebar.classList.remove("active");
+
+  overlay.classList.remove("active");
+}
+
+menuToggle.addEventListener("click", () => {
+  sidebar.classList.contains("active") ? closeMenu() : openMenu();
 });
 
-// Change password modal
-function changePassword(e) {
-    if (e) {
-        e.preventDefault();
-    }
-    
-    openSection('configuracion');
-    
-    // Focus on the password field
-    setTimeout(() => {
-        document.getElementById('currentPassword').focus();
-    }, 300);
-}
+overlay.addEventListener("click", closeMenu);
 
-// Modal functions
-function showModal(message, type = 'info') {
-    const modal = document.getElementById('messageModal');
-    const modalMessage = document.getElementById('modalMessage');
-    
-    modalMessage.innerHTML = message;
-    
-    // Add color based on type
-    if (type === 'success') {
-        modalMessage.style.color = '#16a34a';
-    } else if (type === 'error') {
-        modalMessage.style.color = '#dc2626';
-    }
-    
-    modal.classList.add('show');
-}
-
-function closeModal() {
-    const modal = document.getElementById('messageModal');
-    modal.classList.remove('show');
-}
-
-// Close modal when clicking the X
-document.addEventListener('DOMContentLoaded', () => {
-    const closeBtn = document.querySelector('.close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-    
-    // Close modal when clicking outside
-    const modal = document.getElementById('messageModal');
-    if (modal) {
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-    }
+menuItems.forEach((item) => {
+  item.addEventListener("click", closeMenu);
 });
 
-// Session timeout warning (opcional)
-let sessionTimeout;
+// ======================================
+// FILTRAR
+// ======================================
 
-function resetSessionTimeout() {
-    clearTimeout(sessionTimeout);
-    
-    sessionTimeout = setTimeout(() => {
-        logout();
-    }, 30 * 60 * 1000); // 30 minutes
+async function filtrarMovimientos() {
+  const desde = document.getElementById("desde").value;
+
+  const hasta = document.getElementById("hasta").value;
+
+  await cargarMovimientos(desde, hasta);
 }
 
-document.addEventListener('mousemove', resetSessionTimeout);
-document.addEventListener('keypress', resetSessionTimeout);
-document.addEventListener('click', resetSessionTimeout);
+// ======================================
+// EXPORTAR PDF
+// ======================================
 
-resetSessionTimeout();
+function exportarPDF() {
+  const desde = document.getElementById("desde").value;
 
-// Page visibility - renew session on return
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-        resetSessionTimeout();
-    }
-});
+  const hasta = document.getElementById("hasta").value;
+
+  let url = "/reportes/movimientos/pdf";
+
+  if (desde || hasta) {
+    url += `?desde=${desde}&hasta=${hasta}`;
+  }
+
+  window.open(url, "_blank");
+}
+
+// ======================================
+// TOAST
+// ======================================
+
+function mostrarToast(texto) {
+  const toast = document.getElementById("toast");
+
+  toast.textContent = texto;
+
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
+}
+
+// ======================================
+// CONFIRMACION
+// ======================================
+
+function mostrarConfirmacion(mensaje, callback) {
+  const modal = document.getElementById("confirmModal");
+
+  const texto = document.getElementById("confirmText");
+
+  const aceptar = document.getElementById("confirmAccept");
+
+  texto.textContent = mensaje;
+
+  modal.style.display = "flex";
+
+  aceptar.onclick = () => {
+    callback();
+
+    cerrarConfirmacion();
+  };
+}
+
+function cerrarConfirmacion() {
+  document.getElementById("confirmModal").style.display = "none";
+}

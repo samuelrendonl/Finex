@@ -337,20 +337,26 @@ body {
   overflow-y: auto;
 }
 .auth-right-panel::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
 }
 
 .auth-right-panel::-webkit-scrollbar-track {
-  background: transparent;
+  background: #e5e7eb;
+  border-radius: 10px;
 }
 
 .auth-right-panel::-webkit-scrollbar-thumb {
-  background: var(--gray);
-  border-radius: 3px;
+  background: linear-gradient(
+    180deg,
+    var(--primary-light),
+    var(--primary-color)
+  );
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
 }
 
 .auth-right-panel::-webkit-scrollbar-thumb:hover {
-  background: var(--dark-gray);
+  background: linear-gradient(180deg, #0052a3, #002f5f);
 }
 
 .form-container {

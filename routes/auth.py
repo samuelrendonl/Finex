@@ -5,17 +5,27 @@ from db import get_db_connection
 
 auth_bp = Blueprint("auth", __name__)
 
+# =====================================
+# LOGIN GOOGLE
+# =====================================
 
-# ===== LOGIN GOOGLE =====
 @auth_bp.route('/login/google')
 def login_google():
 
     google = oauth.create_client('google')
 
-    redirect_uri = url_for('auth.callback_google', _external=True)
+    redirect_uri = url_for(
+        'auth.callback_google',
+        _external=True
+    )
 
-    return google.authorize_redirect(redirect_uri)
+    return google.authorize_redirect(
+        redirect_uri
+    )
 
+# =====================================
+# CALLBACK GOOGLE
+# =====================================
 
 @auth_bp.route('/login/google/callback')
 def callback_google():
@@ -23,7 +33,8 @@ def callback_google():
     google = oauth.create_client('google')
 
     try:
-        token = google.authorize_access_token()
+
+        google.authorize_access_token()
 
         user = google.get(
             'https://openidconnect.googleapis.com/v1/userinfo'
@@ -34,108 +45,167 @@ def callback_google():
         google_id = user['sub']
         foto = user['picture']
 
-        db = get_db_connection()
-        cursor = db.cursor()
+        connection = get_db_connection()
 
-        # ===== VALIDAR SI YA EXISTE =====
-        cursor.execute("""
-            SELECT id, tipo_cuenta
-            FROM usuarios
-            WHERE email = %s
-        """, (email,))
+        with connection.cursor() as cursor:
 
-        usuario = cursor.fetchone()
+            # =====================================
+            # VALIDAR SI EL USUARIO YA EXISTE
+            # =====================================
 
-        if usuario:
-            user_id = usuario["id"]
-            tipo_cuenta = usuario["tipo_cuenta"]
-
-        else:
-            # ===== CREAR NUEVO USUARIO =====
             cursor.execute("""
-                INSERT INTO usuarios
-                (nombre, email, google_id, foto, tipo_cuenta, activo, fecha_creacion)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW())
-            """, (
-                nombre,
-                email,
-                google_id,
-                foto,
-                "persona",
-                1
-            ))
+                SELECT
+                    id,
+                    tipo_cuenta
+                FROM usuarios
+                WHERE email = %s
+                LIMIT 1
+            """, (email,))
 
-            db.commit()
+            usuario = cursor.fetchone()
 
-            user_id = cursor.lastrowid
-            tipo_cuenta = "persona"
+            # =====================================
+            # EXISTE
+            # =====================================
 
-        # ===== SESIÓN =====
+            if usuario:
+
+                usuario_id = usuario["id"]
+                tipo_cuenta = usuario["tipo_cuenta"]
+
+            # =====================================
+            # NO EXISTE
+            # =====================================
+
+            else:
+
+                cursor.execute("""
+                    INSERT INTO usuarios (
+                        email,
+                        google_id,
+                        foto,
+                        tipo_cuenta,
+                        activo,
+                        fecha_creacion
+                    )
+                    VALUES (%s,%s,%s,%s,%s,NOW())
+                """, (
+                    email,
+                    google_id,
+                    foto,
+                    "persona",
+                    1
+                ))
+
+                usuario_id = cursor.lastrowid
+                tipo_cuenta = "persona"
+
+                # =====================================
+                # CREAR PERFIL PERSONA
+                # =====================================
+
+                cursor.execute("""
+                    INSERT INTO personas (
+                        usuario_id,
+                        nombre,
+                        apellido
+                    )
+                    VALUES (%s,%s,%s)
+                """, (
+                    usuario_id,
+                    nombre,
+                    ""
+                ))
+
+                connection.commit()
+
+        # =====================================
+        # SESION
+        # =====================================
+
         session.permanent = True
-        session["usuario_id"] = user_id
+        session["usuario_id"] = usuario_id
         session["usuario_nombre"] = nombre
         session["usuario_email"] = email
         session["usuario_tipo"] = tipo_cuenta
 
-        # ===== REDIRECCIÓN SEGÚN TIPO =====
+        # =====================================
+        # REDIRECCION
+        # =====================================
+
         if tipo_cuenta == "persona":
-            return redirect(url_for("main.dashboard"))
-        else:
-            return redirect(url_for("main.dashboard_empresa"))
+
+            return redirect(
+                url_for("persona.dashboard")
+            )
+
+        return redirect(
+            url_for("main.dashboard_empresa")
+        )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
+        return jsonify({
+            "error": str(e)
+        }), 500
 
-# ===== REGISTRO =====
-@auth_bp.route("/api/registro", methods=["POST"])
+# =====================================
+# REGISTRO
+# =====================================
+
+@auth_bp.route(
+    "/api/registro",
+    methods=["POST"]
+)
 def registro():
 
     connection = None
 
     try:
-        data = request.get_json()
 
-        if not data:
-            return jsonify({"error": "No se recibieron datos"}), 400
+        data = request.get_json()
 
         email = data.get("email")
         contraseña = data.get("contraseña")
         tipo_cuenta = data.get("tipo_cuenta")
 
-        if not email or not contraseña or not tipo_cuenta:
-            return jsonify({
-                "error": "Email, contraseña y tipo de cuenta son requeridos"
-            }), 400
-
-        if tipo_cuenta not in ["persona", "empresa"]:
-            return jsonify({"error": "Tipo de cuenta inválido"}), 400
-
-        if len(contraseña) < 6:
-            return jsonify({
-                "error": "La contraseña debe tener al menos 6 caracteres"
-            }), 400
-
         connection = get_db_connection()
 
         with connection.cursor() as cursor:
 
-            # ===== VALIDAR EMAIL =====
-            cursor.execute(
-                "SELECT id FROM usuarios WHERE email = %s",
-                (email,)
-            )
-
-            if cursor.fetchone():
-                return jsonify({"error": "Email ya existe"}), 400
-
-            # ===== CREAR USUARIO =====
-            password_hash = generate_password_hash(contraseña)
+            # =====================================
+            # VALIDAR EMAIL
+            # =====================================
 
             cursor.execute("""
-                INSERT INTO usuarios
-                (email, `contraseña`, tipo_cuenta, activo, fecha_creacion)
-                VALUES (%s, %s, %s, %s, NOW())
+                SELECT id
+                FROM usuarios
+                WHERE email = %s
+            """, (email,))
+
+            if cursor.fetchone():
+
+                return jsonify({
+                    "error": "Email ya existe"
+                }), 400
+
+            # =====================================
+            # CREAR USUARIO
+            # =====================================
+
+            password_hash = generate_password_hash(
+                contraseña
+            )
+
+            cursor.execute("""
+                INSERT INTO usuarios (
+                    email,
+                    contraseña,
+                    tipo_cuenta,
+                    activo,
+                    fecha_creacion
+                )
+                VALUES (%s,%s,%s,%s,NOW())
             """, (
                 email,
                 password_hash,
@@ -145,24 +215,26 @@ def registro():
 
             usuario_id = cursor.lastrowid
 
-            # ===== PERSONA =====
+            # =====================================
+            # PERSONA
+            # =====================================
+
             if tipo_cuenta == "persona":
 
                 nombre = data.get("nombre")
                 apellido = data.get("apellido")
-                documento_identidad = data.get("documento_identidad")
-
-                if not nombre or not apellido:
-                    connection.rollback()
-
-                    return jsonify({
-                        "error": "Nombre y apellido son requeridos"
-                    }), 400
+                documento_identidad = data.get(
+                    "documento_identidad"
+                )
 
                 cursor.execute("""
-                    INSERT INTO personas
-                    (usuario_id, nombre, apellido, documento_identidad)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO personas (
+                        usuario_id,
+                        nombre,
+                        apellido,
+                        documento_identidad
+                    )
+                    VALUES (%s,%s,%s,%s)
                 """, (
                     usuario_id,
                     nombre,
@@ -172,29 +244,27 @@ def registro():
 
                 nombre_sesion = nombre
 
-            # ===== EMPRESA =====
+            # =====================================
+            # EMPRESA
+            # =====================================
+
             else:
 
-                nombre_contacto = data.get("nombre")
-                razon_social = data.get("razon_social")
+                nombre_contacto = data.get(
+                    "nombre"
+                )
+
+                razon_social = data.get(
+                    "razon_social"
+                )
+
                 nit = data.get("nit")
                 telefono = data.get("telefono")
                 ciudad = data.get("ciudad")
                 direccion = data.get("direccion")
 
-                if not razon_social or not nit:
-                    connection.rollback()
-
-                    return jsonify({
-                        "error": "Razón social y NIT son requeridos"
-                    }), 400
-
-                if not nombre_contacto:
-                    nombre_contacto = razon_social
-
                 cursor.execute("""
-                    INSERT INTO empresas
-                    (
+                    INSERT INTO empresas (
                         usuario_id,
                         nombre_contacto,
                         razon_social,
@@ -203,7 +273,7 @@ def registro():
                         ciudad,
                         direccion
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)
                 """, (
                     usuario_id,
                     nombre_contacto,
@@ -218,40 +288,59 @@ def registro():
 
             connection.commit()
 
-        # ===== SESIÓN =====
+        # =====================================
+        # SESION
+        # =====================================
+
         session.permanent = True
         session["usuario_id"] = usuario_id
         session["usuario_email"] = email
         session["usuario_tipo"] = tipo_cuenta
         session["usuario_nombre"] = nombre_sesion
 
-        # ===== REDIRECCIÓN =====
+        # =====================================
+        # REDIRECCION
+        # =====================================
+
         if tipo_cuenta == "persona":
-            redirect_url = url_for("main.dashboard")
+
+            redirect_url = url_for(
+                "persona.dashboard"
+            )
+
         else:
-            redirect_url = url_for("main.dashboard_empresa")
+
+            redirect_url = url_for(
+                "main.dashboard_empresa"
+            )
 
         return jsonify({
             "success": True,
-            "message": "Registro exitoso",
             "redirect": redirect_url
-        }), 201
+        })
 
     except Exception as e:
 
         if connection:
             connection.rollback()
 
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": str(e)
+        }), 500
 
     finally:
 
         if connection:
             connection.close()
 
+# =====================================
+# LOGIN
+# =====================================
 
-# ===== LOGIN =====
-@auth_bp.route("/api/login", methods=["POST"])
+@auth_bp.route(
+    "/api/login",
+    methods=["POST"]
+)
 def login():
 
     connection = None
@@ -260,24 +349,24 @@ def login():
 
         data = request.get_json()
 
-        if not data:
-            return jsonify({"error": "No se recibieron datos"}), 400
-
         email = data.get("email")
         contraseña = data.get("contraseña")
-
-        if not email or not contraseña:
-            return jsonify({
-                "error": "Email y contraseña son requeridos"
-            }), 400
 
         connection = get_db_connection()
 
         with connection.cursor() as cursor:
 
+            # =====================================
+            # USUARIO
+            # =====================================
+
             cursor.execute("""
-                SELECT id, email, `contraseña`,
-                       tipo_cuenta, activo
+                SELECT
+                    id,
+                    email,
+                    contraseña,
+                    tipo_cuenta,
+                    activo
                 FROM usuarios
                 WHERE email = %s
                 LIMIT 1
@@ -286,15 +375,16 @@ def login():
             user = cursor.fetchone()
 
             if not user:
-                return jsonify({"error": "Usuario no existe"}), 401
 
-            if user["activo"] != 1:
-                return jsonify({"error": "Usuario inactivo"}), 401
+                return jsonify({
+                    "error": "Usuario no existe"
+                }), 401
 
             if not check_password_hash(
                 user["contraseña"],
                 contraseña
             ):
+
                 return jsonify({
                     "error": "Contraseña incorrecta"
                 }), 401
@@ -302,11 +392,16 @@ def login():
             usuario_id = user["id"]
             tipo_cuenta = user["tipo_cuenta"]
 
-            # ===== DATOS PERFIL =====
+            # =====================================
+            # DATOS PERSONA
+            # =====================================
+
             if tipo_cuenta == "persona":
 
                 cursor.execute("""
-                    SELECT nombre
+                    SELECT
+                        nombre,
+                        apellido
                     FROM personas
                     WHERE usuario_id = %s
                     LIMIT 1
@@ -314,15 +409,27 @@ def login():
 
                 perfil = cursor.fetchone()
 
-                nombre_sesion = (
-                    perfil["nombre"]
-                    if perfil else email
-                )
+                if perfil:
+
+                    nombre_sesion = (
+                        f"{perfil['nombre']} "
+                        f"{perfil['apellido']}"
+                    ).strip()
+
+                else:
+
+                    nombre_sesion = email
+
+            # =====================================
+            # DATOS EMPRESA
+            # =====================================
 
             else:
 
                 cursor.execute("""
-                    SELECT nombre_contacto, razon_social
+                    SELECT
+                        nombre_contacto,
+                        razon_social
                     FROM empresas
                     WHERE usuario_id = %s
                     LIMIT 1
@@ -331,49 +438,71 @@ def login():
                 perfil = cursor.fetchone()
 
                 if perfil:
+
                     nombre_sesion = (
                         perfil["nombre_contacto"]
                         or perfil["razon_social"]
                     )
+
                 else:
+
                     nombre_sesion = email
 
-        # ===== SESIÓN =====
+        # =====================================
+        # SESION
+        # =====================================
+
         session.permanent = True
         session["usuario_id"] = usuario_id
         session["usuario_email"] = email
         session["usuario_tipo"] = tipo_cuenta
         session["usuario_nombre"] = nombre_sesion
 
-        # ===== REDIRECCIÓN =====
+        # =====================================
+        # REDIRECCION
+        # =====================================
+
         if tipo_cuenta == "persona":
-            redirect_url = url_for("main.dashboard")
+
+            redirect_url = url_for(
+                "persona.dashboard"
+            )
+
         else:
-            redirect_url = url_for("main.dashboard_empresa")
+
+            redirect_url = url_for(
+                "main.dashboard_empresa"
+            )
 
         return jsonify({
             "success": True,
-            "message": "Inicio de sesión exitoso",
             "redirect": redirect_url
-        }), 200
+        })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
     finally:
 
         if connection:
             connection.close()
 
+# =====================================
+# LOGOUT
+# =====================================
 
-# ===== LOGOUT =====
-@auth_bp.route("/api/logout", methods=["POST", "GET"])
+@auth_bp.route(
+    "/api/logout",
+    methods=["POST", "GET"]
+)
 def logout():
 
     session.clear()
 
     return jsonify({
         "success": True,
-        "message": "Sesión cerrada",
         "redirect": url_for("main.index")
-    }), 200
+    })

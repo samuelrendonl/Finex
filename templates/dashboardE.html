@@ -1,367 +1,586 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Empresa - FINEX</title>
-
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/dashboardE.css') }}"
-    />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ContaFlow Empresa</title>
+    <link rel="stylesheet" href="/static/css/dashboardE.css" />
   </head>
-
   <body>
-    <div class="dashboard-container">
-      <!-- SIDEBAR -->
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="logo-box">
-            <div class="logo-icon"></div>
-
-            <div>
-              <h2>FINEX</h2>
-              <p class="tagline">Panel Empresarial</p>
-            </div>
-          </div>
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="bars"><span></span><span></span><span></span></div>
+          <div><strong>Finex</strong><small>Empresa</small></div>
         </div>
-
-        <nav class="sidebar-menu">
-          <ul>
-            <li>
-              <a href="#" class="menu-item active" data-section="resumen">
-                <span class="icon">🏠</span>
-                <span>Inicio</span>
-              </a>
-            </li>
-
-            <li>
-              <a href="#" class="menu-item" data-section="ingresos">
-                <span class="icon">💰</span>
-                <span>Ingresos</span>
-              </a>
-            </li>
-
-            <li>
-              <a href="#" class="menu-item" data-section="gastos">
-                <span class="icon">📉</span>
-                <span>Gastos</span>
-              </a>
-            </li>
-
-            <li>
-              <a href="#" class="menu-item" data-section="inventario">
-                <span class="icon">📦</span>
-                <span>Inventario</span>
-              </a>
-            </li>
-
-            <li>
-              <a href="#" class="menu-item" data-section="reportes">
-                <span class="icon">📊</span>
-                <span>Reportes</span>
-              </a>
-            </li>
-
-            <li>
-              <a href="#" class="menu-item" data-section="configuracion">
-                <span class="icon">⚙️</span>
-                <span>Configuración</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        <div class="payment-alert">
-          <h4>Pago pendiente</h4>
-
-          <p>Puedes actualizar tu método de pago para evitar interrupciones.</p>
-
-          <button class="btn-retry">Reintentar pago</button>
-        </div>
-
-        <div class="sidebar-footer">
-          <button id="btnLogout" class="btn btn-logout">Cerrar Sesión</button>
-        </div>
-      </aside>
-
-      <!-- MAIN -->
-      <main class="main-content">
-        <!-- HEADER -->
-        <header class="top-header">
-          <div class="search-container">
-            <input type="text" placeholder="Buscar..." />
-          </div>
-
-          <div class="header-right">
-            <button class="header-icon">＋</button>
-
-            <div class="user-menu">
-              <button id="userMenuBtn" class="user-btn">
-                <div class="avatar">{{ session.get('user_name', 'U')[0] }}</div>
-
-                <span id="userName">
-                  {{ session.get('user_name', 'Empresa') }}
-                </span>
-              </button>
-
-              <div id="userDropdown" class="user-dropdown">
-                <a href="#" onclick="openSection('configuracion', event)">
-                  Mi Perfil
-                </a>
-
-                <a href="#" onclick="changePassword(event)">
-                  Cambiar Contraseña
-                </a>
-
-                <hr />
-
-                <a href="#" onclick="logout(event)"> Cerrar Sesión </a>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <!-- CONTENT -->
-        <div class="content-area">
-          <!-- RESUMEN -->
-          <section id="resumen" class="content-section active">
-            <div class="section-title">
-              <div>
-                <h2>Resumen del negocio</h2>
-                <p>Vista general de la empresa</p>
-              </div>
-
-              <div class="actions">
-                <button class="btn btn-light">Mes actual</button>
-
-                <button class="btn btn-primary">Agregar gráfica</button>
-              </div>
-            </div>
-
-            <!-- TOP CARDS -->
-            <div class="top-grid">
-              <div class="large-card">
-                <h3>Cuentas por cobrar</h3>
-
-                <div class="big-amount">$0,00</div>
-
-                <div class="mini-grid">
-                  <div class="mini-card success">
-                    <span>Vigentes</span>
-                    <strong>$0,00</strong>
-                    <small>0 documentos</small>
-                  </div>
-
-                  <div class="mini-card danger">
-                    <span>Vencidas</span>
-                    <strong>$0,00</strong>
-                    <small>0 documentos</small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="large-card">
-                <h3>Cuentas por pagar</h3>
-
-                <div class="big-amount">$44.811.680,00</div>
-
-                <div class="danger-line"></div>
-
-                <div class="mini-grid">
-                  <div class="mini-card success">
-                    <span>Vigentes</span>
-                    <strong>$0,00</strong>
-                    <small>0 documentos</small>
-                  </div>
-
-                  <div class="mini-card danger">
-                    <span>Vencidas</span>
-                    <strong>$44.811.680,00</strong>
-                    <small>5 documentos</small>
-                  </div>
-                </div>
-              </div>
-
-              <div class="side-cards">
-                <div class="small-card">
-                  <h4>Impuestos en venta</h4>
-                  <strong>$0,00</strong>
-                </div>
-
-                <div class="small-card">
-                  <h4>Productos vendidos</h4>
-                  <strong>0</strong>
-                </div>
-
-                <div class="small-card">
-                  <h4>Clientes con ventas</h4>
-                  <strong>0</strong>
-                </div>
-
-                <div class="small-card">
-                  <h4>Devoluciones</h4>
-                  <strong>$0,00</strong>
-                </div>
-              </div>
-            </div>
-
-            <!-- CHART -->
-            <div class="chart-card">
-              <div class="chart-header">
-                <div>
-                  <h3>Total de ventas</h3>
-
-                  <p>La gráfica muestra las ventas realizadas este mes.</p>
-                </div>
-
-                <div class="chart-result">
-                  <strong>$0,00</strong>
-                  <span>↓ 100%</span>
-                </div>
-              </div>
-
-              <div class="fake-chart">
-                <div class="chart-line"></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- INGRESOS -->
-          <section id="ingresos" class="content-section">
-            <div class="section-title">
-              <h2>Ingresos</h2>
-
-              <button class="btn btn-primary">+ Nuevo ingreso</button>
-            </div>
-
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Concepto</th>
-                    <th>Monto</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr>
-                    <td colspan="4" class="empty-state">
-                      No hay ingresos registrados
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- GASTOS -->
-          <section id="gastos" class="content-section">
-            <div class="section-title">
-              <h2>Gastos</h2>
-
-              <button class="btn btn-primary">+ Nuevo gasto</button>
-            </div>
-
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Proveedor</th>
-                    <th>Concepto</th>
-                    <th>Monto</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr>
-                    <td colspan="4" class="empty-state">
-                      No hay gastos registrados
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- INVENTARIO -->
-          <section id="inventario" class="content-section">
-            <div class="section-title">
-              <h2>Inventario</h2>
-
-              <button class="btn btn-primary">+ Nuevo producto</button>
-            </div>
-
-            <div class="section-info">
-              📦 Aquí podrás administrar productos y stock.
-            </div>
-          </section>
-
-          <!-- REPORTES -->
-          <section id="reportes" class="content-section">
-            <div class="section-title">
-              <h2>Reportes</h2>
-
-              <button class="btn btn-primary">+ Generar reporte</button>
-            </div>
-
-            <div class="section-info">
-              📊 Consulta balances, estadísticas y reportes empresariales.
-            </div>
-          </section>
-
-          <!-- CONFIG -->
-          <section id="configuracion" class="content-section">
-            <div class="section-title">
-              <h2>Configuración</h2>
-            </div>
-
-            <div class="config-card">
-              <form id="formProfile">
-                <div class="form-group">
-                  <label>Empresa</label>
-
-                  <input
-                    type="text"
-                    id="profileCompany"
-                    placeholder="Nombre de la empresa"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label>Email</label>
-
-                  <input
-                    type="email"
-                    id="profileEmail"
-                    placeholder="Correo empresarial"
-                  />
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                  Guardar Cambios
-                </button>
-              </form>
-            </div>
-          </section>
-        </div>
-      </main>
-    </div>
-
-    <!-- MODAL -->
-    <div id="messageModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-
-        <div id="modalMessage"></div>
-
-        <button onclick="closeModal()" class="btn btn-primary">Aceptar</button>
       </div>
-    </div>
 
-    <script src="{{ url_for('static', filename='js/dashboardE.js') }}"></script>
+      <nav class="sidebar-menu">
+        <button class="nav-item active" data-section="dashboard">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M3 10.5L12 3L21 10.5V20A1 1 0 0 1 20 21H4A1 1 0 0 1 3 20V10.5Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+              <path d="M9 21V12H15V21" stroke="currentColor" stroke-width="2" />
+            </svg>
+          </div>
+          <span>Inicio</span>
+        </button>
+
+        <button class="nav-item" data-section="ventas">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 3H15L20 8V21H6V3Z"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path d="M15 3V8H20" stroke="currentColor" stroke-width="2" />
+              <path
+                d="M9 13H17M9 17H14"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <span>Facturación venta</span>
+        </button>
+
+        <button class="nav-item" data-section="compras">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 3L4 7V17L12 21L20 17V7L12 3Z"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M4 7L12 12L20 7"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <span>Facturas compra</span>
+        </button>
+
+        <button class="nav-item" data-section="clientes">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle
+                cx="9"
+                cy="8"
+                r="4"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M3 20C3 16.6 5.6 14 9 14C12.4 14 15 16.6 15 20"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M17 11C18.7 11 20 9.7 20 8C20 6.3 18.7 5 17 5"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <span>Clientes</span>
+        </button>
+
+        <button class="nav-item" data-section="proveedores">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M3 21H21" stroke="currentColor" stroke-width="2" />
+              <path
+                d="M5 21V7L12 3L19 7V21"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M9 10H10M14 10H15M9 14H10M14 14H15"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <span>Proveedores</span>
+        </button>
+
+        <button class="nav-item" data-section="items">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M21 16V8L12 3L3 8V16L12 21L21 16Z"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M3 8L12 13L21 8"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <span>Ítems/Servicios</span>
+        </button>
+
+        <button class="nav-item" data-section="pagos">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect
+                x="3"
+                y="6"
+                width="18"
+                height="12"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path d="M3 10H21" stroke="currentColor" stroke-width="2" />
+            </svg>
+          </div>
+          <span>Pagos</span>
+        </button>
+
+        <button class="nav-item" data-section="movimientos">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 16L10 10L14 14L20 8"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path d="M15 8H20V13" stroke="currentColor" stroke-width="2" />
+            </svg>
+          </div>
+          <span>Movimientos</span>
+        </button>
+
+        <button class="nav-item" data-section="cuenta">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M19.4 15A1.65 1.65 0 0 0 19.7 16.8L19.8 16.9A2 2 0 1 1 17 19.7L16.9 19.6A1.65 1.65 0 0 0 15 19.3A1.65 1.65 0 0 0 14 20.9V21A2 2 0 1 1 10 21V20.9A1.65 1.65 0 0 0 9 19.3A1.65 1.65 0 0 0 7.1 19.6L7 19.7A2 2 0 1 1 4.2 16.9L4.3 16.8A1.65 1.65 0 0 0 4.6 15A1.65 1.65 0 0 0 3 14H3A2 2 0 1 1 3 10H3A1.65 1.65 0 0 0 4.6 9A1.65 1.65 0 0 0 4.3 7.2L4.2 7.1A2 2 0 1 1 7 4.3L7.1 4.4A1.65 1.65 0 0 0 9 4.7A1.65 1.65 0 0 0 10 3.1V3A2 2 0 1 1 14 3V3.1A1.65 1.65 0 0 0 15 4.7A1.65 1.65 0 0 0 16.9 4.4L17 4.3A2 2 0 1 1 19.8 7.1L19.7 7.2A1.65 1.65 0 0 0 19.4 9A1.65 1.65 0 0 0 21 10H21A2 2 0 1 1 21 14H21A1.65 1.65 0 0 0 19.4 15Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+            </svg>
+          </div>
+          <span>Configuración</span>
+        </button>
+        <div class="active">
+          <button id="btnLogout" class="logout-btn" data-section="logout">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9 21H5C4.44772 21 4 20.5523 4 20V4C4 3.44772 4.44772 3 5 3H9"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <path
+                d="M16 17L21 12L16 7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <path
+                d="M21 12H9"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="hamburger" id="toggle-sidebar">☰</button>
+        <div class="mode">MODO EMPRESA</div>
+        <div class="user">
+          <span class="bell">🔔</span><span class="avatar">AD</span>
+          <div>
+            <strong>Administrador</strong><small>admin@miempresa.com</small>
+          </div>
+        </div>
+      </header>
+
+      <section id="dashboard" class="page active-page">
+        <div class="page-title">
+          <div>
+            <h1>¡Bienvenido, Administrador!</h1>
+            <p>Este es el resumen general de tu empresa.</p>
+          </div>
+          <input type="month" id="periodo-dashboard" />
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span class="icon green">$</span>
+            <div>
+              <small>Ingresos del mes</small>
+              <h2 id="card-ingresos">$ 0</h2>
+              <p id="var-ingresos">0% vs mes anterior</p>
+            </div>
+          </article>
+          <article class="stat-card">
+            <span class="icon red">↓</span>
+            <div>
+              <small>Gastos del mes</small>
+              <h2 id="card-gastos">$ 0</h2>
+              <p id="var-gastos">0% vs mes anterior</p>
+            </div>
+          </article>
+          <article class="stat-card">
+            <span class="icon blue">▣</span>
+            <div>
+              <small>Utilidad del mes</small>
+              <h2 id="card-utilidad">$ 0</h2>
+              <p id="var-utilidad">0% vs mes anterior</p>
+            </div>
+          </article>
+          <article class="stat-card">
+            <span class="icon purple">▤</span>
+            <div>
+              <small>Impuestos por pagar</small>
+              <h2 id="card-impuestos">$ 0</h2>
+              <p id="var-impuestos">0% vs mes anterior</p>
+            </div>
+          </article>
+        </div>
+        <div class="dashboard-grid">
+          <article class="panel wide">
+            <div class="panel-head">
+              <h3>Flujo de caja</h3>
+              <span class="legend"
+                ><i class="green-dot"></i> Ingresos
+                <i class="red-dot"></i> Gastos
+                <i class="blue-dot"></i> Utilidad</span
+              >
+            </div>
+            <canvas id="cashflow-chart" height="260"></canvas>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><h3>Gastos por categoría</h3></div>
+            <canvas id="donut-chart" height="240"></canvas>
+            <div id="donut-legend" class="donut-legend"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-head"><h3>Próximas obligaciones</h3></div>
+            <div id="obligaciones-list" class="obligaciones"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="clientes" class="page">
+        <div class="page-title">
+          <h1>Clientes</h1>
+          <p>Agrega, edita y elimina clientes.</p>
+        </div>
+        <div class="two-col">
+          <form id="form-clientes" class="card-form">
+            <input type="hidden" name="id" /><label
+              >Nombre<input name="nombre" required /></label
+            ><label>Documento<input name="documento" /></label
+            ><label>Email<input name="email" type="email" /></label
+            ><label>Teléfono<input name="telefono" /></label
+            ><label>Dirección<input name="direccion" /></label
+            ><button>Guardar cliente</button
+            ><button type="button" class="secondary" data-reset="form-clientes">
+              Limpiar
+            </button>
+          </form>
+          <div class="panel"><table id="tabla-clientes"></table></div>
+        </div>
+      </section>
+
+      <section id="proveedores" class="page">
+        <div class="page-title">
+          <h1>Proveedores</h1>
+          <p>Gestiona proveedores para facturas de compra.</p>
+        </div>
+        <div class="two-col">
+          <form id="form-proveedores" class="card-form">
+            <input type="hidden" name="id" /><label
+              >Nombre<input name="nombre" required /></label
+            ><label>Documento/NIT<input name="documento" /></label
+            ><label>Email<input name="email" type="email" /></label
+            ><label>Teléfono<input name="telefono" /></label
+            ><label>Dirección<input name="direccion" /></label
+            ><button>Guardar proveedor</button
+            ><button
+              type="button"
+              class="secondary"
+              data-reset="form-proveedores"
+            >
+              Limpiar
+            </button>
+          </form>
+          <div class="panel"><table id="tabla-proveedores"></table></div>
+        </div>
+      </section>
+
+      <section id="items" class="page">
+        <div class="page-title">
+          <h1>Ítems de venta o servicios</h1>
+          <p>Productos y servicios para facturación.</p>
+        </div>
+        <div class="two-col">
+          <form id="form-items" class="card-form">
+            <input type="hidden" name="id" /><label
+              >Código<input name="codigo" /></label
+            ><label>Nombre<input name="nombre" required /></label
+            ><label
+              >Tipo<select name="tipo">
+                <option value="servicio">Servicio</option>
+                <option value="producto">Producto</option>
+              </select></label
+            ><label
+              >Precio<input
+                name="precio_unitario"
+                type="number"
+                step="0.01"
+                required /></label
+            ><label
+              >Impuesto %<input
+                name="impuesto_porcentaje"
+                type="number"
+                step="0.01"
+                value="19" /></label
+            ><label>Descripción<textarea name="descripcion"></textarea></label
+            ><button>Guardar ítem</button
+            ><button type="button" class="secondary" data-reset="form-items">
+              Limpiar
+            </button>
+          </form>
+          <div class="panel"><table id="tabla-items"></table></div>
+        </div>
+      </section>
+
+      <section id="ventas" class="page">
+        <div class="page-title">
+          <h1>Facturación de venta</h1>
+          <p>Crea facturas, consulta ventas y exporta a PDF.</p>
+        </div>
+        <div class="two-col">
+          <form id="form-ventas" class="card-form">
+            <label
+              >Cliente<select
+                name="cliente_id"
+                id="venta-cliente"
+                required
+              ></select></label
+            ><label
+              >Fecha emisión<input
+                name="fecha_emision"
+                type="date"
+                required /></label
+            ><label
+              >Fecha vencimiento<input
+                name="fecha_vencimiento"
+                type="date" /></label
+            ><label
+              >Ítem<select
+                name="item_id"
+                id="venta-item"
+                required
+              ></select></label
+            ><label
+              >Cantidad<input
+                name="cantidad"
+                type="number"
+                step="0.01"
+                value="1" /></label
+            ><label
+              >Observaciones<textarea name="observaciones"></textarea></label
+            ><button>Crear factura de venta</button>
+          </form>
+          <div class="panel"><table id="tabla-ventas"></table></div>
+        </div>
+      </section>
+
+      <section id="compras" class="page">
+        <div class="page-title">
+          <h1>Facturas de compra</h1>
+          <p>Ingresa facturas recibidas de proveedores.</p>
+        </div>
+        <div class="two-col">
+          <form id="form-compras" class="card-form">
+            <label
+              >Proveedor<select
+                name="proveedor_id"
+                id="compra-proveedor"
+                required
+              ></select></label
+            ><label>No. proveedor<input name="numero_proveedor" /></label
+            ><label
+              >Fecha emisión<input
+                name="fecha_emision"
+                type="date"
+                required /></label
+            ><label
+              >Fecha vencimiento<input
+                name="fecha_vencimiento"
+                type="date" /></label
+            ><label>Descripción<input name="descripcion" required /></label
+            ><label
+              >Cantidad<input
+                name="cantidad"
+                type="number"
+                step="0.01"
+                value="1" /></label
+            ><label
+              >Valor unitario<input
+                name="valor_unitario"
+                type="number"
+                step="0.01"
+                required /></label
+            ><label
+              >Impuesto %<input
+                name="impuesto_porcentaje"
+                type="number"
+                step="0.01"
+                value="19" /></label
+            ><label>Categoría<input name="categoria" value="Compras" /></label
+            ><button>Crear factura de compra</button>
+          </form>
+          <div class="panel"><table id="tabla-compras"></table></div>
+        </div>
+      </section>
+
+      <section id="pagos" class="page">
+        <div class="page-title">
+          <h1>Pagos</h1>
+          <p>Registra cobros de ventas y pagos a proveedores.</p>
+        </div>
+        <div class="two-col">
+          <form id="form-pagos" class="card-form">
+            <label
+              >Tipo factura<select name="tipo_factura">
+                <option value="venta">Venta / cobro recibido</option>
+                <option value="compra">Compra / pago realizado</option>
+              </select></label
+            ><label
+              >ID factura<input
+                name="factura_id"
+                type="number"
+                required /></label
+            ><label
+              >Fecha pago<input name="fecha_pago" type="date" required /></label
+            ><label
+              >Monto<input
+                name="monto"
+                type="number"
+                step="0.01"
+                required /></label
+            ><label
+              >Método<select name="metodo">
+                <option value="transferencia">Transferencia</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="cheque">Cheque</option>
+                <option value="otro">Otro</option>
+              </select></label
+            ><label>Referencia<input name="referencia" /></label
+            ><button>Registrar pago</button>
+          </form>
+          <div class="panel"><table id="tabla-pagos"></table></div>
+        </div>
+      </section>
+
+      <section id="movimientos" class="page">
+        <div class="page-title">
+          <h1>Movimientos contables</h1>
+          <p>Consulta y registra movimientos manuales.</p>
+        </div>
+        <div class="two-col">
+          <form id="form-movimientos" class="card-form">
+            <label
+              >Tipo<select name="tipo">
+                <option value="ingreso">Ingreso</option>
+                <option value="gasto">Gasto</option>
+                <option value="impuesto">Impuesto</option>
+                <option value="ajuste">Ajuste</option>
+              </select></label
+            ><label>Fecha<input name="fecha" type="date" required /></label
+            ><label>Descripción<input name="descripcion" required /></label
+            ><label
+              >Débito<input
+                name="debito"
+                type="number"
+                step="0.01"
+                value="0" /></label
+            ><label
+              >Crédito<input
+                name="credito"
+                type="number"
+                step="0.01"
+                value="0" /></label
+            ><label>Categoría<input name="categoria" /></label
+            ><button>Crear movimiento</button>
+          </form>
+          <div class="panel"><table id="tabla-movimientos"></table></div>
+        </div>
+      </section>
+
+      <section id="cuenta" class="page">
+        <div class="page-title">
+          <h1>Cuenta de empresa</h1>
+          <p>Edita los datos de tu empresa.</p>
+        </div>
+        <form id="form-cuenta" class="panel form-grid">
+          <label>Nombre empresa<input name="nombre_empresa" required /></label
+          ><label>NIT<input name="nit" required /></label
+          ><label
+            >Tipo empresa<select name="tipo_empresa">
+              <option>SAS</option>
+              <option>LTDA</option>
+              <option>SA</option>
+              <option>OTRA</option>
+            </select></label
+          ><label>Representante legal<input name="representante_legal" /></label
+          ><label
+            >Documento representante<input
+              name="documento_representante" /></label
+          ><label>Teléfono<input name="telefono" /></label
+          ><label>Dirección<input name="direccion" /></label
+          ><label>Ciudad<input name="ciudad" /></label
+          ><label>Departamento<input name="departamento" /></label
+          ><label
+            >Email contacto<input name="email_contacto" type="email" /></label
+          ><label>Régimen<input name="regimen" /></label
+          ><label>Actividad económica<input name="actividad_economica" /></label
+          ><button>Actualizar cuenta</button>
+        </form>
+      </section>
+    </main>
+
+    <div id="toast" class="toast"></div>
+    <script src="/static/js/dashboardE.js"></script>
   </body>
 </html>

@@ -1,313 +1,465 @@
-// ===============================
-// DASHBOARD EMPRESA - dashboard_empresa.js
-// ===============================
+const API = "";
+const empresaId = 1;
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => document.querySelectorAll(selector);
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadCompanyInfo();
-  setupMenuNavigation();
-  setupUserMenu();
-  setupProfileForm();
-  setupPasswordForm();
-  setupLogout();
-  setupModal();
-  setupSessionTimeout();
-  loadDashboardStats();
-});
-
-// ===============================
-// CARGAR INFORMACIÓN EMPRESA
-// ===============================
-
-async function loadCompanyInfo() {
-  try {
-    const response = await fetch("/api/usuario-info");
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = "/";
-        return;
-      }
-
-      throw new Error("No se pudo cargar la información");
-    }
-
-    const data = await response.json();
-
-    // Header
-    const userName = document.getElementById("userName");
-    if (userName) {
-      userName.textContent = data.nombre || "Empresa";
-    }
-
-    // Empresa
-    const companyName = document.getElementById("companyName");
-    if (companyName) {
-      companyName.textContent = data.empresa || "Mi Empresa";
-    }
-
-    // Perfil
-    const profileName = document.getElementById("profileName");
-    if (profileName) {
-      profileName.value = data.nombre || "";
-    }
-
-    const profileCompany = document.getElementById("profileCompany");
-    if (profileCompany) {
-      profileCompany.value = data.empresa || "";
-    }
-
-    const profileEmail = document.getElementById("profileEmail");
-    if (profileEmail) {
-      profileEmail.value = data.email || "";
-    }
-  } catch (error) {
-    console.error(error);
-    showModal("Error al cargar la información de la empresa", "error");
-  }
+function today() {
+  return new Date().toISOString().slice(0, 10);
 }
-
-// ===============================
-// ESTADÍSTICAS DASHBOARD
-// ===============================
-
-async function loadDashboardStats() {
-  try {
-    const response = await fetch("/api/dashboard-empresa");
-
-    if (!response.ok) {
-      return;
-    }
-
-    const data = await response.json();
-
-    setText("ventasTotal", formatCurrency(data.ventas || 0));
-    setText("gastosTotal", formatCurrency(data.gastos || 0));
-    setText("clientesTotal", data.clientes || 0);
-    setText("productosTotal", data.productos || 0);
-    setText("facturasPendientes", data.facturas_pendientes || 0);
-    setText("balanceTotal", formatCurrency(data.balance || 0));
-  } catch (error) {
-    console.error("Error cargando estadísticas:", error);
-  }
-}
-
-function setText(id, value) {
-  const el = document.getElementById(id);
-
-  if (el) {
-    el.textContent = value;
-  }
-}
-
-function formatCurrency(value) {
+function money(v) {
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
-  }).format(value);
+    maximumFractionDigits: 0,
+  }).format(Number(v || 0));
+}
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2600);
+}
+async function request(path, options = {}) {
+  const res = await fetch(API + path, {
+    headers: { "Content-Type": "application/json", "X-Empresa-Id": empresaId },
+    ...options,
+  });
+  if (path.includes("/pdf")) return res;
+  const data = await res.json();
+  if (!res.ok || data.ok === false)
+    throw new Error(data.error || "Error de servidor");
+  return data;
+}
+function formData(form) {
+  const data = Object.fromEntries(new FormData(form).entries());
+  Object.keys(data).forEach((k) => {
+    if (data[k] === "") data[k] = null;
+  });
+  return data;
+}
+function fillForm(form, data) {
+  Object.entries(data).forEach(([k, v]) => {
+    if (form.elements[k]) form.elements[k].value = v ?? "";
+  });
+}
+function clearForm(id) {
+  const f = document.getElementById(id);
+  f.reset();
+  if (f.elements.id) f.elements.id.value = "";
 }
 
-// ===============================
-// NAVEGACIÓN SIDEBAR
-// ===============================
-
-function setupMenuNavigation() {
-  const menuItems = document.querySelectorAll(".menu-item");
-
-  menuItems.forEach((item) => {
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
-
-      menuItems.forEach((i) => {
-        i.classList.remove("active");
-      });
-
-      item.classList.add("active");
-
-      const section = item.dataset.section;
-
-      openSection(section);
-
-      closeDropdown();
+function drawLineChart(canvas, rows) {
+  const ctx = canvas.getContext("2d"),
+    w = (canvas.width = canvas.clientWidth),
+    h = (canvas.height = 260);
+  ctx.clearRect(0, 0, w, h);
+  const pad = 34;
+  const max = Math.max(
+    1,
+    ...rows.flatMap((r) => [r.ingresos, r.gastos, Math.abs(r.utilidad)]),
+  );
+  ctx.strokeStyle = "#e5e7eb";
+  ctx.lineWidth = 1;
+  ctx.font = "11px Arial";
+  ctx.fillStyle = "#64748b";
+  for (let i = 0; i < 5; i++) {
+    const y = pad + ((h - pad * 2) * i) / 4;
+    ctx.beginPath();
+    ctx.moveTo(pad, y);
+    ctx.lineTo(w - pad, y);
+    ctx.stroke();
+    ctx.fillText(money((max * (4 - i)) / 4).replace(",00", ""), 4, y + 4);
+  }
+  function plot(key, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    rows.forEach((r, i) => {
+      const x = pad + (w - pad * 2) * (i / Math.max(1, rows.length - 1));
+      const y = h - pad - (h - pad * 2) * (Number(r[key]) / max);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     });
+    ctx.stroke();
+  }
+  plot("ingresos", "#16c784");
+  plot("gastos", "#ff4d67");
+  plot("utilidad", "#2563eb");
+  ctx.fillStyle = "#64748b";
+  if (rows[0]) ctx.fillText(rows[0].fecha.slice(5), pad, h - 10);
+  if (rows.at(-1))
+    ctx.fillText(rows.at(-1).fecha.slice(5), w - pad - 30, h - 10);
+}
+function drawDonut(canvas, rows) {
+  const ctx = canvas.getContext("2d"),
+    w = (canvas.width = canvas.clientWidth),
+    h = (canvas.height = 240),
+    cx = w / 2,
+    cy = h / 2,
+    r = 82;
+  ctx.clearRect(0, 0, w, h);
+  const colors = [
+    "#2563eb",
+    "#16c784",
+    "#7057d3",
+    "#f97316",
+    "#94a3b8",
+    "#ef4444",
+  ];
+  const total = rows.reduce((s, r) => s + Number(r.total), 0) || 1;
+  let start = -Math.PI / 2;
+  rows.forEach((row, i) => {
+    const angle = (Number(row.total) / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    start += angle;
   });
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.arc(cx, cy, 45, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#172033";
+  ctx.font = "bold 14px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Total", cx, cy - 4);
+  ctx.font = "bold 13px Arial";
+  ctx.fillText(money(total), cx, cy + 16);
+  ctx.textAlign = "left";
+  $("#donut-legend").innerHTML =
+    rows
+      .map(
+        (r, i) =>
+          `<div><span><b style="color:${colors[i % colors.length]}">●</b> ${r.categoria}</span><strong>${money(r.total)}</strong></div>`,
+      )
+      .join("") || "<p>No hay gastos registrados.</p>";
 }
 
-function openSection(sectionId) {
-  const sections = document.querySelectorAll(".content-section");
+async function loadDashboard() {
+  const period = $("#periodo-dashboard").value;
+  let qs = "";
+  if (period) {
+    const [y, m] = period.split("-").map(Number);
+    const last = new Date(y, m, 0).getDate();
+    qs = `?desde=${period}-01&hasta=${period}-${String(last).padStart(2, "0")}`;
+  }
+  const data = await request("/api/dashboard/resumen" + qs);
+  const c = data.cards;
+  $("#card-ingresos").textContent = money(c.ingresos.valor);
+  $("#var-ingresos").textContent = `${c.ingresos.variacion}% vs mes anterior`;
+  $("#card-gastos").textContent = money(c.gastos.valor);
+  $("#var-gastos").textContent = `${c.gastos.variacion}% vs mes anterior`;
+  $("#card-utilidad").textContent = money(c.utilidad.valor);
+  $("#var-utilidad").textContent = `${c.utilidad.variacion}% vs mes anterior`;
+  $("#card-impuestos").textContent = money(c.impuestos.valor);
+  $("#var-impuestos").textContent = `${c.impuestos.variacion}% vs mes anterior`;
+  drawLineChart($("#cashflow-chart"), data.flujo);
+  drawDonut($("#donut-chart"), data.gastos_por_categoria);
+  $("#obligaciones-list").innerHTML =
+    data.obligaciones
+      .map(
+        (o) =>
+          `<div class="obligacion"><div><strong>${o.nombre}</strong><small>${o.periodo}<br>${money(o.valor_estimado)}</small></div><div class="date-badge">${new Date(o.fecha_vencimiento + "T00:00:00").getDate()}<br><small>${new Date(o.fecha_vencimiento + "T00:00:00").toLocaleString("es-CO", { month: "short" }).toUpperCase()}</small></div></div>`,
+      )
+      .join("") || "<p>No hay obligaciones pendientes.</p>";
+}
 
-  sections.forEach((section) => {
-    section.classList.remove("active");
-  });
+async function loadCuenta() {
+  const data = await request("/api/cuenta");
+  fillForm($("#form-cuenta"), data.empresa);
+  $("#side-company").textContent = data.empresa.nombre_empresa;
+  $("#side-nit").textContent = "Nit. " + data.empresa.nit;
+}
 
-  const selectedSection = document.getElementById(sectionId);
+function table(headers, rows) {
+  return `<thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody>`;
+}
+async function loadClientes() {
+  const d = await request("/api/clientes");
+  $("#tabla-clientes").innerHTML = table(
+    ["Nombre", "Documento", "Email", "Acciones"],
+    d.clientes.map(
+      (r) =>
+        `<tr><td><strong>${r.nombre}</strong><small>${r.telefono || ""}</small></td><td>${r.documento || ""}</td><td>${r.email || ""}</td><td class="action-row"><button onclick='editCliente(${JSON.stringify(r)})'>Editar</button><button class="danger" onclick="del('/api/clientes/${r.id}', loadClientes)">Eliminar</button></td></tr>`,
+    ),
+  );
+  fillSelect("#venta-cliente", d.clientes, "nombre");
+}
+function editCliente(r) {
+  fillForm($("#form-clientes"), r);
+}
+async function loadProveedores() {
+  const d = await request("/api/proveedores");
+  $("#tabla-proveedores").innerHTML = table(
+    ["Nombre", "Documento", "Email", "Acciones"],
+    d.proveedores.map(
+      (r) =>
+        `<tr><td><strong>${r.nombre}</strong><small>${r.telefono || ""}</small></td><td>${r.documento || ""}</td><td>${r.email || ""}</td><td class="action-row"><button onclick='editProveedor(${JSON.stringify(r)})'>Editar</button><button class="danger" onclick="del('/api/proveedores/${r.id}', loadProveedores)">Eliminar</button></td></tr>`,
+    ),
+  );
+  fillSelect("#compra-proveedor", d.proveedores, "nombre");
+}
+function editProveedor(r) {
+  fillForm($("#form-proveedores"), r);
+}
+async function loadItems() {
+  const d = await request("/api/items");
+  $("#tabla-items").innerHTML = table(
+    ["Código", "Nombre", "Tipo", "Precio", "Acciones"],
+    d.items.map(
+      (r) =>
+        `<tr><td>${r.codigo || ""}</td><td><strong>${r.nombre}</strong><small>${r.descripcion || ""}</small></td><td><span class="badge">${r.tipo}</span></td><td>${money(r.precio_unitario)}</td><td class="action-row"><button onclick='editItem(${JSON.stringify(r)})'>Editar</button><button class="danger" onclick="del('/api/items/${r.id}', loadItems)">Desactivar</button></td></tr>`,
+    ),
+  );
+  fillSelect(
+    "#venta-item",
+    d.items.filter((i) => i.activo == 1),
+    "nombre",
+  );
+}
+function editItem(r) {
+  fillForm($("#form-items"), r);
+}
+function fillSelect(selector, rows, label) {
+  const el = $(selector);
+  if (!el) return;
+  el.innerHTML =
+    '<option value="">Seleccione...</option>' +
+    rows.map((r) => `<option value="${r.id}">${r[label]}</option>`).join("");
+}
 
-  if (selectedSection) {
-    selectedSection.classList.add("active");
-
-    const title = selectedSection.querySelector(".section-title h2");
-
-    if (title) {
-      const headerTitle = document.querySelector(".header-title");
-
-      if (headerTitle) {
-        headerTitle.textContent = title.textContent;
-      }
-    }
+async function loadVentas() {
+  const d = await request("/api/ventas");
+  $("#tabla-ventas").innerHTML = table(
+    ["ID", "Número", "Cliente", "Total", "Saldo", "Estado", "PDF"],
+    d.ventas.map(
+      (r) =>
+        `<tr><td>${r.id}</td><td><strong>${r.numero}</strong><small>${r.fecha_emision}</small></td><td>${r.cliente_nombre || ""}</td><td>${money(r.total)}</td><td>${money(r.saldo)}</td><td><span class="badge">${r.estado}</span></td><td><button onclick="location.href='/api/ventas/${r.id}/pdf?empresa_id=${empresaId}'">PDF</button></td></tr>`,
+    ),
+  );
+}
+async function loadCompras() {
+  const d = await request("/api/compras");
+  $("#tabla-compras").innerHTML = table(
+    ["ID", "Número", "Proveedor", "Total", "Saldo", "Estado"],
+    d.compras.map(
+      (r) =>
+        `<tr><td>${r.id}</td><td><strong>${r.numero}</strong><small>${r.fecha_emision}</small></td><td>${r.proveedor_nombre || ""}</td><td>${money(r.total)}</td><td>${money(r.saldo)}</td><td><span class="badge">${r.estado}</span></td></tr>`,
+    ),
+  );
+}
+async function loadPagos() {
+  const d = await request("/api/pagos");
+  $("#tabla-pagos").innerHTML = table(
+    ["Fecha", "Tipo", "Factura", "Monto", "Método", "Acciones"],
+    d.pagos.map(
+      (r) =>
+        `<tr><td>${r.fecha_pago}</td><td>${r.tipo_factura}</td><td>${r.factura_venta_numero || r.factura_compra_numero || ""}</td><td>${money(r.monto)}</td><td>${r.metodo}</td><td><button class="danger" onclick="del('/api/pagos/${r.id}', loadAll)">Eliminar</button></td></tr>`,
+    ),
+  );
+}
+async function loadMovimientos() {
+  const d = await request("/api/movimientos");
+  $("#tabla-movimientos").innerHTML = table(
+    ["Fecha", "Tipo", "Descripción", "Débito", "Crédito", "Categoría"],
+    d.movimientos.map(
+      (r) =>
+        `<tr><td>${r.fecha}</td><td><span class="badge">${r.tipo}</span></td><td>${r.descripcion}</td><td>${money(r.debito)}</td><td>${money(r.credito)}</td><td>${r.categoria || ""}</td></tr>`,
+    ),
+  );
+}
+async function del(path, cb) {
+  if (!confirm("¿Confirmas la eliminación?")) return;
+  try {
+    await request(path, { method: "DELETE" });
+    toast("Eliminado correctamente");
+    await cb();
+    await loadDashboard();
+  } catch (e) {
+    toast(e.message);
   }
 }
 
-// ===============================
-// USER MENU
-// ===============================
-
-function setupUserMenu() {
-  const btn = document.getElementById("userMenuBtn");
-  const dropdown = document.getElementById("userDropdown");
-
-  if (!btn || !dropdown) return;
-
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    dropdown.classList.toggle("show");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".user-menu")) {
-      dropdown.classList.remove("show");
-    }
-  });
+async function submitCrud(formId, base, reload) {
+  const form = $("#" + formId);
+  const data = formData(form);
+  const id = data.id;
+  delete data.id;
+  const path = id ? `${base}/${id}` : base;
+  const method = id ? "PUT" : "POST";
+  await request(path, { method, body: JSON.stringify(data) });
+  clearForm(formId);
+  toast("Guardado correctamente");
+  await reload();
+  await loadDashboard();
 }
 
-function closeDropdown() {
-  const dropdown = document.getElementById("userDropdown");
-
-  if (dropdown) {
-    dropdown.classList.remove("show");
-  }
+async function loadAll() {
+  await Promise.all([
+    loadCuenta(),
+    loadClientes(),
+    loadProveedores(),
+    loadItems(),
+    loadVentas(),
+    loadCompras(),
+    loadPagos(),
+    loadMovimientos(),
+    loadDashboard(),
+  ]);
 }
 
-// ===============================
-// PERFIL EMPRESA
-// ===============================
-
-function setupProfileForm() {
-  const form = document.getElementById("formProfile");
-
-  if (!form) return;
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const nombre = document.getElementById("profileName").value.trim();
-    const empresa = document.getElementById("profileCompany").value.trim();
-
-    if (!nombre || !empresa) {
-      showModal("Completa todos los campos", "error");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/actualizar-perfil", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nombre,
-          empresa,
-        }),
+function initForms() {
+  ["form-clientes", "form-proveedores", "form-items", "form-cuenta"].forEach(
+    (id) => {
+      const f = $("#" + id);
+      if (!f) return;
+      f.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        try {
+          if (id === "form-clientes")
+            await submitCrud(id, "/api/clientes", loadClientes);
+          if (id === "form-proveedores")
+            await submitCrud(id, "/api/proveedores", loadProveedores);
+          if (id === "form-items")
+            await submitCrud(id, "/api/items", loadItems);
+          if (id === "form-cuenta") {
+            await request("/api/cuenta", {
+              method: "PUT",
+              body: JSON.stringify(formData(f)),
+            });
+            toast("Cuenta actualizada");
+            await loadCuenta();
+          }
+        } catch (err) {
+          toast(err.message);
+        }
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        showModal(data.error || "Error actualizando perfil", "error");
-        return;
-      }
-
-      showModal(data.message || "Perfil actualizado", "success");
-
-      setText("userName", nombre);
-      setText("companyName", empresa);
-    } catch (error) {
-      console.error(error);
-      showModal("Error de conexión", "error");
-    }
-  });
-}
-
-// ===============================
-// CONTRASEÑA
-// ===============================
-
-function setupPasswordForm() {
-  const form = document.getElementById("formPassword");
-
-  if (!form) return;
-
-  form.addEventListener("submit", async (e) => {
+    },
+  );
+  $("#form-ventas").addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const actual = document.getElementById("currentPassword").value;
-    const nueva = document.getElementById("newPassword").value;
-    const confirmar = document.getElementById("confirmPassword").value;
-
-    if (!actual || !nueva || !confirmar) {
-      showModal("Completa todos los campos", "error");
-      return;
-    }
-
-    if (nueva.length < 6) {
-      showModal("La contraseña debe tener mínimo 6 caracteres", "error");
-      return;
-    }
-
-    if (nueva !== confirmar) {
-      showModal("Las contraseñas no coinciden", "error");
-      return;
-    }
-
+    const d = formData(e.target);
     try {
-      const response = await fetch("/api/cambiar-contraseña", {
+      await request("/api/ventas", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
-          contraseña_actual: actual,
-          contraseña_nueva: nueva,
+          cliente_id: d.cliente_id,
+          fecha_emision: d.fecha_emision,
+          fecha_vencimiento: d.fecha_vencimiento,
+          observaciones: d.observaciones,
+          items: [{ item_id: d.item_id, cantidad: d.cantidad }],
         }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        showModal(data.error || "Error cambiando contraseña", "error");
-        return;
-      }
-
-      showModal(data.message || "Contraseña actualizada", "success");
-
-      form.reset();
-    } catch (error) {
-      console.error(error);
-      showModal("Error de conexión", "error");
+      e.target.reset();
+      setDefaultDates();
+      toast("Factura creada");
+      await loadVentas();
+      await loadDashboard();
+    } catch (err) {
+      toast(err.message);
     }
   });
+  $("#form-compras").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const d = formData(e.target);
+    try {
+      await request("/api/compras", {
+        method: "POST",
+        body: JSON.stringify({
+          proveedor_id: d.proveedor_id,
+          numero_proveedor: d.numero_proveedor,
+          fecha_emision: d.fecha_emision,
+          fecha_vencimiento: d.fecha_vencimiento,
+          items: [
+            {
+              descripcion: d.descripcion,
+              cantidad: d.cantidad,
+              valor_unitario: d.valor_unitario,
+              impuesto_porcentaje: d.impuesto_porcentaje,
+              categoria: d.categoria,
+            },
+          ],
+        }),
+      });
+      e.target.reset();
+      setDefaultDates();
+      toast("Compra registrada");
+      await loadCompras();
+      await loadDashboard();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+  $("#form-pagos").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await request("/api/pagos", {
+        method: "POST",
+        body: JSON.stringify(formData(e.target)),
+      });
+      e.target.reset();
+      setDefaultDates();
+      toast("Pago registrado");
+      await loadAll();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+  $("#form-movimientos").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const d = formData(e.target);
+    d.origen = "manual";
+    d.origen_id = null;
+    try {
+      await request("/api/movimientos", {
+        method: "POST",
+        body: JSON.stringify(d),
+      });
+      e.target.reset();
+      setDefaultDates();
+      toast("Movimiento creado");
+      await loadMovimientos();
+      await loadDashboard();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+  $$("[data-reset]").forEach((b) =>
+    b.addEventListener("click", () => clearForm(b.dataset.reset)),
+  );
+}
+function setDefaultDates() {
+  $$('input[type="date"]').forEach((i) => {
+    if (!i.value) i.value = today();
+  });
+  const now = new Date();
+  $("#periodo-dashboard").value =
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+function initNavigation() {
+  $$("nav button").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      $$("nav button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      $$(".page").forEach((p) => p.classList.remove("active-page"));
+      $("#" + btn.dataset.section).classList.add("active-page");
+      if (innerWidth < 1100) $(".sidebar").classList.remove("open");
+    }),
+  );
+  $("#toggle-sidebar").addEventListener("click", () =>
+    $(".sidebar").classList.toggle("open"),
+  );
+  $("#periodo-dashboard").addEventListener("change", loadDashboard);
 }
 
-// ===============================
-// LOGOUT
-// ===============================
-
-function setupLogout() {
-  const logoutBtn = document.getElementById("btnLogout");
-
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", logout);
-  }
-}
+document.addEventListener("DOMContentLoaded", async () => {
+  setDefaultDates();
+  initNavigation();
+  initForms();
+  await loadAll();
+});
 
 async function logout(e) {
   if (e) {
@@ -321,111 +473,34 @@ async function logout(e) {
 
     const data = await response.json();
 
-    window.location.href = data.redirect || "/";
+    if (response.ok) {
+      window.location.href = data.redirect;
+    }
   } catch (error) {
-    console.error(error);
+    console.error("Error:", error);
     window.location.href = "/";
   }
 }
 
-// ===============================
-// MODAL
-// ===============================
-
-function setupModal() {
-  const closeBtn = document.querySelector(".close");
-
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closeModal);
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutBtn = document.getElementById("btnLogout");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
   }
+});
 
-  const modal = document.getElementById("messageModal");
+const items = document.querySelectorAll(".nav-item");
 
-  if (modal) {
-    window.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        closeModal();
-      }
+items.forEach((item) => {
+  item.addEventListener("click", () => {
+    items.forEach((btn) => {
+      btn.classList.remove("active");
     });
-  }
-}
 
-function showModal(message, type = "info") {
-  const modal = document.getElementById("messageModal");
-  const modalMessage = document.getElementById("modalMessage");
+    item.classList.add("active");
 
-  if (!modal || !modalMessage) return;
+    const section = item.dataset.section;
 
-  modalMessage.innerHTML = message;
-
-  modalMessage.style.color = "#1f2937";
-
-  if (type === "success") {
-    modalMessage.style.color = "#10b981";
-  }
-
-  if (type === "error") {
-    modalMessage.style.color = "#ef4444";
-  }
-
-  modal.classList.add("show");
-}
-
-function closeModal() {
-  const modal = document.getElementById("messageModal");
-
-  if (modal) {
-    modal.classList.remove("show");
-  }
-}
-
-// ===============================
-// SESSION TIMEOUT
-// ===============================
-
-let sessionTimeout;
-
-function resetSessionTimeout() {
-  clearTimeout(sessionTimeout);
-
-  sessionTimeout = setTimeout(
-    () => {
-      logout();
-    },
-    30 * 60 * 1000,
-  );
-}
-
-function setupSessionTimeout() {
-  document.addEventListener("mousemove", resetSessionTimeout);
-  document.addEventListener("keypress", resetSessionTimeout);
-  document.addEventListener("click", resetSessionTimeout);
-
-  resetSessionTimeout();
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      resetSessionTimeout();
-    }
+    console.log("Sección:", section);
   });
-}
-
-// ===============================
-// FUNCIONES EXTRA EMPRESA
-// ===============================
-
-function createInvoice() {
-  showModal("Módulo de facturación próximamente", "info");
-}
-
-function createProduct() {
-  showModal("Módulo de inventario próximamente", "info");
-}
-
-function createClient() {
-  showModal("Módulo de clientes próximamente", "info");
-}
-
-function generateReport() {
-  showModal("Generando reporte empresarial...", "success");
-}
+});
