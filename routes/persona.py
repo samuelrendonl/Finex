@@ -1,7 +1,15 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, session, redirect, url_for
 from controller.persona_controller import *
 
 persona_bp = Blueprint("persona", __name__)
+
+@persona_bp.before_request
+def require_persona_session():
+    if "usuario_id" not in session:
+        return redirect(url_for("main.login"))
+    if session.get("usuario_tipo") == "empresa":
+        return redirect(url_for("finex.index"))
+
 
 @persona_bp.route("/")
 def dashboard():

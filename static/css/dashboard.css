@@ -876,3 +876,5 @@ canvas {
 
   color: white;
 }
+
+.logout-button,.sidebar-logout{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:0;border-radius:12px;background:#0b438c;color:#fff;font-weight:800;padding:10px 14px;cursor:pointer}.logout-button:hover,.sidebar-logout:hover{filter:brightness(.96)}.sidebar-logout{margin-top:8px;font-size:12px;padding:8px 10px;background:rgba(255,255,255,.15)}.topbar p{margin:4px 0 0;color:#6b7890}

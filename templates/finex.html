@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FINEX Empresa</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo_finex.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <img class="brand-logo" src="{{ url_for('static', filename='logo_finex.png') }}" alt="FINEX">
+      <div><strong>FINEX</strong><small>Empresa</small></div>
+    </div>
+    <nav>
+      <a class="{{ 'active' if active == 'inicio' else '' }}" href="{{ url_for('finex.index') }}">Inicio</a>
+      <a class="{{ 'active' if active == 'venta' else '' }}" href="{{ url_for('finex.facturacion_venta') }}">Facturacion venta</a>
+      <a class="{{ 'active' if active == 'compra' else '' }}" href="{{ url_for('finex.facturas_compra') }}">Facturas compra</a>
+      <a class="{{ 'active' if active == 'clientes' else '' }}" href="{{ url_for('finex.clientes') }}">Clientes</a>
+      <a class="{{ 'active' if active == 'proveedores' else '' }}" href="{{ url_for('finex.proveedores') }}">Proveedores</a>
+      <a class="{{ 'active' if active == 'items' else '' }}" href="{{ url_for('finex.items') }}">Items/Servicios</a>
+      <a class="{{ 'active' if active == 'movimientos' else '' }}" href="{{ url_for('finex.movimientos') }}">Movimientos</a>
+      <a class="{{ 'active' if active == 'configuracion' else '' }}" href="{{ url_for('finex.configuracion') }}">Configuracion</a>
+    </nav>
+    <div class="company-card">
+      <strong>{{ empresa.nombre_empresa or 'FINEX' }}</strong>
+      <small>Nit. {{ empresa.nit or 'Sin configurar' }}</small>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar compact-topbar">
+      <div></div>
+      <div class="user user-with-logout">
+        <span class="avatar">{{ usuario_actual.iniciales }}</span>
+        <div><strong>{{ usuario_actual.nombre }}</strong><small>{{ usuario_actual.email }}</small></div>
+        <a class="btn small secondary logout-link" href="{{ url_for('auth.logout') }}">Cerrar sesion</a>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-wrap">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if page == 'index' %}
+
+<section class="page-title">
+  <div>
+    <h1>Inicio</h1>
+    <p>Resumen general de la empresa.</p>
+  </div>
+</section>
+
+<div class="stats-grid">
+  <article class="stat-card">
+    <small>Ventas</small>
+    <strong>{{ stats.ventas.total|cop }}</strong>
+    <span>{{ stats.ventas.cantidad }} facturas</span>
+  </article>
+  <article class="stat-card">
+    <small>Compras</small>
+    <strong>{{ stats.compras.total|cop }}</strong>
+    <span>{{ stats.compras.cantidad }} facturas</span>
+  </article>
+  <article class="stat-card">
+    <small>Movimientos</small>
+    <strong>{{ stats.movimientos.cantidad }}</strong>
+    <span>generados automaticamente</span>
+  </article>
+</div>
+
+<section class="dashboard-grid">
+  <article class="card chart-card">
+    <div class="section-head">
+      <div>
+        <h2>Grafica mensual</h2>
+        <p class="subtext">Comparacion mensual entre ventas y compras registradas.</p>
+      </div>
+      <div class="legend"><span class="dot ventas"></span>Ventas <span class="dot compras"></span>Compras</div>
+    </div>
+    <div id="monthlyChart" class="chart-box" aria-label="Grafica mensual de ventas y compras"></div>
+  </article>
+
+  <article class="card chart-card compact-chart">
+    <div class="section-head stacked">
+      <div>
+        <h2>Distribucion</h2>
+        <p class="subtext">Participacion total de ventas y compras.</p>
+      </div>
+    </div>
+    <div id="donutChart" class="donut-box" aria-label="Grafica circular de distribucion"></div>
+    <div id="donutSummary" class="donut-summary"></div>
+  </article>
+</section>
+
+<script id="dashboard-data" type="application/json">{{ dashboard_json|safe }}</script>
+
+{% elif page == 'venta' %}
+
+{% macro quick_item_dialog(dialog_id) %}
+<dialog class="modal quick-item-modal" id="{{ dialog_id }}">
+  <div class="modal-content">
+    <button class="modal-close" type="button" data-close-dialog>×</button>
+    <h2>Agregar producto/servicio</h2>
+    <p class="subtext">Guarda el item sin salir de la factura. Al guardarlo se selecciona en la linea actual.</p>
+    <form method="post" action="{{ url_for('finex.crear_item_rapido') }}" class="stack-form" data-quick-item-form>
+      <label>Codigo<input name="codigo" required></label>
+      <label>Nombre<input name="nombre" required></label>
+      <label>Descripcion<textarea name="descripcion" rows="3"></textarea></label>
+      <label>Tipo
+        <select name="tipo"><option value="servicio">servicio</option><option value="producto">producto</option></select>
+      </label>
+      <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="0"></label>
+      <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="0"></label>
+      <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0"></label>
+      <div class="form-actions"><button class="btn" type="submit">Guardar producto/servicio</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
+    </form>
+  </div>
+</dialog>
+{% endmacro %}
+
+{% macro sale_line_row(prefix, line=None) %}
+<tr class="invoice-line" data-line-row>
+  <td class="product-cell">
+    <div class="product-search-wrap" data-product-search-wrap>
+      <input class="item-search" name="item_search[]" autocomplete="off" placeholder="Buscar producto o servicio" value="{% if line %}{{ (line.codigo ~ ' - ' if line.codigo else '') ~ (line.item_nombre or line.descripcion) }}{% endif %}">
+      <div class="product-results" data-product-results hidden></div>
+    </div>
+    <input type="hidden" name="item_id[]" value="{{ line.item_id if line else '' }}" data-item-id>
+  </td>
+  <td><input name="precio_unitario[]" data-format-int data-price value="{{ line.precio_unitario|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input name="impuesto_porcentaje[]" data-format-int data-tax value="{{ line.impuesto_porcentaje|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input class="qty-input" name="cantidad[]" data-format-int data-quantity value="{{ line.cantidad|num if line else '1' }}" inputmode="numeric"></td>
+  <td><input name="descripcion[]" data-description value="{{ line.descripcion if line else '' }}"></td>
+  <td><input name="nota[]" data-note placeholder="Nota editable" value="{{ line.nota if line and line.nota else '' }}"></td>
+  <td class="line-total" data-line-total>{{ line.total|cop if line else '$ 0' }}</td>
+  <td><button class="icon-btn danger-text" type="button" data-remove-line title="Eliminar linea">x</button></td>
+</tr>
+{% endmacro %}
+
+{% macro sale_form(form_id, invoice=None, modal=False) %}
+<form method="post" class="invoice-form sale-invoice-form" data-invoice-form data-form-id="{{ form_id }}">
+  <input type="hidden" name="invoice_id" value="{{ invoice.id if invoice else '' }}">
+
+  <div class="form-grid">
+    <label>Cliente
+      <select name="cliente_id" required data-client-select data-target-email="#{{ form_id }}-email" data-target-phone="#{{ form_id }}-phone" data-target-address="#{{ form_id }}-address">
+        <option value="">Seleccione...</option>
+        {% for c in clientes %}
+        <option value="{{ c.id }}" data-email="{{ c.email or '' }}" data-telefono="{{ c.telefono or '' }}" data-direccion="{{ c.direccion or '' }}" {% if invoice and c.id == invoice.cliente_id %}selected{% endif %}>{{ c.nombre }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Correo electronico
+      <input id="{{ form_id }}-email" readonly value="{{ invoice.cliente_email if invoice else '' }}">
+    </label>
+    <label>Telefono
+      <input id="{{ form_id }}-phone" readonly value="{{ invoice.cliente_telefono if invoice else '' }}">
+    </label>
+    <label class="span-3">Direccion
+      <input id="{{ form_id }}-address" readonly value="{{ invoice.cliente_direccion if invoice else '' }}">
+    </label>
+    <label>Fecha emision
+      <input type="datetime-local" name="fecha_emision" required value="{{ invoice.fecha_emision|html_dt if invoice else now_local }}">
+    </label>
+    <label>Fecha vencimiento
+      <input type="date" name="fecha_vencimiento" value="{{ invoice.fecha_vencimiento|html_d if invoice else today }}">
+    </label>
+    <label>Estado
+      <select name="estado">
+        {% for e in ['emitida','pagada','vencida','anulada'] %}
+        <option value="{{ e }}" {% if invoice and invoice.estado == e %}selected{% endif %}>{{ e }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <section class="invoice-lines-card">
+    <div class="section-head compact">
+      <div>
+        <h3>Items de la factura</h3>
+        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripcion se llenan automaticamente, pero puedes editarlos.</p>
+      </div>
+      <button class="btn secondary small" type="button" data-add-line>+ Agregar linea</button>
+    </div>
+    <div class="table-scroll">
+      <table class="line-table">
+        <thead>
+          <tr>
+            <th>Producto/Servicio</th>
+            <th>Precio</th>
+            <th>Impuesto</th>
+            <th>Cantidad</th>
+            <th>Descripcion</th>
+            <th>Notas</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody data-lines-body>
+          {% if invoice and invoice.lineas %}
+            {% for line in invoice.lineas %}{{ sale_line_row(form_id, line) }}{% endfor %}
+          {% else %}
+            {{ sale_line_row(form_id) }}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="invoice-total-panel">
+    <div>
+      <small>Total factura</small>
+      <strong data-invoice-total>{{ invoice.total|cop if invoice else '$ 0' }}</strong>
+      <span>Se actualiza con cada linea agregada o modificada.</span>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn" type="submit">{{ 'Guardar cambios' if invoice else 'Emitir factura oficial' }}</button>
+    {% if modal %}<button class="btn secondary" type="button" data-close-dialog>Cancelar</button>{% endif %}
+  </div>
+</form>
+{% endmacro %}<script id="sale-items-data" type="application/json">{{ items_json|safe }}</script>
+
+<section class="page-title">
+  <div><h1>Facturacion de venta</h1><p>Registra facturas de venta con lineas dinamicas.</p></div>
+</section>
+
+<section class="card sheet" id="hoja">
+  <div class="section-head">
+    <h2>Hoja de informacion del registro</h2>
+  </div>
+  {{ sale_form('sale-new') }}
+</section>
+
+<section class="card full">
+  <div class="section-head">
+    <h2>Facturas registradas</h2>
+    <span class="hint">Editar abre una ventana independiente.</span>
+  </div>
+  <div class="table-scroll horizontal-list">
+    <table>
+      <thead>
+        <tr>
+          <th>N°</th><th>ID</th><th>Cliente</th><th>Emision</th><th>Vencimiento</th><th>Total</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in facturas %}
+        <tr>
+          <td><strong>{{ f.numero }}</strong></td>
+          <td>{{ f.codigo }}</td>
+          <td>{{ f.cliente_nombre }}</td>
+          <td>{{ f.fecha_emision|dt }}</td>
+          <td>{{ f.fecha_vencimiento|d }}</td>
+          <td>{{ f.total|cop }}</td>
+          <td class="actions">
+            <button class="btn small" type="button" data-open-dialog="edit-sale-{{ f.id }}">Editar</button>
+            <button class="btn danger small" type="button" data-open-dialog="delete-sale-{{ f.id }}">Eliminar</button>
+            <a class="btn secondary small" href="{{ url_for('finex.pdf_venta', invoice_id=f.id) }}" target="_blank">PDF</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty">Aun no hay facturas de venta.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% for f in facturas %}
+<dialog class="modal" id="edit-sale-{{ f.id }}">
+  <div class="modal-content large-modal">
+    <button class="modal-close" type="button" data-close-dialog>×</button>
+    <h2>Editar factura {{ f.numero }}</h2>
+    <p class="subtext">Guarda cambios para actualizar la factura, el movimiento y el PDF.</p>
+    {{ sale_form('sale-edit-' ~ f.id, f, True) }}
+  </div>
+</dialog>
+
+<dialog class="modal" id="delete-sale-{{ f.id }}">
+  <div class="modal-content confirm-modal">
+    <h2>Eliminar factura</h2>
+    <p>Si borras la factura <strong>{{ f.numero }}</strong>, tambien se borrara su movimiento contable.</p>
+    <form method="post" action="{{ url_for('finex.eliminar_venta', invoice_id=f.id) }}" class="form-actions">
+      <button class="btn danger" type="submit">Continuar</button>
+      <button class="btn secondary" type="button" data-close-dialog>Cancelar</button>
+    </form>
+  </div>
+</dialog>
+{% endfor %}
+
+{{ quick_item_dialog('quick-item-dialog') }}
+
+{% elif page == 'compra' %}
+
+{% macro quick_item_dialog(dialog_id) %}
+<dialog class="modal quick-item-modal" id="{{ dialog_id }}">
+  <div class="modal-content">
+    <button class="modal-close" type="button" data-close-dialog>×</button>
+    <h2>Agregar producto/servicio</h2>
+    <p class="subtext">Guarda el item sin salir de la factura. Al guardarlo se selecciona en la linea actual.</p>
+    <form method="post" action="{{ url_for('finex.crear_item_rapido') }}" class="stack-form" data-quick-item-form>
+      <label>Codigo<input name="codigo" required></label>
+      <label>Nombre<input name="nombre" required></label>
+      <label>Descripcion<textarea name="descripcion" rows="3"></textarea></label>
+      <label>Tipo
+        <select name="tipo"><option value="servicio">servicio</option><option value="producto">producto</option></select>
+      </label>
+      <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="0"></label>
+      <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="0"></label>
+      <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0"></label>
+      <div class="form-actions"><button class="btn" type="submit">Guardar producto/servicio</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
+    </form>
+  </div>
+</dialog>
+{% endmacro %}
+
+{% macro purchase_line_row(prefix, line=None) %}
+<tr class="invoice-line" data-line-row>
+  <td class="product-cell">
+    <div class="product-search-wrap" data-product-search-wrap>
+      <input class="item-search" name="item_search[]" autocomplete="off" placeholder="Buscar producto o servicio" value="{% if line %}{{ (line.codigo ~ ' - ' if line.codigo else '') ~ (line.item_nombre or line.descripcion) }}{% endif %}">
+      <div class="product-results" data-product-results hidden></div>
+    </div>
+    <input type="hidden" name="item_id[]" value="{{ line.item_id if line else '' }}" data-item-id>
+  </td>
+  <td><input name="precio_unitario[]" data-format-int data-price value="{{ line.valor_unitario|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input name="impuesto_porcentaje[]" data-format-int data-tax value="{{ line.impuesto_porcentaje|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input class="qty-input" name="cantidad[]" data-format-int data-quantity value="{{ line.cantidad|num if line else '1' }}" inputmode="numeric"></td>
+  <td><input name="descripcion[]" data-description value="{{ line.descripcion if line else '' }}"></td>
+  <td><input name="nota[]" data-note placeholder="Nota editable" value="{{ line.nota if line and line.nota else '' }}"></td>
+  <td class="line-total" data-line-total>{{ line.total|cop if line else '$ 0' }}</td>
+  <td><button class="icon-btn danger-text" type="button" data-remove-line title="Eliminar linea">x</button></td>
+</tr>
+{% endmacro %}
+
+{% macro purchase_form(form_id, invoice=None, modal=False) %}
+<form method="post" class="invoice-form purchase-form" data-invoice-form data-form-id="{{ form_id }}">
+  <input type="hidden" name="invoice_id" value="{{ invoice.id if invoice else '' }}">
+  <div class="form-grid">
+    <label>Proveedor
+      <select name="proveedor_id" required data-provider-select data-target-number="#{{ form_id }}-number" data-target-email="#{{ form_id }}-email" data-target-phone="#{{ form_id }}-phone" data-target-address="#{{ form_id }}-address">
+        <option value="">Seleccione...</option>
+        {% for p in proveedores %}
+        <option value="{{ p.id }}" data-numero="{{ p.numero_proveedor or '' }}" data-email="{{ p.email or '' }}" data-telefono="{{ p.telefono or '' }}" data-direccion="{{ p.direccion or '' }}" {% if invoice and p.id == invoice.proveedor_id %}selected{% endif %}>{{ p.nombre }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>No. proveedor
+      <input id="{{ form_id }}-number" name="numero_proveedor" value="{{ invoice.numero_proveedor if invoice else '' }}">
+    </label>
+    <label>Correo electronico
+      <input id="{{ form_id }}-email" readonly value="{{ invoice.proveedor_email if invoice else '' }}">
+    </label>
+    <label>Telefono
+      <input id="{{ form_id }}-phone" readonly value="{{ invoice.proveedor_telefono if invoice else '' }}">
+    </label>
+    <label class="span-2">Direccion
+      <input id="{{ form_id }}-address" readonly value="{{ invoice.proveedor_direccion if invoice else '' }}">
+    </label>
+    <label>Fecha emision
+      <input type="datetime-local" name="fecha_emision" required value="{{ invoice.fecha_emision|html_dt if invoice else now_local }}">
+    </label>
+    <label>Fecha vencimiento
+      <input type="date" name="fecha_vencimiento" value="{{ invoice.fecha_vencimiento|html_d if invoice else today }}">
+    </label>
+    <label>Estado interno
+      <select name="estado">
+        {% for e in ['recibida','pagada','vencida','anulada'] %}
+        <option value="{{ e }}" {% if invoice and invoice.estado == e %}selected{% endif %}>{{ e }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="span-3">Descripcion general
+      <input name="descripcion" placeholder="Descripcion general de la compra" value="{{ invoice.descripcion if invoice else '' }}">
+    </label>
+  </div>
+
+  <section class="invoice-lines-card">
+    <div class="section-head compact">
+      <div>
+        <h3>Productos de la factura</h3>
+        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripcion se llenan automaticamente, pero puedes editarlos.</p>
+      </div>
+      <button class="btn secondary small" type="button" data-add-line>+ Agregar linea</button>
+    </div>
+    <div class="table-scroll">
+      <table class="line-table">
+        <thead>
+          <tr>
+            <th>Producto/Servicio</th>
+            <th>Precio</th>
+            <th>Impuesto</th>
+            <th>Cantidad</th>
+            <th>Descripcion</th>
+            <th>Notas</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody data-lines-body>
+          {% if invoice and invoice.lineas %}
+            {% for line in invoice.lineas %}{{ purchase_line_row(form_id, line) }}{% endfor %}
+          {% else %}
+            {{ purchase_line_row(form_id) }}
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="invoice-total-panel">
+    <div>
+      <small>Total a pagar</small>
+      <strong data-invoice-total>{{ invoice.total|cop if invoice else '$ 0' }}</strong>
+      <span>Se actualiza con cada producto agregado o modificado.</span>
+    </div>
+  </div>
+
+  <div class="form-grid">
+    <label class="span-3">Observaciones
+      <textarea name="observaciones" rows="3">{{ invoice.observaciones if invoice else '' }}</textarea>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn" type="submit">{{ 'Guardar cambios' if invoice else 'Registrar factura' }}</button>
+    {% if modal %}<button class="btn secondary" type="button" data-close-dialog>Cancelar</button>{% endif %}
+  </div>
+</form>
+{% endmacro %}<script id="sale-items-data" type="application/json">{{ items_json|safe }}</script>
+
+<section class="page-title">
+  <div><h1>Facturas de compra</h1><p>Registra facturas recibidas de proveedores.</p></div>
+</section>
+
+<section class="card sheet" id="hoja">
+  <div class="section-head">
+    <h2>Hoja de informacion del registro</h2>
+    <span class="hint">Datos del proveedor se completan automaticamente.</span>
+  </div>
+  {{ purchase_form('purchase-new') }}
+</section>
+
+<section class="card full">
+  <div class="section-head">
+    <h2>Facturas recibidas</h2>
+    <span class="hint">Editar abre una ventana independiente.</span>
+  </div>
+  <div class="table-scroll horizontal-list">
+    <table>
+      <thead>
+        <tr>
+          <th>N°</th><th>ID</th><th>No. proveedor</th><th>Emision</th><th>Vencimiento</th><th>Total</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in facturas %}
+        <tr>
+          <td><strong>{{ f.numero }}</strong></td>
+          <td>{{ f.codigo }}</td>
+          <td>{{ f.proveedor_nombre }}</td>
+          <td>{{ f.fecha_emision|dt }}</td>
+          <td>{{ f.fecha_vencimiento|d }}</td>
+          <td>{{ f.total|cop }}</td>
+          <td class="actions">
+            <button class="btn small" type="button" data-open-dialog="edit-purchase-{{ f.id }}">Editar</button>
+            <button class="btn danger small" type="button" data-open-dialog="delete-purchase-{{ f.id }}">Eliminar</button>
+            <a class="btn secondary small" href="{{ url_for('finex.pdf_compra', invoice_id=f.id) }}" target="_blank">PDF</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty">Aun no hay facturas de compra.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% for f in facturas %}
+<dialog class="modal" id="edit-purchase-{{ f.id }}">
+  <div class="modal-content large-modal">
+    <button class="modal-close" type="button" data-close-dialog>×</button>
+    <h2>Editar factura {{ f.numero }}</h2>
+    <p class="subtext">Guarda cambios para actualizar la factura, el movimiento y el PDF.</p>
+    {{ purchase_form('purchase-edit-' ~ f.id, f, True) }}
+  </div>
+</dialog>
+
+<dialog class="modal" id="delete-purchase-{{ f.id }}">
+  <div class="modal-content confirm-modal">
+    <h2>Eliminar factura</h2>
+    <p>Si borras la factura <strong>{{ f.numero }}</strong>, tambien se borrara su movimiento contable.</p>
+    <form method="post" action="{{ url_for('finex.eliminar_compra', invoice_id=f.id) }}" class="form-actions">
+      <button class="btn danger" type="submit">Continuar</button>
+      <button class="btn secondary" type="button" data-close-dialog>Cancelar</button>
+    </form>
+  </div>
+</dialog>
+{% endfor %}
+
+{{ quick_item_dialog('quick-item-dialog') }}
+
+{% elif page == 'clientes' %}
+
+<section class="page-title"><div><h1>Clientes</h1><p>Gestion de clientes.</p></div></section>
+
+<section class="card sheet">
+  <h2>Nuevo cliente</h2>
+  <form method="post" class="form-grid">
+    <label>Nombre<input name="nombre" required></label>
+    <label>Documento<input name="documento"></label>
+    <label>Email<input name="email" type="email"></label>
+    <label>Telefono<input name="telefono"></label>
+    <label class="span-2">Direccion<input name="direccion"></label>
+    <div class="form-actions span-3"><button class="btn" type="submit">Guardar cliente</button></div>
+  </form>
+</section>
+
+<section class="card full">
+  <h2>Listado</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Nombre</th><th>Documento</th><th>Email</th><th>Telefono</th><th>Direccion</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for c in clientes %}
+        <tr>
+          <td>{{ c.nombre }}</td><td>{{ c.documento }}</td><td>{{ c.email }}</td><td>{{ c.telefono }}</td><td>{{ c.direccion }}</td>
+          <td class="actions">
+            <button class="btn small" type="button" data-open-dialog="edit-client-{{ c.id }}">Editar</button>
+            <form method="post" action="{{ url_for('finex.eliminar_cliente', cliente_id=c.id) }}" onsubmit="return confirm('Eliminar este cliente?');"><button class="btn danger small" type="submit">Eliminar</button></form>
+          </td>
+        </tr>
+        {% else %}<tr><td colspan="6" class="empty">Sin clientes.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% for c in clientes %}
+<dialog class="modal" id="edit-client-{{ c.id }}">
+  <div class="modal-content">
+    <button class="modal-close" type="button" data-close-dialog>×</button>
+    <h2>Editar cliente</h2>
+    <form method="post" class="stack-form">
+      <input type="hidden" name="cliente_id" value="{{ c.id }}">
+      <label>Nombre<input name="nombre" required value="{{ c.nombre }}"></label>
+      <label>Documento<input name="documento" value="{{ c.documento or '' }}"></label>
+      <label>Email<input name="email" type="email" value="{{ c.email or '' }}"></label>
+      <label>Telefono<input name="telefono" value="{{ c.telefono or '' }}"></label>
+      <label>Direccion<input name="direccion" value="{{ c.direccion or '' }}"></label>
+      <div class="form-actions"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
+    </form>
+  </div>
+</dialog>
+{% endfor %}
+
+{% elif page == 'proveedores' %}
+
+<section class="page-title"><div><h1>Proveedores</h1><p>Gestion de proveedores.</p></div></section>
+
+<section class="card sheet">
+  <h2>Nuevo proveedor</h2>
+  <form method="post" class="form-grid">
+    <label>Nombre<input name="nombre" required></label>
+    <label>No. proveedor<input name="numero_proveedor"></label>
+    <label>Email<input name="email" type="email"></label>
+    <label>Telefono<input name="telefono"></label>
+    <label class="span-2">Direccion<input name="direccion"></label>
+    <div class="form-actions span-3"><button class="btn" type="submit">Guardar proveedor</button></div>
+  </form>
+</section>
+
+<section class="card full">
+  <h2>Listado</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Nombre</th><th>No. proveedor</th><th>Email</th><th>Telefono</th><th>Direccion</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for p in proveedores %}
+        <tr>
+          <td>{{ p.nombre }}</td><td>{{ p.numero_proveedor }}</td><td>{{ p.email }}</td><td>{{ p.telefono }}</td><td>{{ p.direccion }}</td>
+          <td class="actions">
+            <button class="btn small" type="button" data-open-dialog="edit-provider-{{ p.id }}">Editar</button>
+            <form method="post" action="{{ url_for('finex.eliminar_proveedor', proveedor_id=p.id) }}" onsubmit="return confirm('Eliminar este proveedor?');"><button class="btn danger small" type="submit">Eliminar</button></form>
+          </td>
+        </tr>
+        {% else %}<tr><td colspan="6" class="empty">Sin proveedores.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% for p in proveedores %}
+<dialog class="modal" id="edit-provider-{{ p.id }}">
+  <div class="modal-content">
+    <button class="modal-close" type="button" data-close-dialog>×</button>
+    <h2>Editar proveedor</h2>
+    <form method="post" class="stack-form">
+      <input type="hidden" name="proveedor_id" value="{{ p.id }}">
+      <label>Nombre<input name="nombre" required value="{{ p.nombre }}"></label>
+      <label>No. proveedor<input name="numero_proveedor" value="{{ p.numero_proveedor or '' }}"></label>
+      <label>Email<input name="email" type="email" value="{{ p.email or '' }}"></label>
+      <label>Telefono<input name="telefono" value="{{ p.telefono or '' }}"></label>
+      <label>Direccion<input name="direccion" value="{{ p.direccion or '' }}"></label>
+      <div class="form-actions"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
+    </form>
+  </div>
+</dialog>
+{% endfor %}
+
+{% elif page == 'items' %}
+
+<section class="page-title"><div><h1>Items/Servicios</h1><p>Productos y servicios para facturacion de venta.</p></div></section>
+
+<section class="card sheet">
+  <h2>Nuevo item</h2>
+  <form method="post" class="form-grid">
+    <label>Codigo<input name="codigo" required></label>
+    <label>Nombre<input name="nombre" required></label>
+    <label>Tipo<select name="tipo"><option value="servicio">servicio</option><option value="producto">producto</option></select></label>
+    <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="0"></label>
+    <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="0"></label>
+    <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0"></label>
+    <label class="span-3">Descripcion<textarea name="descripcion" rows="2"></textarea></label>
+    <div class="form-actions span-3"><button class="btn" type="submit">Guardar item</button></div>
+  </form>
+</section>
+
+<section class="card full">
+  <h2>Listado</h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Codigo</th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Cantidad</th><th>Impuesto</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <td>{{ i.codigo }}</td><td>{{ i.nombre }}</td><td>{{ i.tipo }}</td><td>{{ i.precio_unitario|cop }}</td><td>{{ i.cantidad|num }}</td><td>{{ i.impuesto_porcentaje|num }}%</td>
+          <td class="actions">
+            <button class="btn small" type="button" data-open-dialog="edit-item-{{ i.id }}">Editar</button>
+            <form method="post" action="{{ url_for('finex.eliminar_item', item_id=i.id) }}" onsubmit="return confirm('Eliminar este item?');"><button class="btn danger small" type="submit">Eliminar</button></form>
+          </td>
+        </tr>
+        {% else %}<tr><td colspan="7" class="empty">Sin items.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% for i in items %}
+<dialog class="modal" id="edit-item-{{ i.id }}">
+  <div class="modal-content">
+    <button class="modal-close" type="button" data-close-dialog>×</button>
+    <h2>Editar item</h2>
+    <form method="post" class="stack-form">
+      <input type="hidden" name="item_id" value="{{ i.id }}">
+      <label>Codigo<input name="codigo" required value="{{ i.codigo }}"></label>
+      <label>Nombre<input name="nombre" required value="{{ i.nombre }}"></label>
+      <label>Tipo<select name="tipo"><option value="servicio" {% if i.tipo == 'servicio' %}selected{% endif %}>servicio</option><option value="producto" {% if i.tipo == 'producto' %}selected{% endif %}>producto</option></select></label>
+      <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="{{ i.precio_unitario|num }}"></label>
+      <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="{{ i.cantidad|num }}"></label>
+      <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="{{ i.impuesto_porcentaje|num }}"></label>
+      <label>Descripcion<textarea name="descripcion" rows="2">{{ i.descripcion or '' }}</textarea></label>
+      <div class="form-actions"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
+    </form>
+  </div>
+</dialog>
+{% endfor %}
+
+{% elif page == 'movimientos' %}
+
+<section class="page-title">
+  <div><h1>Movimientos</h1><p>Se registran automaticamente desde facturas de venta y compra.</p></div>
+</section>
+
+<section class="card full">
+  <div class="section-head">
+    <h2>Movimientos contables</h2>
+    <span class="hint">El PDF siempre muestra la factura actualizada.</span>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>N°</th><th>Fecha</th><th>Tipo</th><th>Categoria</th><th>PDF</th><th>Total</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {% for m in movimientos %}
+        <tr class="{{ 'row-anulada' if m.estado == 'anulada' else '' }}">
+          <td><strong>{{ m.numero_movimiento }}</strong></td>
+          <td>{{ m.fecha|dt }}</td>
+          <td><span class="pill {{ m.tipo }}">{{ m.tipo }}</span></td>
+          <td>{{ m.categoria }}</td>
+          <td><a class="btn secondary small" href="{{ url_for('finex.movimiento_pdf', movimiento_id=m.id) }}" target="_blank">PDF</a></td>
+          <td>{{ m.valor|cop }}</td>
+          <td><span class="pill state state-{{ m.estado }}">{{ m.estado }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty">No hay movimientos. Crea una factura de venta o compra.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% elif page == 'configuracion' %}
+
+<section class="page-title"><div><h1>Configuracion</h1><p>Datos basicos de la empresa.</p></div></section>
+<section class="card sheet"><h2>{{ empresa.nombre_empresa or 'FINEX' }}</h2><p><strong>NIT:</strong> {{ empresa.nit or 'Sin configurar' }}</p><p>La configuracion queda igual hasta proximo aviso.</p></section>
+
+{% elif page == 'error' %}
+
+<section class="card sheet"><h1>Error del servidor</h1><p>Revisa que MySQL este activo y que la base de datos <strong>finex_db</strong> este importada.</p><pre>{{ error }}</pre></section>
+
+{% else %}
+<section class="card sheet"><h1>Pagina no encontrada</h1></section>
+{% endif %}
+  </main>
+  <div id="globalTooltip" class="chart-tooltip" hidden></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

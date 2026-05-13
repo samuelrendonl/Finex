@@ -450,7 +450,7 @@ async function cargarDashboard() {
 
     cards[3].textContent = `$${Number(data.ahorros).toLocaleString("es-CO")}`;
 
-    actualizarGraficas(data.ingresos, data.egresos);
+    actualizarGraficas(data.ingresos, data.egresos, data.monthly);
   } catch (error) {
     console.error("Error cargando dashboard:", error);
   }
@@ -463,42 +463,64 @@ async function cargarDashboard() {
 function crearGraficas() {
   financeChart = new Chart(document.getElementById("financeChart"), {
     type: "bar",
-
     data: {
-      labels: ["Ingresos", "Egresos"],
-
+      labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
       datasets: [
-        {
-          label: "Monto",
-          data: [0, 0],
-          borderRadius: 10,
-        },
+        { label: "Ingresos", data: Array(12).fill(0), borderRadius: 10 },
+        { label: "Egresos", data: Array(12).fill(0), borderRadius: 10 },
       ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: $${Number(ctx.raw || 0).toLocaleString("es-CO")}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (value) => `$${Number(value).toLocaleString("es-CO")}`,
+          },
+        },
+      },
     },
   });
 
   pieChart = new Chart(document.getElementById("pieChart"), {
     type: "doughnut",
-
     data: {
       labels: ["Ingresos", "Egresos"],
-
-      datasets: [
-        {
-          data: [0, 0],
+      datasets: [{ data: [0, 0] }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.label}: $${Number(ctx.raw || 0).toLocaleString("es-CO")}`,
+          },
         },
-      ],
+      },
     },
   });
 }
 
-function actualizarGraficas(ingresos, egresos) {
-  financeChart.data.datasets[0].data = [ingresos, egresos];
-
+function actualizarGraficas(ingresos, egresos, monthly = null) {
+  if (monthly && Array.isArray(monthly)) {
+    financeChart.data.labels = monthly.map((row) => row.mes);
+    financeChart.data.datasets[0].data = monthly.map((row) => Number(row.ingresos || 0));
+    financeChart.data.datasets[1].data = monthly.map((row) => Number(row.egresos || 0));
+  } else {
+    financeChart.data.labels = ["Ingresos", "Egresos"];
+    financeChart.data.datasets[0].data = [ingresos, 0];
+    financeChart.data.datasets[1].data = [0, egresos];
+  }
   financeChart.update();
 
   pieChart.data.datasets[0].data = [ingresos, egresos];
-
   pieChart.update();
 }
 
