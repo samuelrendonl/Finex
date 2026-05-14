@@ -1,476 +1,549 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Finex Personal</title>
-
-    <link rel="stylesheet" href="style.css" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FINEX Personal</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='logo_finex.png') }}"
     />
     <link
-      href="{{ url_for('static', filename='css/dashboard.css') }}"
       rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
     />
   </head>
+  <body data-personal-app>
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <aside class="sidebar">
+      <div class="brand">
+        <img
+          class="brand-logo"
+          src="{{ url_for('static', filename='img/logo-finex.png') }}"
+          alt="FINEX"
+        />
+        <div><strong>FINEX</strong><small>Cuenta personal</small></div>
+      </div>
+      <nav>
+        <a class="active" href="#inicio" data-personal-section="inicio"
+          >Inicio</a
+        >
+        <a href="#ingresos" data-personal-section="ingresos">Ingresos</a>
+        <a href="#egresos" data-personal-section="egresos">Egresos</a>
+        <a href="#reportes" data-personal-section="reportes">Reportes</a>
+        <a href="#configuracion" data-personal-section="configuracion"
+          >Configuración</a
+        >
+      </nav>
+    </aside>
 
-  <body>
-    <div class="overlay" id="overlay"></div>
-    <div class="container">
-      <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-
-      <aside class="sidebar">
-        <div>
-          <div class="logo">
-            <div class="logo-icon">🏠</div>
-
-            <div>
-              <h2>Finex</h2>
-
-              <span>Personal</span>
-            </div>
-          </div>
-
-          <ul class="menu">
-            <li onclick="showSection('inicio')">🏠 Inicio</li>
-
-            <li onclick="showSection('ingresos')">💰 Ingresos</li>
-
-            <li onclick="showSection('egresos')">💳 Egresos</li>
-
-            <li onclick="showSection('reportes')">📊 Reportes</li>
-
-            <li onclick="showSection('configuracion')">⚙️ Configuración</li>
-          </ul>
+    <main class="main">
+      <header class="topbar compact-topbar account-topbar">
+        <button class="menu-toggle" id="menuToggle" type="button">☰</button>
+        <div class="user account-user">
+          <span class="avatar"
+            >{{ nombre.split()[0][0].upper() if nombre else 'U' }}</span
+          >
+          <div><strong>{{ nombre }}</strong><small>{{ correo }}</small></div>
+          <button
+            type="button"
+            class="logout-icon"
+            data-open-logout
+            title="Cerrar sesión"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="logout-svg"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
         </div>
+      </header>
 
-        <div class="user-box">
-          <div class="avatar">
-            {{ nombre.split()[0][0].upper() }}{{ nombre.split()[1][0].upper() if
-            nombre.split()|length > 1 else '' }}
-          </div>
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="flash-wrap">
+        {% for category, message in messages %}
+        <div class="flash {{ 'error' if category == 'error' else 'success' }}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
 
+      <section id="inicio" class="personal-section active-section">
+        <section class="page-title">
           <div>
-            <h4>{{ nombre }}</h4>
-
-            <p>{{ correo }}</p>
-            <a class="sidebar-logout" href="{{ url_for('auth.logout') }}"
-              >Cerrar sesion</a
-            >
-          </div>
-        </div>
-      </aside>
-
-      <!-- MAIN -->
-
-      <main class="main">
-        <!-- INICIO -->
-
-        <section id="inicio" class="section">
-          <div class="topbar">
-            <div>
-              <h1>¡Hola, {{ nombre }}!</h1>
-              <p>{{ correo }}</p>
-            </div>
-            <a class="logout-button" href="{{ url_for('auth.logout') }}"
-              >Cerrar sesion</a
-            >
-          </div>
-
-          <!-- CARDS -->
-
-          <div class="cards">
-            <div class="card">
-              <span>Saldo actual</span>
-
-              <h2>$2.850.000</h2>
-
-              <small>Disponible</small>
-            </div>
-
-            <div class="card">
-              <span>Ingresos del mes</span>
-
-              <h2>$5.600.000</h2>
-
-              <small>+10%</small>
-            </div>
-
-            <div class="card">
-              <span>Gastos del mes</span>
-
-              <h2>$2.750.000</h2>
-
-              <small>-5%</small>
-            </div>
-          </div>
-
-          <!-- GRAFICAS -->
-
-          <div class="charts-grid">
-            <div class="chart-card">
-              <div class="chart-header">
-                <h3>Grafica mensual</h3>
-
-                <span>Ingresos y egresos por mes</span>
-              </div>
-
-              <canvas id="financeChart"></canvas>
-            </div>
-
-            <div class="chart-card">
-              <div class="chart-header">
-                <h3>Distribucion</h3>
-
-                <span>Participacion total</span>
-              </div>
-
-              <canvas id="pieChart"></canvas>
-            </div>
+            <h1>Inicio</h1>
+            <p>Resumen general de tu cuenta personal.</p>
           </div>
         </section>
 
-        <!-- INGRESOS -->
+        <div class="stats-grid personal-stats">
+          <article class="stat-card">
+            <small>Saldo actual</small>
+            <strong id="saldoActual">$ 0</strong>
+            <span>solo movimientos pagados</span>
+          </article>
+          <article class="stat-card">
+            <small>Ingresos del mes</small>
+            <strong id="ingresosMes">$ 0</strong>
+            <span>pagados</span>
+          </article>
+          <article class="stat-card">
+            <small>Gastos del mes</small>
+            <strong id="egresosMes">$ 0</strong>
+            <span>pagados</span>
+          </article>
+        </div>
 
-        <section id="ingresos" class="section">
-          <div class="table-card">
-            <div class="table-top">
-              <h2>Ingresos registrados</h2>
-
-              <button class="new-btn" onclick="toggleIngresoForm()">
-                + Nuevo ingreso
-              </button>
-            </div>
-
-            <div id="ingresoForm" class="hidden-form">
-              <div class="form-card">
-                <div class="grid-2">
-                  <div class="input-group">
-                    <label>Categoría</label>
-
-                    <select id="ingresoCategoria">
-                      <option value="">Seleccione categoría</option>
-                    </select>
-
-                    <input
-                      type="text"
-                      id="nuevaIngresoCategoria"
-                      placeholder="Nueva categoría"
-                      style="display: none; margin-top: 10px"
-                    />
-                  </div>
-
-                  <div class="input-group">
-                    <label>Monto</label>
-
-                    <input type="number" id="ingresoMonto" />
-                  </div>
-                </div>
-
-                <div class="input-group">
-                  <label>Descripción</label>
-
-                  <textarea id="ingresoDescripcion"></textarea>
-                </div>
-
-                <div class="grid-2">
-                  <div class="input-group">
-                    <label>Fecha</label>
-
-                    <input type="date" id="ingresoFecha" />
-                  </div>
-
-                  <div class="input-group">
-                    <label>Estado</label>
-
-                    <select id="ingresoEstado">
-                      <option>Pendiente</option>
-                      <option>En curso</option>
-                      <option>Completado</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button class="btn" onclick="guardarIngreso()">
-                  Guardar ingreso
-                </button>
+        <section class="dashboard-grid">
+          <article class="card chart-card">
+            <div class="section-head">
+              <div>
+                <h2>Gráfica mensual</h2>
+                <p class="subtext">
+                  Comparación mensual entre ingresos y egresos pagados.
+                </p>
+              </div>
+              <div class="legend">
+                <span class="dot ventas"></span>Ingresos
+                <span class="dot compras"></span>Egresos
               </div>
             </div>
+            <div
+              id="monthlyChart"
+              class="chart-box"
+              aria-label="Gráfica mensual personal"
+            ></div>
+          </article>
 
+          <article class="card chart-card compact-chart">
+            <div class="section-head stacked">
+              <div>
+                <h2>Distribución</h2>
+                <p class="subtext">
+                  Participación total de ingresos y egresos.
+                </p>
+              </div>
+            </div>
+            <div
+              id="donutChart"
+              class="donut-box"
+              aria-label="Gráfica circular personal"
+            ></div>
+            <div id="donutSummary" class="donut-summary"></div>
+          </article>
+        </section>
+      </section>
+
+      <section id="ingresos" class="personal-section">
+        <section class="page-title">
+          <div>
+            <h1>Ingresos</h1>
+            <p>Registra y administra tus ingresos personales.</p>
+          </div>
+        </section>
+        <section class="card sheet">
+          <div class="section-head">
+            <h2>Nuevo ingreso</h2>
+            <span class="hint"
+              >Todos los campos principales son editables.</span
+            >
+          </div>
+          <form class="form-grid" data-movement-form data-type="ingreso">
+            <label
+              >Categoría
+              <select name="categoria" required data-category-select="ingreso">
+                <option value="">Seleccione...</option>
+              </select>
+            </label>
+            <label class="new-category-field" hidden
+              >Nueva categoría<input
+                name="nueva_categoria"
+                placeholder="Nombre de la categoría"
+            /></label>
+            <label
+              >Monto<input
+                name="monto"
+                inputmode="numeric"
+                data-format-int
+                required
+                placeholder="0"
+            /></label>
+            <label class="span-3"
+              >Descripción<textarea
+                name="descripcion"
+                rows="2"
+                required
+              ></textarea>
+            </label>
+            <label
+              >Fecha<input type="datetime-local" name="fecha" required
+            /></label>
+            <label
+              >Estado
+              <select name="estado" required>
+                <option value="emitida">emitida</option>
+                <option value="pagada">pagada</option>
+                <option value="vencida">vencida</option>
+                <option value="anulada">anulada</option>
+              </select>
+            </label>
+            <div class="form-actions span-3">
+              <button class="btn" type="submit">Guardar ingreso</button>
+            </div>
+          </form>
+        </section>
+        <section class="card full">
+          <h2>Ingresos registrados</h2>
+          <div class="table-scroll">
             <table>
               <thead>
                 <tr>
+                  <th>N°</th>
+                  <th>Fecha</th>
                   <th>Categoría</th>
                   <th>Descripción</th>
                   <th>Monto</th>
-                  <th>Fecha</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
-
               <tbody id="tablaIngresos"></tbody>
             </table>
           </div>
         </section>
+      </section>
 
-        <!-- EGRESOS -->
-
-        <section id="egresos" class="section">
-          <div class="table-card">
-            <div class="table-top">
-              <h2>Egresos registrados</h2>
-
-              <button class="new-btn red-new-btn" onclick="toggleEgresoForm()">
-                + Nuevo egreso
-              </button>
+      <section id="egresos" class="personal-section">
+        <section class="page-title">
+          <div>
+            <h1>Egresos</h1>
+            <p>Registra y administra tus egresos personales.</p>
+          </div>
+        </section>
+        <section class="card sheet">
+          <div class="section-head">
+            <h2>Nuevo egreso</h2>
+            <span class="hint"
+              >Todos los campos principales son editables.</span
+            >
+          </div>
+          <form class="form-grid" data-movement-form data-type="egreso">
+            <label
+              >Categoría
+              <select name="categoria" required data-category-select="egreso">
+                <option value="">Seleccione...</option>
+              </select>
+            </label>
+            <label class="new-category-field" hidden
+              >Nueva categoría<input
+                name="nueva_categoria"
+                placeholder="Nombre de la categoría"
+            /></label>
+            <label
+              >Monto<input
+                name="monto"
+                inputmode="numeric"
+                data-format-int
+                required
+                placeholder="0"
+            /></label>
+            <label class="span-3"
+              >Descripción<textarea
+                name="descripcion"
+                rows="2"
+                required
+              ></textarea>
+            </label>
+            <label
+              >Fecha<input type="datetime-local" name="fecha" required
+            /></label>
+            <label
+              >Estado
+              <select name="estado" required>
+                <option value="emitida">emitida</option>
+                <option value="pagada">pagada</option>
+                <option value="vencida">vencida</option>
+                <option value="anulada">anulada</option>
+              </select>
+            </label>
+            <div class="form-actions span-3">
+              <button class="btn danger" type="submit">Guardar egreso</button>
             </div>
-
-            <div id="egresoForm" class="hidden-form">
-              <div class="form-card">
-                <div class="grid-2">
-                  <div class="input-group">
-                    <label>Categoría</label>
-
-                    <select id="egresoCategoria">
-                      <option value="">Seleccione categoría</option>
-                    </select>
-
-                    <input
-                      type="text"
-                      id="nuevaEgresoCategoria"
-                      placeholder="Nueva categoría"
-                      style="display: none; margin-top: 10px"
-                    />
-                  </div>
-
-                  <div class="input-group">
-                    <label>Monto</label>
-
-                    <input type="number" id="egresoMonto" />
-                  </div>
-                </div>
-
-                <div class="input-group">
-                  <label>Descripción</label>
-
-                  <textarea id="egresoDescripcion"></textarea>
-                </div>
-
-                <div class="grid-2">
-                  <div class="input-group">
-                    <label>Fecha</label>
-
-                    <input type="date" id="egresoFecha" />
-                  </div>
-
-                  <div class="input-group">
-                    <label>Estado</label>
-
-                    <select id="egresoEstado">
-                      <option>Pendiente</option>
-                      <option>En curso</option>
-                      <option>Completado</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button class="btn red-btn" onclick="guardarEgreso()">
-                  Guardar egreso
-                </button>
-              </div>
-            </div>
-
+          </form>
+        </section>
+        <section class="card full">
+          <h2>Egresos registrados</h2>
+          <div class="table-scroll">
             <table>
               <thead>
                 <tr>
+                  <th>N°</th>
+                  <th>Fecha</th>
                   <th>Categoría</th>
                   <th>Descripción</th>
                   <th>Monto</th>
-                  <th>Fecha</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
-
               <tbody id="tablaEgresos"></tbody>
             </table>
           </div>
         </section>
+      </section>
 
-        <!-- REPORTES -->
-
-        <section id="reportes" class="section">
-          <div class="table-card">
-            <div class="report-top">
-              <div>
-                <h2>Reporte de movimientos</h2>
-
-                <p>Exporta ingresos y egresos por fecha</p>
-              </div>
-
-              <div class="report-actions">
-                <input type="date" id="desde" />
-                <input type="date" id="hasta" />
-
-                <button onclick="filtrarMovimientos()">Filtrar</button>
-
-                <button onclick="exportarPDF()" class="btn btn-danger">
-                  Exportar PDF
-                </button>
-              </div>
+      <section id="reportes" class="personal-section">
+        <section class="page-title">
+          <div>
+            <h1>Reportes y movimientos</h1>
+            <p>Consulta, filtra y exporta tus ingresos y egresos.</p>
+          </div>
+        </section>
+        <section class="card full">
+          <div class="section-head">
+            <div>
+              <h2>Movimientos personales</h2>
+              <p class="subtext">
+                El PDF y Excel se generan con la información actualizada.
+              </p>
             </div>
-
-            <table id="tablaReporte">
+            <div class="actions report-actions">
+              <input type="date" id="desde" />
+              <input type="date" id="hasta" />
+              <button
+                class="btn secondary small"
+                type="button"
+                data-filter-report
+              >
+                Filtrar
+              </button>
+              <a
+                class="btn secondary small"
+                id="reportePdfGeneral"
+                href="/reportes/movimientos/pdf"
+                >Movimientos PDF</a
+              >
+              <a
+                class="btn secondary small"
+                id="reporteExcelGeneral"
+                href="/reportes/movimientos/excel"
+                >Movimientos Excel</a
+              >
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
               <thead>
                 <tr>
+                  <th>N°</th>
+                  <th>Fecha</th>
                   <th>Tipo</th>
                   <th>Categoría</th>
                   <th>Descripción</th>
                   <th>Monto</th>
-                  <th>Fecha</th>
                   <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
-
               <tbody id="reporteBody"></tbody>
             </table>
           </div>
         </section>
+      </section>
 
-        <!-- CONFIGURACION -->
-
-        <section id="configuracion" class="section">
-          <div class="config-card">
-            <h2>Configuración de la cuenta</h2>
-
-            <div class="profile-box">
-              <div class="avatar">
-                {{ nombre.split()[0][0].upper() }}{{
-                nombre.split()[1][0].upper() if nombre.split()|length > 1 else
-                '' }}
-              </div>
-
-              <div>
-                <h3>{{ nombre }}</h3>
-
-                <p>{{ correo }}</p>
-              </div>
-            </div>
-
-            <div class="config-grid">
-              <div class="input-group">
-                <label>Nombre completo</label>
-
-                <input type="text" value="{{ nombre }}" />
-              </div>
-
-              <div class="input-group">
-                <label>Correo electrónico</label>
-
-                <input type="email" value="{{ correo }}" />
-              </div>
-
-              <div class="input-group">
-                <label>Contraseña</label>
-
-                <input type="password" value="123456" />
-              </div>
-
-              <div class="input-group">
-                <label>Tipo de cuenta</label>
-
-                <input type="text" value="Personal" />
-              </div>
-            </div>
-
-            <button class="save-config">Guardar cambios</button>
+      <section id="configuracion" class="personal-section">
+        <section class="page-title">
+          <div>
+            <h1>Configuración</h1>
+            <p>Datos de registro de tu cuenta personal.</p>
           </div>
         </section>
-      </main>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-
-    <div id="modalEditar" class="modal-overlay">
-      <div class="modal-box">
-        <div class="modal-header">
-          <h2>Editar movimiento</h2>
-
-          <button class="cerrar-modal" onclick="cerrarModal()">✖</button>
-        </div>
-
-        <div class="input-group">
-          <label>Categoría</label>
-
-          <input type="text" id="editCategoria" />
-        </div>
-
-        <div class="input-group">
-          <label>Monto</label>
-
-          <input type="number" id="editMonto" />
-        </div>
-
-        <div class="input-group">
-          <label>Descripción</label>
-
-          <textarea id="editDescripcion"></textarea>
-        </div>
-
-        <div class="grid-2">
-          <div class="input-group">
-            <label>Fecha</label>
-
-            <input type="date" id="editFecha" />
+        <section class="card sheet">
+          <div class="section-head stacked">
+            <div>
+              <h2>Editar datos personales</h2>
+              <p class="subtext">
+                Actualiza tu información básica. La contraseña es opcional.
+              </p>
+            </div>
           </div>
+          <form
+            method="post"
+            action="{{ url_for('persona.configuracion_personal') }}"
+            class="form-grid"
+            autocomplete="off"
+          >
+            <label
+              >Nombre
+              <input
+                name="nombre"
+                required
+                value="{{ perfil.nombre if perfil else '' }}"
+              />
+            </label>
+            <label
+              >Apellido
+              <input
+                name="apellido"
+                required
+                value="{{ perfil.apellido if perfil else '' }}"
+              />
+            </label>
+            <label
+              >Correo electrónico
+              <input
+                type="email"
+                name="email"
+                required
+                value="{{ perfil.email if perfil else correo }}"
+              />
+            </label>
+            <label
+              >Documento de identidad
+              <input
+                name="documento_identidad"
+                required
+                value="{{ perfil.documento_identidad if perfil else '' }}"
+              />
+            </label>
+            <label
+              >Teléfono
+              <input
+                name="telefono"
+                required
+                inputmode="numeric"
+                pattern="[0-9]+"
+                oninput="this.value = this.value.replace(/\D/g, '')"
+                value="{{ perfil.telefono if perfil else '' }}"
+              />
+            </label>
+            <label
+              >Dirección
+              <input
+                name="direccion"
+                value="{{ perfil.direccion if perfil else '' }}"
+              />
+            </label>
+            <label
+              >Nueva contraseña
+              <input
+                type="password"
+                name="nueva_contrasena"
+                autocomplete="new-password"
+                placeholder="Solo si deseas cambiarla"
+              />
+            </label>
+            <label
+              >Confirmar contraseña
+              <input
+                type="password"
+                name="confirmar_contrasena"
+                autocomplete="new-password"
+                placeholder="Repite la nueva contraseña"
+              />
+            </label>
+            <div class="form-actions span-3">
+              <button class="btn" type="submit">Guardar configuración</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
 
-          <div class="input-group">
-            <label>Estado</label>
-
-            <select id="editEstado">
-              <option>Pendiente</option>
-              <option>En curso</option>
-              <option>Completado</option>
-            </select>
+    <dialog class="modal" id="editMovementDialog">
+      <div class="modal-content large-modal">
+        <button class="modal-close" type="button" data-close-dialog>×</button>
+        <h2>Editar movimiento</h2>
+        <form class="form-grid" id="editMovementForm">
+          <input type="hidden" name="id" />
+          <input type="hidden" name="tipo" />
+          <label>Categoría<input name="categoria" required /></label>
+          <label
+            >Monto<input
+              name="monto"
+              inputmode="numeric"
+              data-format-int
+              required
+          /></label>
+          <label
+            >Fecha<input type="datetime-local" name="fecha" required
+          /></label>
+          <label
+            >Estado<select name="estado">
+              <option value="emitida">emitida</option>
+              <option value="pagada">pagada</option>
+              <option value="vencida">vencida</option>
+              <option value="anulada">anulada</option>
+            </select></label
+          >
+          <label class="span-3"
+            >Descripción<textarea
+              name="descripcion"
+              rows="3"
+              required
+            ></textarea>
+          </label>
+          <div class="form-actions span-3">
+            <button class="btn" type="submit">Guardar cambios</button
+            ><button class="btn secondary" type="button" data-close-dialog>
+              Cancelar
+            </button>
           </div>
-        </div>
-
-        <button class="guardar-modal-btn" onclick="guardarEdicion()">
-          Guardar cambios
-        </button>
+        </form>
       </div>
-    </div>
+    </dialog>
 
-    <div id="toast"></div>
-
-    <div id="confirmModal" class="confirm-overlay">
-      <div class="confirm-box">
-        <h3 id="confirmTitle">Confirmar acción</h3>
-
-        <p id="confirmText">¿Deseas continuar?</p>
-
-        <div class="confirm-actions">
-          <button class="cancel-btn" onclick="cerrarConfirmacion()">
-            Cancelar
+    <dialog class="modal" id="deleteMovementDialog">
+      <div class="modal-content confirm-modal">
+        <h2>Eliminar movimiento</h2>
+        <p>
+          ¿Seguro que deseas eliminar este registro? Esta acción no se puede
+          deshacer.
+        </p>
+        <div class="form-actions">
+          <button class="btn secondary" type="button" data-close-dialog>
+            Cancelar</button
+          ><button class="btn danger" type="button" id="confirmDeleteMovement">
+            Eliminar
           </button>
-
-          <button class="accept-btn" id="confirmAccept">Confirmar</button>
         </div>
       </div>
-    </div>
+    </dialog>
+
+    <dialog class="modal" id="logoutDialog">
+      <div class="modal-content confirm-modal">
+        <h2>Cerrar sesión</h2>
+        <p>¿Seguro que deseas cerrar sesión?</p>
+        <div class="form-actions">
+          <button class="btn secondary" type="button" data-close-dialog>
+            Cancelar</button
+          ><a class="btn danger" href="{{ url_for('auth.logout') }}"
+            >Cerrar sesión</a
+          >
+        </div>
+      </div>
+    </dialog>
+
+    <div id="globalTooltip" class="chart-tooltip" hidden></div>
+    <script id="dashboard-data" type="application/json">
+      {{ dashboard_json|tojson }}
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/personal.js') }}"></script>
   </body>
 </html>

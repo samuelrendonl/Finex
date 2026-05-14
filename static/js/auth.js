@@ -1,383 +1,156 @@
-// ===== VARIABLE GLOBAL =====
+// Autenticacion FINEX: login, registro y validaciones visuales.
 let currentRegisterType = null;
 
-// ===== TOGGLE ENTRE LOGIN Y REGISTRO =====
 function toggleForms(e) {
   e.preventDefault();
-
-  const loginForm = document.getElementById("loginForm");
-  const registerTypeSelector = document.getElementById("registerTypeSelector");
-
-  console.log(
-    "Toggle Forms - Login visible:",
-    loginForm.classList.contains("active"),
-  );
-
-  loginForm.classList.toggle("active");
-  registerTypeSelector.classList.toggle("active");
-
-  // Limpiar formularios y mensajes
+  document.getElementById("loginForm").classList.toggle("active");
+  document.getElementById("registerTypeSelector").classList.toggle("active");
   document.getElementById("formLogin").reset();
   clearMessages();
-
-  // Resetear tipo de registro
   currentRegisterType = null;
-
-  console.log(
-    "Toggle Forms - Registro visible:",
-    registerTypeSelector.classList.contains("active"),
-  );
 }
 
-// ===== SELECTOR DE TIPO DE CUENTA =====
 function selectRegisterType(tipo) {
   currentRegisterType = tipo;
-
-  const typeSelector = document.getElementById("registerTypeSelector");
-  const personaForm = document.getElementById("registerPersonaForm");
-  const empresaForm = document.getElementById("registerEmpresaForm");
-
-  console.log("Seleccionar tipo:", tipo);
-
-  typeSelector.classList.remove("active");
-
-  if (tipo === "persona") {
-    personaForm.classList.add("active");
-    empresaForm.classList.remove("active");
-    if (document.getElementById("formRegisterPersona")) {
-      document.getElementById("formRegisterPersona").reset();
-    }
-    console.log("Mostrar formulario PERSONA");
-  } else if (tipo === "empresa") {
-    empresaForm.classList.add("active");
-    personaForm.classList.remove("active");
-    if (document.getElementById("formRegisterEmpresa")) {
-      document.getElementById("formRegisterEmpresa").reset();
-    }
-    console.log("Mostrar formulario EMPRESA");
-  }
+  document.getElementById("registerTypeSelector").classList.remove("active");
+  document.getElementById("registerPersonaForm").classList.toggle("active", tipo === "persona");
+  document.getElementById("registerEmpresaForm").classList.toggle("active", tipo === "empresa");
 }
 
-// ===== VOLVER AL SELECTOR DE TIPO =====
 function backToTypeSelector(e) {
   e.preventDefault();
-
-  const typeSelector = document.getElementById("registerTypeSelector");
-  const personaForm = document.getElementById("registerPersonaForm");
-  const empresaForm = document.getElementById("registerEmpresaForm");
-
-  typeSelector.classList.add("active");
-  personaForm.classList.remove("active");
-  empresaForm.classList.remove("active");
-
+  document.getElementById("registerTypeSelector").classList.add("active");
+  document.getElementById("registerPersonaForm").classList.remove("active");
+  document.getElementById("registerEmpresaForm").classList.remove("active");
   clearMessages();
   currentRegisterType = null;
 }
 
-// ===== MOSTRAR MENSAJE =====
 function showMessage(elementId, message, type) {
   const messageEl = document.getElementById(elementId);
+  if (!messageEl) return;
   messageEl.textContent = message;
   messageEl.className = `message show ${type}`;
-
-  // Auto-desaparecer si es éxito
-  if (type === "success") {
-    setTimeout(() => {
-      messageEl.classList.remove("show");
-    }, 3500);
-  }
 }
 
-// ===== LIMPIAR MENSAJES =====
 function clearMessages() {
-  const messages = document.querySelectorAll(".message");
-  messages.forEach((msg) => {
+  document.querySelectorAll(".message").forEach((msg) => {
     msg.classList.remove("show");
     msg.textContent = "";
   });
 }
 
-// ===== VALIDAR EMAIL =====
 function validarEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// ===== HANDLE LOGIN =====
+function onlyDigits(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function markInvalid(input, invalid = true) {
+  if (!input) return;
+  input.classList.toggle("input-invalid", invalid);
+}
+
+function validateRequired(form, messageId) {
+  let ok = true;
+  form.querySelectorAll("[required]").forEach((input) => {
+    const empty = !String(input.value || "").trim();
+    markInvalid(input, empty);
+    if (empty) ok = false;
+  });
+  if (!ok) showMessage(messageId, "Completa todos los campos obligatorios.", "error");
+  return ok;
+}
+
+function bindNumeric(input) {
+  if (!input) return;
+  input.addEventListener("input", () => {
+    const clean = onlyDigits(input.value);
+    if (input.value && input.value !== clean) alert("Solo es permitido numeros.");
+    input.value = clean;
+  });
+}
+
+["personaTelefono", "personaDocumento", "empresaTelefono", "empresaNIT"].forEach((id) => bindNumeric(document.getElementById(id)));
+
+async function postJSON(url, data) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Error en la solicitud");
+  return result;
+}
+
+// Inicio de sesion normal.
 document.getElementById("formLogin").addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const email = document.getElementById("loginEmail").value.trim();
   const contraseña = document.getElementById("loginPassword").value;
-
-  if (!email || !contraseña) {
-    showMessage("loginMessage", "Por favor completa todos los campos", "error");
-    return;
-  }
-
-  if (!validarEmail(email)) {
-    showMessage("loginMessage", "Email inválido", "error");
-    return;
-  }
-
+  if (!email || !contraseña) return showMessage("loginMessage", "Por favor completa todos los campos", "error");
+  if (!validarEmail(email)) return showMessage("loginMessage", "Email inválido", "error");
   try {
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email,
-        contraseña: contraseña,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      showMessage(
-        "loginMessage",
-        data.error || "Error al iniciar sesión",
-        "error",
-      );
-      return;
-    }
-
-    showMessage("loginMessage", data.message, "success");
-
-    // Redirigir al dashboard
-    setTimeout(() => {
-      window.location.href = data.redirect;
-    }, 1500);
+    const data = await postJSON("/api/login", { email, contraseña });
+    showMessage("loginMessage", data.message || "Inicio de sesión exitoso", "success");
+    setTimeout(() => { window.location.href = data.redirect; }, 700);
   } catch (error) {
-    showMessage("loginMessage", "Error de conexión: " + error.message, "error");
+    showMessage("loginMessage", error.message, "error");
   }
 });
 
-// ===== HANDLE REGISTRO PERSONA =====
-document
-  .getElementById("formRegisterPersona")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const nombre = document.getElementById("personaNombre").value.trim();
-    const apellido = document.getElementById("personaApellido").value.trim();
-    const documento = document.getElementById("personaDocumento").value.trim();
-    const email = document.getElementById("personaEmail").value.trim();
-    const contraseña = document.getElementById("personaPassword").value;
-    const confirmar = document.getElementById("personaPasswordConfirm").value;
-
-    // Validaciones
-    if (!nombre || !apellido || !email || !contraseña || !confirmar) {
-      showMessage(
-        "registerPersonaMessage",
-        "Por favor completa todos los campos requeridos",
-        "error",
-      );
-      return;
-    }
-
-    if (contraseña.length < 6) {
-      showMessage(
-        "registerPersonaMessage",
-        "La contraseña debe tener al menos 6 caracteres",
-        "error",
-      );
-      return;
-    }
-
-    if (contraseña !== confirmar) {
-      showMessage(
-        "registerPersonaMessage",
-        "Las contraseñas no coinciden",
-        "error",
-      );
-      return;
-    }
-
-    if (!validarEmail(email)) {
-      showMessage("registerPersonaMessage", "Email inválido", "error");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/registro", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nombre: nombre,
-          apellido: apellido,
-          documento_identidad: documento,
-          email: email,
-          contraseña: contraseña,
-          tipo_cuenta: "persona",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        showMessage(
-          "registerPersonaMessage",
-          data.error || "Error al registrarse",
-          "error",
-        );
-        return;
-      }
-
-      showMessage("registerPersonaMessage", data.message, "success");
-
-      // Redirigir al dashboard
-      setTimeout(() => {
-        window.location.href = data.redirect;
-      }, 1500);
-    } catch (error) {
-      showMessage(
-        "registerPersonaMessage",
-        "Error de conexión: " + error.message,
-        "error",
-      );
-    }
-  });
-
-// ===== HANDLE REGISTRO EMPRESA =====
-document
-  .getElementById("formRegisterEmpresa")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const razonSocial = document
-      .getElementById("empresaRazonSocial")
-      .value.trim();
-    const nit = document.getElementById("empresaNIT").value.trim();
-    const telefono = document.getElementById("empresaTelefono").value.trim();
-    const ciudad = document.getElementById("empresaCiudad").value.trim();
-    const nombreContacto = document
-      .getElementById("empresaContacto")
-      .value.trim();
-    const email = document.getElementById("empresaEmail").value.trim();
-    const contraseña = document.getElementById("empresaPassword").value;
-    const confirmar = document.getElementById("empresaPasswordConfirm").value;
-
-    // Validaciones
-    if (!razonSocial || !nit || !email || !contraseña || !confirmar) {
-      showMessage(
-        "registerEmpresaMessage",
-        "Por favor completa todos los campos requeridos",
-        "error",
-      );
-      return;
-    }
-
-    if (contraseña.length < 6) {
-      showMessage(
-        "registerEmpresaMessage",
-        "La contraseña debe tener al menos 6 caracteres",
-        "error",
-      );
-      return;
-    }
-
-    if (contraseña !== confirmar) {
-      showMessage(
-        "registerEmpresaMessage",
-        "Las contraseñas no coinciden",
-        "error",
-      );
-      return;
-    }
-
-    if (!validarEmail(email)) {
-      showMessage("registerEmpresaMessage", "Email inválido", "error");
-      return;
-    }
-
-    // Validar NIT (mínimo 8 caracteres)
-    if (nit.length < 8) {
-      showMessage(
-        "registerEmpresaMessage",
-        "NIT debe tener al menos 8 caracteres",
-        "error",
-      );
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/registro", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nombre: nombreContacto,
-          razon_social: razonSocial,
-          nit: nit,
-          telefono: telefono,
-          ciudad: ciudad,
-          email: email,
-          contraseña: contraseña,
-          tipo_cuenta: "empresa",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        showMessage(
-          "registerEmpresaMessage",
-          data.error || "Error al registrarse",
-          "error",
-        );
-        return;
-      }
-
-      showMessage("registerEmpresaMessage", data.message, "success");
-
-      // Redirigir al dashboard
-      setTimeout(() => {
-        window.location.href = data.redirect;
-      }, 1500);
-    } catch (error) {
-      showMessage(
-        "registerEmpresaMessage",
-        "Error de conexión: " + error.message,
-        "error",
-      );
-    }
-  });
-
-// ===== INICIALIZACIÓN =====
-document.addEventListener("DOMContentLoaded", () => {
-  // Enfoque automático en el primer campo
-  const loginEmail = document.getElementById("loginEmail");
-  if (loginEmail) {
-    loginEmail.focus();
+// Registro de cuenta personal.
+document.getElementById("formRegisterPersona").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  if (!validateRequired(form, "registerPersonaMessage")) return;
+  const nombre = document.getElementById("personaNombre").value.trim();
+  const apellido = document.getElementById("personaApellido").value.trim();
+  const documento = document.getElementById("personaDocumento").value.trim();
+  const telefono = document.getElementById("personaTelefono").value.trim();
+  const email = document.getElementById("personaEmail").value.trim();
+  const contraseña = document.getElementById("personaPassword").value;
+  const confirmar = document.getElementById("personaPasswordConfirm").value;
+  if (!validarEmail(email)) return showMessage("registerPersonaMessage", "Email inválido", "error");
+  if (contraseña.length < 6) return showMessage("registerPersonaMessage", "La contraseña debe tener al menos 6 caracteres", "error");
+  if (contraseña !== confirmar) return showMessage("registerPersonaMessage", "Las contraseñas no coinciden", "error");
+  try {
+    const data = await postJSON("/api/registro", { nombre, apellido, documento_identidad: documento, telefono, email, contraseña, tipo_cuenta: "persona" });
+    showMessage("registerPersonaMessage", data.message || "Registro exitoso", "success");
+    setTimeout(() => { window.location.href = data.redirect; }, 700);
+  } catch (error) {
+    showMessage("registerPersonaMessage", error.message, "error");
   }
-
-  // Guardar texto original de botones
-  document.querySelectorAll('button[type="submit"]').forEach((btn) => {
-    btn.setAttribute("data-original-text", btn.textContent);
-  });
 });
 
-// ===== PREVENIR DOBLE ENVÍO =====
-document.addEventListener("DOMContentLoaded", () => {
-  const forms = document.querySelectorAll("form");
-  forms.forEach((form) => {
-    form.addEventListener("submit", function (e) {
-      const submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Procesando...";
+// Registro de cuenta empresarial.
+document.getElementById("formRegisterEmpresa").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  if (!validateRequired(form, "registerEmpresaMessage")) return;
+  const razonSocial = document.getElementById("empresaRazonSocial").value.trim();
+  const nit = document.getElementById("empresaNIT").value.trim();
+  const telefono = document.getElementById("empresaTelefono").value.trim();
+  const ciudad = document.getElementById("empresaCiudad").value.trim();
+  const nombreContacto = document.getElementById("empresaContacto").value.trim();
+  const email = document.getElementById("empresaEmail").value.trim();
+  const contraseña = document.getElementById("empresaPassword").value;
+  const confirmar = document.getElementById("empresaPasswordConfirm").value;
+  if (!validarEmail(email)) return showMessage("registerEmpresaMessage", "Email inválido", "error");
+  if (contraseña.length < 6) return showMessage("registerEmpresaMessage", "La contraseña debe tener al menos 6 caracteres", "error");
+  if (contraseña !== confirmar) return showMessage("registerEmpresaMessage", "Las contraseñas no coinciden", "error");
+  try {
+    const data = await postJSON("/api/registro", { nombre: nombreContacto, razon_social: razonSocial, nit, telefono, ciudad, email, contraseña, tipo_cuenta: "empresa" });
+    showMessage("registerEmpresaMessage", data.message || "Registro exitoso", "success");
+    setTimeout(() => { window.location.href = data.redirect; }, 700);
+  } catch (error) {
+    showMessage("registerEmpresaMessage", error.message, "error");
+  }
+});
 
-        setTimeout(() => {
-          submitBtn.disabled = false;
-          submitBtn.textContent =
-            submitBtn.getAttribute("data-original-text") || "Enviar";
-        }, 2000);
-      }
-    });
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("loginEmail")?.focus();
 });

@@ -10,6 +10,18 @@
 
   <body>
     <div class="auth-page">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="login-flash-wrap">
+        {% for category, message in messages %}
+        <div
+          class="message show {{ 'error' if category == 'error' else 'success' }}"
+        >
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
       <div class="auth-background"></div>
 
       <div class="auth-container">
@@ -17,7 +29,11 @@
           <!-- COLUMNA IZQUIERDA - BRANDING -->
           <div class="auth-left-panel">
             <div class="brand-content">
-              <img src="/static/img/logo-finex.png" alt="FINEX" class="logo" />
+              <img
+                src="/static/img/Logo-Transparente.png"
+                alt="FINEX"
+                class="logo"
+              />
 
               <div class="badge">Acceso seguro</div>
 
@@ -31,15 +47,6 @@
           <!-- COLUMNA DERECHA - FORMULARIOS -->
           <div class="auth-right-panel">
             <div class="forms-wrapper">
-              {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                  <div class="oauth-flash-messages">
-                    {% for category, message in messages %}
-                      <div class="message show {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                  </div>
-                {% endif %}
-              {% endwith %}
               <!-- Login Form -->
               <div class="form-container active" id="loginForm">
                 <div class="form-header">
@@ -52,7 +59,7 @@
 
                 <form id="formLogin">
                   <div class="form-group">
-                    <label for="loginEmail">Correo electrónico</label>
+                    <label for="loginEmail">Correo electrónico *</label>
                     <input
                       type="email"
                       id="loginEmail"
@@ -63,9 +70,14 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="loginPassword">Contraseña</label>
+                    <label for="loginPassword">Contraseña *</label>
                     <input
-                      type="password"
+                      type="text"
+                      data-secure-password
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false"
                       id="loginPassword"
                       name="contraseña"
                       placeholder="Tu contraseña"
@@ -108,21 +120,6 @@
                     <span>Continuar con Google</span>
                   </a>
                 </div>
-                <!-- MICROSOFT -->
-                <div>
-                  <a href="/login/microsoft" class="microsoft-btn">
-                    <div class="microsoft-icon">
-                      <svg viewBox="0 0 24 24">
-                        <path fill="#F25022" d="M1 1h10v10H1z" />
-                        <path fill="#7FBA00" d="M13 1h10v10H13z" />
-                        <path fill="#00A4EF" d="M1 13h10v10H1z" />
-                        <path fill="#FFB900" d="M13 13h10v10H13z" />
-                      </svg>
-                    </div>
-
-                    <span>Continuar con Microsoft</span>
-                  </a>
-                </div>
 
                 <div class="form-footer">
                   <p>
@@ -147,10 +144,27 @@
                     class="type-option persona-btn"
                     onclick="selectRegisterType('persona')"
                   >
-                    <div class="type-icon">👤</div>
+                    <div class="type-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="user-svg"
+                      >
+                        <path d="M20 21a8 8 0 0 0-16 0"></path>
+                        <circle cx="12" cy="8" r="4"></circle>
+                      </svg>
+                    </div>
                     <div class="type-title">Cuenta Personal</div>
                     <div class="type-description">
-                      Para usuarios individuales
+                      Controla ingresos, egresos, reportes y movimientos de tu
+                      vida financiera.
                     </div>
                   </button>
 
@@ -159,17 +173,50 @@
                     class="type-option empresa-btn"
                     onclick="selectRegisterType('empresa')"
                   >
-                    <div class="type-icon">🏢</div>
+                    <div class="type-icon company-icon">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="30"
+                        height="30"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="company-svg"
+                      >
+                        <!-- edificio -->
+                        <path d="M4 21h16"></path>
+                        <path d="M7 21V7l5-3 5 3v14"></path>
+
+                        <!-- ventanas -->
+                        <path d="M9 10h.01"></path>
+                        <path d="M12 10h.01"></path>
+                        <path d="M15 10h.01"></path>
+
+                        <path d="M9 13h.01"></path>
+                        <path d="M12 13h.01"></path>
+                        <path d="M15 13h.01"></path>
+
+                        <!-- puerta -->
+                        <path d="M11 21v-4h2v4"></path>
+                      </svg>
+                    </div>
                     <div class="type-title">Cuenta Empresa</div>
                     <div class="type-description">
-                      Para negocios y emprendimientos
+                      Gestiona facturas, inventario, clientes, proveedores y
+                      movimientos contables.
                     </div>
                   </button>
                 </div>
 
                 <div class="form-footer">
                   <p>
-                    <a href="#" onclick="toggleForms(event)"
+                    <a
+                      href="#"
+                      onclick="toggleForms(event)"
+                      class="back-home-link"
                       >← Volver al inicio</a
                     >
                   </p>
@@ -186,7 +233,7 @@
                 <form id="formRegisterPersona">
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="personaNombre">Nombre</label>
+                      <label for="personaNombre">Nombre *</label>
                       <input
                         type="text"
                         id="personaNombre"
@@ -197,7 +244,7 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="personaApellido">Apellido</label>
+                      <label for="personaApellido">Apellido *</label>
                       <input
                         type="text"
                         id="personaApellido"
@@ -209,17 +256,32 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="personaDocumento">Documento de Identidad</label>
+                    <label for="personaDocumento"
+                      >Documento de Identidad *</label
+                    >
                     <input
                       type="text"
                       id="personaDocumento"
                       name="documento_identidad"
                       placeholder="1234567890"
+                      required
                     />
                   </div>
 
                   <div class="form-group">
-                    <label for="personaEmail">Correo electrónico</label>
+                    <label for="personaTelefono">Teléfono *</label>
+                    <input
+                      type="tel"
+                      id="personaTelefono"
+                      name="telefono"
+                      placeholder="3190000000"
+                      required
+                      inputmode="numeric"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="personaEmail">Correo electrónico *</label>
                     <input
                       type="email"
                       id="personaEmail"
@@ -230,9 +292,14 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="personaPassword">Contraseña</label>
+                    <label for="personaPassword">Contraseña *</label>
                     <input
-                      type="password"
+                      type="text"
+                      data-secure-password
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false"
                       id="personaPassword"
                       name="contraseña"
                       placeholder="Mínimo 6 caracteres"
@@ -242,10 +309,15 @@
 
                   <div class="form-group">
                     <label for="personaPasswordConfirm"
-                      >Confirmar Contraseña</label
+                      >Confirmar Contraseña *</label
                     >
                     <input
-                      type="password"
+                      type="text"
+                      data-secure-password
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false"
                       id="personaPasswordConfirm"
                       name="confirmar"
                       placeholder="Repite tu contraseña"
@@ -280,21 +352,6 @@
                       <span>Crear con Google</span>
                     </a>
                   </div>
-                  <!-- MICROSOFT -->
-                  <div>
-                    <a href="/login/microsoft" class="microsoft-btn">
-                      <div class="microsoft-icon">
-                        <svg viewBox="0 0 24 24">
-                          <path fill="#F25022" d="M1 1h10v10H1z" />
-                          <path fill="#7FBA00" d="M13 1h10v10H13z" />
-                          <path fill="#00A4EF" d="M1 13h10v10H1z" />
-                          <path fill="#FFB900" d="M13 13h10v10H13z" />
-                        </svg>
-                      </div>
-
-                      <span>Crear con Microsoft</span>
-                    </a>
-                  </div>
                 </form>
 
                 <div class="form-footer">
@@ -315,7 +372,9 @@
 
                 <form id="formRegisterEmpresa">
                   <div class="form-group">
-                    <label for="empresaRazonSocial">Razón Social</label>
+                    <label for="empresaRazonSocial"
+                      >Nombre de la empresa *</label
+                    >
                     <input
                       type="text"
                       id="empresaRazonSocial"
@@ -327,49 +386,54 @@
 
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="empresaNIT">NIT / RUC</label>
+                      <label for="empresaNIT">NIT / RUT *</label>
                       <input
                         type="text"
                         id="empresaNIT"
                         name="nit"
                         placeholder="123456789"
                         required
+                        inputmode="numeric"
                       />
                     </div>
 
                     <div class="form-group">
-                      <label for="empresaTelefono">Teléfono</label>
+                      <label for="empresaTelefono">Teléfono *</label>
                       <input
                         type="tel"
                         id="empresaTelefono"
                         name="telefono"
-                        placeholder="+57 1 2345678"
+                        placeholder="3190000000"
+                        required
+                        inputmode="numeric"
                       />
                     </div>
                   </div>
 
                   <div class="form-group">
-                    <label for="empresaCiudad">Ciudad</label>
+                    <label for="empresaCiudad">Ciudad *</label>
                     <input
                       type="text"
                       id="empresaCiudad"
                       name="ciudad"
                       placeholder="Bogotá, D.C."
+                      required
                     />
                   </div>
 
                   <div class="form-group">
-                    <label for="empresaContacto">Nombre del Contacto</label>
+                    <label for="empresaContacto">Nombre del Contacto *</label>
                     <input
                       type="text"
                       id="empresaContacto"
                       name="nombre_contacto"
                       placeholder="Juan Pérez"
+                      required
                     />
                   </div>
 
                   <div class="form-group">
-                    <label for="empresaEmail">Correo electrónico</label>
+                    <label for="empresaEmail">Correo electrónico *</label>
                     <input
                       type="email"
                       id="empresaEmail"
@@ -380,9 +444,14 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="empresaPassword">Contraseña</label>
+                    <label for="empresaPassword">Contraseña *</label>
                     <input
-                      type="password"
+                      type="text"
+                      data-secure-password
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false"
                       id="empresaPassword"
                       name="contraseña"
                       placeholder="Mínimo 6 caracteres"
@@ -392,10 +461,15 @@
 
                   <div class="form-group">
                     <label for="empresaPasswordConfirm"
-                      >Confirmar Contraseña</label
+                      >Confirmar Contraseña *</label
                     >
                     <input
-                      type="password"
+                      type="text"
+                      data-secure-password
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false"
                       id="empresaPasswordConfirm"
                       name="confirmar"
                       placeholder="Repite tu contraseña"

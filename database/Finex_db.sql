@@ -1,19 +1,17 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-DROP DATABASE IF EXISTS `Finex_db`;
-CREATE DATABASE IF NOT EXISTS `Finex_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `Finex_db`;
+DROP DATABASE IF EXISTS `finex_db`;
+CREATE DATABASE `finex_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `finex_db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
-
 DROP TRIGGER IF EXISTS `trg_facturas_venta_ai_movimiento`;
 DROP TRIGGER IF EXISTS `trg_facturas_venta_au_movimiento`;
 DROP TRIGGER IF EXISTS `trg_facturas_venta_ad_movimiento`;
 DROP TRIGGER IF EXISTS `trg_facturas_compra_ai_movimiento`;
 DROP TRIGGER IF EXISTS `trg_facturas_compra_au_movimiento`;
 DROP TRIGGER IF EXISTS `trg_facturas_compra_ad_movimiento`;
-
 DROP TABLE IF EXISTS `movimientos_contables`;
 DROP TABLE IF EXISTS `movimientos_persona`;
 DROP TABLE IF EXISTS `categorias`;
@@ -28,7 +26,6 @@ DROP TABLE IF EXISTS `empresas`;
 DROP TABLE IF EXISTS `personas`;
 DROP TABLE IF EXISTS `usuarios`;
 DROP TABLE IF EXISTS `extras_finex`;
-
 SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE `usuarios` (
@@ -51,38 +48,41 @@ CREATE TABLE `personas` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `usuario_id` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
-  `apellido` varchar(100) DEFAULT NULL,
-  `documento_identidad` varchar(80) DEFAULT NULL,
-  `telefono` varchar(30) DEFAULT NULL,
+  `apellido` varchar(100) NOT NULL,
+  `documento_identidad` varchar(80) NOT NULL,
+  `telefono` varchar(30) NOT NULL,
   `direccion` varchar(180) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `idx_personas_usuario` (`usuario_id`)
+  UNIQUE KEY `uq_personas_usuario` (`usuario_id`),
+  CONSTRAINT `fk_personas_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `empresas` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `usuario_id` int(11) DEFAULT NULL,
-  `nombre_contacto` varchar(100) DEFAULT NULL,
-  `razon_social` varchar(200) DEFAULT NULL,
-  `nombre_empresa` varchar(150) DEFAULT 'FINEX',
+  `usuario_id` int(11) NOT NULL,
+  `nombre_contacto` varchar(100) NOT NULL,
+  `razon_social` varchar(200) NOT NULL,
+  `nombre_empresa` varchar(150) NOT NULL,
   `nit` varchar(50) NOT NULL,
   `tipo_empresa` varchar(30) DEFAULT NULL,
   `representante_legal` varchar(150) DEFAULT NULL,
-  `telefono` varchar(30) DEFAULT NULL,
+  `telefono` varchar(30) NOT NULL,
   `direccion` varchar(255) DEFAULT NULL,
-  `ciudad` varchar(100) DEFAULT NULL,
+  `ciudad` varchar(100) NOT NULL,
   `departamento` varchar(100) DEFAULT NULL,
   `email_contacto` varchar(120) DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `idx_empresas_usuario` (`usuario_id`)
+  UNIQUE KEY `uq_empresas_usuario` (`usuario_id`),
+  KEY `idx_empresas_nit` (`nit`),
+  CONSTRAINT `fk_empresas_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `clientes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `empresa_id` int(11) NOT NULL DEFAULT 1,
+  `empresa_id` int(11) NOT NULL,
   `tipo` enum('persona','empresa') DEFAULT 'empresa',
   `nombre` varchar(150) NOT NULL,
   `documento` varchar(50) DEFAULT NULL,
@@ -95,12 +95,13 @@ CREATE TABLE `clientes` (
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_clientes_empresa` (`empresa_id`),
-  KEY `idx_clientes_documento` (`documento`)
+  KEY `idx_clientes_documento` (`documento`),
+  CONSTRAINT `fk_clientes_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `proveedores` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `empresa_id` int(11) NOT NULL DEFAULT 1,
+  `empresa_id` int(11) NOT NULL,
   `tipo` enum('persona','empresa') DEFAULT 'empresa',
   `nombre` varchar(150) NOT NULL,
   `numero_proveedor` varchar(80) DEFAULT NULL,
@@ -111,12 +112,13 @@ CREATE TABLE `proveedores` (
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_proveedores_empresa` (`empresa_id`),
-  KEY `idx_proveedores_numero` (`numero_proveedor`)
+  KEY `idx_proveedores_numero` (`numero_proveedor`),
+  CONSTRAINT `fk_proveedores_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `items_venta` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `empresa_id` int(11) NOT NULL DEFAULT 1,
+  `empresa_id` int(11) NOT NULL,
   `codigo` varchar(50) NOT NULL,
   `nombre` varchar(150) NOT NULL,
   `descripcion` text DEFAULT NULL,
@@ -129,12 +131,13 @@ CREATE TABLE `items_venta` (
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_item_codigo_empresa` (`empresa_id`,`codigo`),
-  KEY `idx_items_empresa` (`empresa_id`)
+  KEY `idx_items_empresa` (`empresa_id`),
+  CONSTRAINT `fk_items_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `facturas_venta` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `empresa_id` int(11) NOT NULL DEFAULT 1,
+  `empresa_id` int(11) NOT NULL,
   `cliente_id` int(11) NOT NULL,
   `codigo` varchar(20) NOT NULL,
   `numero` varchar(50) NOT NULL,
@@ -150,7 +153,9 @@ CREATE TABLE `facturas_venta` (
   UNIQUE KEY `uq_ventas_numero_empresa` (`empresa_id`,`numero`),
   UNIQUE KEY `uq_ventas_codigo_empresa` (`empresa_id`,`codigo`),
   KEY `idx_ventas_cliente` (`cliente_id`),
-  KEY `idx_ventas_empresa_fecha` (`empresa_id`,`fecha_emision`)
+  KEY `idx_ventas_empresa_fecha` (`empresa_id`,`fecha_emision`),
+  CONSTRAINT `fk_ventas_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_ventas_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `factura_venta_items` (
@@ -167,12 +172,14 @@ CREATE TABLE `factura_venta_items` (
   `total` decimal(14,0) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `idx_venta_items_factura` (`factura_id`),
-  KEY `idx_venta_items_item` (`item_id`)
+  KEY `idx_venta_items_item` (`item_id`),
+  CONSTRAINT `fk_venta_items_factura` FOREIGN KEY (`factura_id`) REFERENCES `facturas_venta` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_venta_items_item` FOREIGN KEY (`item_id`) REFERENCES `items_venta` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `facturas_compra` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `empresa_id` int(11) NOT NULL DEFAULT 1,
+  `empresa_id` int(11) NOT NULL,
   `proveedor_id` int(11) NOT NULL,
   `codigo` varchar(20) NOT NULL,
   `numero` varchar(50) NOT NULL,
@@ -191,7 +198,9 @@ CREATE TABLE `facturas_compra` (
   UNIQUE KEY `uq_compras_numero_empresa` (`empresa_id`,`numero`),
   UNIQUE KEY `uq_compras_codigo_empresa` (`empresa_id`,`codigo`),
   KEY `idx_compras_proveedor` (`proveedor_id`),
-  KEY `idx_compras_empresa_fecha` (`empresa_id`,`fecha_emision`)
+  KEY `idx_compras_empresa_fecha` (`empresa_id`,`fecha_emision`),
+  CONSTRAINT `fk_compras_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_compras_proveedor` FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `factura_compra_items` (
@@ -209,12 +218,44 @@ CREATE TABLE `factura_compra_items` (
   `categoria` varchar(100) DEFAULT 'Compra',
   PRIMARY KEY (`id`),
   KEY `idx_compra_items_factura` (`factura_id`),
-  KEY `idx_compra_items_item` (`item_id`)
+  KEY `idx_compra_items_item` (`item_id`),
+  CONSTRAINT `fk_compra_items_factura` FOREIGN KEY (`factura_id`) REFERENCES `facturas_compra` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_compra_items_item` FOREIGN KEY (`item_id`) REFERENCES `items_venta` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `categorias` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `tipo` enum('ingreso','egreso') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_categoria_usuario_tipo_nombre` (`usuario_id`,`tipo`,`nombre`),
+  CONSTRAINT `fk_categorias_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `movimientos_persona` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL,
+  `categoria_id` int(11) DEFAULT NULL,
+  `tipo` enum('ingreso','egreso') NOT NULL,
+  `descripcion` varchar(255) NOT NULL,
+  `valor` decimal(14,0) NOT NULL DEFAULT 0,
+  `fecha` datetime NOT NULL,
+  `estado` enum('emitida','pagada','vencida','anulada') NOT NULL DEFAULT 'emitida',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_mov_persona_usuario_fecha` (`usuario_id`,`fecha`),
+  KEY `idx_mov_persona_tipo` (`tipo`),
+  KEY `idx_mov_persona_categoria` (`categoria_id`),
+  CONSTRAINT `fk_mov_persona_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_mov_persona_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `movimientos_contables` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `empresa_id` int(11) NOT NULL DEFAULT 1,
+  `empresa_id` int(11) NOT NULL,
   `numero_movimiento` varchar(20) NOT NULL,
   `tipo` enum('ingreso','gasto') NOT NULL,
   `categoria` varchar(100) NOT NULL,
@@ -231,37 +272,8 @@ CREATE TABLE `movimientos_contables` (
   UNIQUE KEY `uq_movimiento_origen` (`origen`,`origen_id`),
   KEY `idx_mov_empresa_fecha` (`empresa_id`,`fecha`),
   KEY `idx_mov_tipo` (`tipo`),
-  KEY `idx_mov_numero` (`numero_movimiento`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-
-CREATE TABLE `categorias` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `usuario_id` int(11) NOT NULL DEFAULT 1,
-  `nombre` varchar(100) NOT NULL,
-  `tipo` enum('ingreso','egreso','gasto') NOT NULL DEFAULT 'egreso',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_categorias_usuario` (`usuario_id`),
-  KEY `idx_categorias_tipo` (`tipo`),
-  UNIQUE KEY `uq_categoria_usuario_nombre_tipo` (`usuario_id`,`nombre`,`tipo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE `movimientos_persona` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `usuario_id` int(11) NOT NULL DEFAULT 1,
-  `categoria_id` int(11) DEFAULT NULL,
-  `tipo` enum('ingreso','egreso','gasto') NOT NULL,
-  `descripcion` varchar(255) NOT NULL,
-  `valor` decimal(14,0) NOT NULL DEFAULT 0,
-  `fecha` date NOT NULL,
-  `estado` varchar(40) NOT NULL DEFAULT 'pendiente',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_mov_persona_usuario` (`usuario_id`),
-  KEY `idx_mov_persona_categoria` (`categoria_id`),
-  KEY `idx_mov_persona_fecha` (`fecha`)
+  KEY `idx_mov_numero` (`numero_movimiento`),
+  CONSTRAINT `fk_movimientos_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `extras_finex` (
@@ -273,94 +285,7 @@ CREATE TABLE `extras_finex` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
-
--- =========================================================
--- ENLACES ENTRE TABLAS / CLAVES FORANEAS
--- Se agregan sin cambiar nombres de tablas ni columnas.
--- =========================================================
-ALTER TABLE `personas`
-  ADD CONSTRAINT `fk_personas_usuario`
-  FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
-  ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE `categorias`
-  ADD CONSTRAINT `fk_categorias_usuario`
-  FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
-  ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE `movimientos_persona`
-  ADD CONSTRAINT `fk_mov_persona_usuario`
-  FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
-  ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_mov_persona_categoria`
-  FOREIGN KEY (`categoria_id`) REFERENCES `categorias` (`id`)
-  ON DELETE SET NULL ON UPDATE CASCADE;
-
-ALTER TABLE `empresas`
-  ADD CONSTRAINT `fk_empresas_usuario`
-  FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
-  ON UPDATE CASCADE ON DELETE SET NULL;
-
-ALTER TABLE `clientes`
-  ADD CONSTRAINT `fk_clientes_empresa`
-  FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE `proveedores`
-  ADD CONSTRAINT `fk_proveedores_empresa`
-  FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE `items_venta`
-  ADD CONSTRAINT `fk_items_empresa`
-  FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE `facturas_venta`
-  ADD CONSTRAINT `fk_ventas_empresa`
-  FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_ventas_cliente`
-  FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`)
-  ON UPDATE CASCADE ON DELETE RESTRICT;
-
-ALTER TABLE `factura_venta_items`
-  ADD CONSTRAINT `fk_venta_items_factura`
-  FOREIGN KEY (`factura_id`) REFERENCES `facturas_venta` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_venta_items_item`
-  FOREIGN KEY (`item_id`) REFERENCES `items_venta` (`id`)
-  ON UPDATE CASCADE ON DELETE SET NULL;
-
-ALTER TABLE `facturas_compra`
-  ADD CONSTRAINT `fk_compras_empresa`
-  FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_compras_proveedor`
-  FOREIGN KEY (`proveedor_id`) REFERENCES `proveedores` (`id`)
-  ON UPDATE CASCADE ON DELETE RESTRICT;
-
-ALTER TABLE `factura_compra_items`
-  ADD CONSTRAINT `fk_compra_items_factura`
-  FOREIGN KEY (`factura_id`) REFERENCES `facturas_compra` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_compra_items_item`
-  FOREIGN KEY (`item_id`) REFERENCES `items_venta` (`id`)
-  ON UPDATE CASCADE ON DELETE SET NULL;
-
-ALTER TABLE `movimientos_contables`
-  ADD CONSTRAINT `fk_movimientos_empresa`
-  FOREIGN KEY (`empresa_id`) REFERENCES `empresas` (`id`)
-  ON UPDATE CASCADE ON DELETE CASCADE;
-
--- NOTA TECNICA:
--- movimientos_contables.origen_id no se enlaza con una unica clave foranea
--- porque puede apuntar a facturas_venta o facturas_compra segun el campo origen.
--- Esa relacion queda controlada por origen + origen_id y por los triggers.
-
 DELIMITER $$
-
 CREATE TRIGGER `trg_facturas_venta_ai_movimiento`
 AFTER INSERT ON `facturas_venta`
 FOR EACH ROW
@@ -460,5 +385,4 @@ BEGIN
   DELETE FROM `movimientos_contables`
   WHERE `origen` = 'factura_compra' AND `origen_id` = OLD.id;
 END$$
-
 DELIMITER ;

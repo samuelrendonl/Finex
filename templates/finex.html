@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FINEX Empresa</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo_finex.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/Logo-White.jpeg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <img class="brand-logo" src="{{ url_for('static', filename='logo_finex.png') }}" alt="FINEX">
+      <img class="brand-logo" src="{{ url_for('static', filename='img/Logo-White.jpeg') }}" alt="FINEX">
       <div><strong>FINEX</strong><small>Empresa</small></div>
     </div>
     <nav>
@@ -23,19 +23,38 @@
       <a class="{{ 'active' if active == 'movimientos' else '' }}" href="{{ url_for('finex.movimientos') }}">Movimientos</a>
       <a class="{{ 'active' if active == 'configuracion' else '' }}" href="{{ url_for('finex.configuracion') }}">Configuracion</a>
     </nav>
-    <div class="company-card">
-      <strong>{{ empresa.nombre_empresa or 'FINEX' }}</strong>
-      <small>Nit. {{ empresa.nit or 'Sin configurar' }}</small>
-    </div>
+    
   </aside>
 
   <main class="main">
-    <header class="topbar compact-topbar">
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+      ☰
+    </button>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <header class="topbar compact-topbar account-topbar">
       <div></div>
-      <div class="user user-with-logout">
-        <span class="avatar">{{ usuario_actual.iniciales }}</span>
-        <div><strong>{{ usuario_actual.nombre }}</strong><small>{{ usuario_actual.email }}</small></div>
-        <a class="btn small secondary logout-link" href="{{ url_for('auth.logout') }}">Cerrar sesion</a>
+      <div class="user account-user header-company">
+        <span class="avatar">{{ (empresa.nombre_empresa or 'FN')[:2].upper() }}</span>
+        <div><strong>{{ empresa.nombre_empresa or empresa.razon_social or 'FINEX' }}</strong><small>Nit. {{ empresa.nit or 'Sin configurar' }}</small></div>
+        <button type="button" class="logout-icon" data-open-logout title="Cerrar sesión">
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="22" 
+            height="22" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2.2" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"
+            class="logout-svg"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+      </button>
       </div>
     </header>
 
@@ -153,6 +172,7 @@
     <label>Cliente
       <select name="cliente_id" required data-client-select data-target-email="#{{ form_id }}-email" data-target-phone="#{{ form_id }}-phone" data-target-address="#{{ form_id }}-address">
         <option value="">Seleccione...</option>
+        <option value="__new_client__">+ Agregar cliente</option>
         {% for c in clientes %}
         <option value="{{ c.id }}" data-email="{{ c.email or '' }}" data-telefono="{{ c.telefono or '' }}" data-direccion="{{ c.direccion or '' }}" {% if invoice and c.id == invoice.cliente_id %}selected{% endif %}>{{ c.nombre }}</option>
         {% endfor %}
@@ -216,9 +236,11 @@
   </section>
 
   <div class="invoice-total-panel">
-    <div>
+    <div class="invoice-total-grid">
       <small>Total factura</small>
-      <strong data-invoice-total>{{ invoice.total|cop if invoice else '$ 0' }}</strong>
+      <div class="invoice-total-line"><span>Subtotal</span><strong data-invoice-subtotal>{{ invoice.subtotal|cop if invoice else '$ 0' }}</strong></div>
+      <div class="invoice-total-line"><span>Impuesto</span><strong data-invoice-tax>{{ invoice.impuestos|cop if invoice else '$ 0' }}</strong></div>
+      <div class="invoice-total-line total"><span>Total</span><strong data-invoice-total>{{ invoice.total|cop if invoice else '$ 0' }}</strong></div>
       <span>Se actualiza con cada linea agregada o modificada.</span>
     </div>
   </div>
@@ -350,6 +372,7 @@
     <label>Proveedor
       <select name="proveedor_id" required data-provider-select data-target-number="#{{ form_id }}-number" data-target-email="#{{ form_id }}-email" data-target-phone="#{{ form_id }}-phone" data-target-address="#{{ form_id }}-address">
         <option value="">Seleccione...</option>
+        <option value="__new_provider__">+ Agregar proveedor</option>
         {% for p in proveedores %}
         <option value="{{ p.id }}" data-numero="{{ p.numero_proveedor or '' }}" data-email="{{ p.email or '' }}" data-telefono="{{ p.telefono or '' }}" data-direccion="{{ p.direccion or '' }}" {% if invoice and p.id == invoice.proveedor_id %}selected{% endif %}>{{ p.nombre }}</option>
         {% endfor %}
@@ -419,9 +442,11 @@
   </section>
 
   <div class="invoice-total-panel">
-    <div>
+    <div class="invoice-total-grid">
       <small>Total a pagar</small>
-      <strong data-invoice-total>{{ invoice.total|cop if invoice else '$ 0' }}</strong>
+      <div class="invoice-total-line"><span>Subtotal</span><strong data-invoice-subtotal>{{ invoice.subtotal|cop if invoice else '$ 0' }}</strong></div>
+      <div class="invoice-total-line"><span>Impuesto</span><strong data-invoice-tax>{{ invoice.impuestos|cop if invoice else '$ 0' }}</strong></div>
+      <div class="invoice-total-line total"><span>Total</span><strong data-invoice-total>{{ invoice.total|cop if invoice else '$ 0' }}</strong></div>
       <span>Se actualiza con cada producto agregado o modificado.</span>
     </div>
   </div>
@@ -684,8 +709,17 @@
 
 <section class="card full">
   <div class="section-head">
-    <h2>Movimientos contables</h2>
-    <span class="hint">El PDF siempre muestra la factura actualizada.</span>
+    <div>
+      <h2>Movimientos contables</h2>
+      <p class="subtext">El PDF siempre muestra la factura actualizada.</p>
+    </div>
+    <form method="get" class="actions report-actions">
+      <input type="date" name="desde" value="{{ filtros.desde if filtros else '' }}">
+      <input type="date" name="hasta" value="{{ filtros.hasta if filtros else '' }}">
+      <button class="btn secondary small" type="submit">Filtrar</button>
+      <a class="btn secondary small" href="{{ url_for('finex.movimientos_pdf_completo', desde=filtros.desde if filtros else '', hasta=filtros.hasta if filtros else '') }}">PDF completo</a>
+      <a class="btn secondary small" href="{{ url_for('finex.movimientos_excel_completo', desde=filtros.desde if filtros else '', hasta=filtros.hasta if filtros else '') }}">Excel completo</a>
+    </form>
   </div>
   <div class="table-scroll">
     <table>
@@ -713,8 +747,23 @@
 
 {% elif page == 'configuracion' %}
 
-<section class="page-title"><div><h1>Configuracion</h1><p>Datos basicos de la empresa.</p></div></section>
-<section class="card sheet"><h2>{{ empresa.nombre_empresa or 'FINEX' }}</h2><p><strong>NIT:</strong> {{ empresa.nit or 'Sin configurar' }}</p><p>La configuracion queda igual hasta proximo aviso.</p></section>
+<section class="page-title"><div><h1>Configuracion</h1><p>Edita los datos basicos de la empresa.</p></div></section>
+<section class="card sheet">
+  <div class="section-head"><h2>Datos de la empresa</h2><span class="hint">Esta informacion se muestra en el sistema y en la cuenta.</span></div>
+  <form method="post" class="form-grid">
+    <label>Nombre de la empresa<input name="nombre_empresa" required value="{{ empresa.nombre_empresa or empresa.razon_social or '' }}"></label>
+    <label>NIT/RUT<input name="nit" required inputmode="numeric" value="{{ empresa.nit or '' }}"></label>
+    <label>Tipo de empresa<input name="tipo_empresa" value="{{ empresa.tipo_empresa or '' }}"></label>
+    <label>Representante legal<input name="representante_legal" value="{{ empresa.representante_legal or '' }}"></label>
+    <label>Nombre de contacto<input name="nombre_contacto" value="{{ empresa.nombre_contacto or '' }}"></label>
+    <label>Email de contacto<input name="email_contacto" type="email" value="{{ empresa.email_contacto or '' }}"></label>
+    <label>Telefono<input name="telefono" inputmode="numeric" value="{{ empresa.telefono or '' }}"></label>
+    <label>Ciudad<input name="ciudad" value="{{ empresa.ciudad or '' }}"></label>
+    <label>Departamento<input name="departamento" value="{{ empresa.departamento or '' }}"></label>
+    <label class="span-3">Direccion<input name="direccion" value="{{ empresa.direccion or '' }}"></label>
+    <div class="form-actions span-3"><button class="btn" type="submit">Guardar configuracion</button></div>
+  </form>
+</section>
 
 {% elif page == 'error' %}
 
@@ -724,7 +773,45 @@
 <section class="card sheet"><h1>Pagina no encontrada</h1></section>
 {% endif %}
   </main>
+
+  <dialog class="modal" id="quick-client-dialog">
+    <div class="modal-content">
+      <button class="modal-close" type="button" data-close-dialog>×</button>
+      <h2>Agregar cliente</h2>
+      <form method="post" action="{{ url_for('finex.crear_cliente_rapido') }}" class="stack-form">
+        <label>Nombre<input name="nombre" required></label>
+        <label>Documento<input name="documento"></label>
+        <label>Email<input name="email" type="email"></label>
+        <label>Telefono<input name="telefono" inputmode="numeric"></label>
+        <label>Direccion<input name="direccion"></label>
+        <div class="form-actions"><button class="btn" type="submit">Guardar cliente</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="quick-provider-dialog">
+    <div class="modal-content">
+      <button class="modal-close" type="button" data-close-dialog>×</button>
+      <h2>Agregar proveedor</h2>
+      <form method="post" action="{{ url_for('finex.crear_proveedor_rapido') }}" class="stack-form">
+        <label>Nombre<input name="nombre" required></label>
+        <label>No. proveedor<input name="numero_proveedor"></label>
+        <label>Email<input name="email" type="email"></label>
+        <label>Telefono<input name="telefono" inputmode="numeric"></label>
+        <label>Direccion<input name="direccion"></label>
+        <div class="form-actions"><button class="btn" type="submit">Guardar proveedor</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="logoutDialog">
+    <div class="modal-content confirm-modal">
+      <h2>Cerrar sesión</h2>
+      <p>¿Seguro que deseas cerrar sesión?</p>
+      <div class="form-actions"><button class="btn secondary" type="button" data-close-dialog>Cancelar</button><a class="btn danger" href="{{ url_for('auth.logout') }}">Cerrar sesión</a></div>
+    </div>
+  </dialog>
   <div id="globalTooltip" class="chart-tooltip" hidden></div>
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

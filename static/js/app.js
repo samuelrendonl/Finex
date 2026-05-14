@@ -38,13 +38,27 @@
 
   document.querySelectorAll('[data-client-select]').forEach((select) => {
     const map = { email: select.dataset.targetEmail, telefono: select.dataset.targetPhone, direccion: select.dataset.targetAddress };
-    select.addEventListener('change', () => fillFromSelect(select, map));
+    select.addEventListener('change', () => {
+      if (select.value === '__new_client__') {
+        select.value = '';
+        document.getElementById('quick-client-dialog')?.showModal();
+        return;
+      }
+      fillFromSelect(select, map);
+    });
     fillFromSelect(select, map);
   });
 
   document.querySelectorAll('[data-provider-select]').forEach((select) => {
     const map = { numero: select.dataset.targetNumber, email: select.dataset.targetEmail, telefono: select.dataset.targetPhone, direccion: select.dataset.targetAddress };
-    select.addEventListener('change', () => fillFromSelect(select, map));
+    select.addEventListener('change', () => {
+      if (select.value === '__new_provider__') {
+        select.value = '';
+        document.getElementById('quick-provider-dialog')?.showModal();
+        return;
+      }
+      fillFromSelect(select, map);
+    });
     fillFromSelect(select, map);
   });
 
@@ -56,6 +70,10 @@
   });
 
   document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-open-logout]')) {
+      const dialog = document.getElementById('logoutDialog');
+      if (dialog && dialog.showModal) dialog.showModal();
+    }
     if (event.target.matches('[data-close-dialog]')) {
       const dialog = event.target.closest('dialog');
       if (dialog) dialog.close();
@@ -125,9 +143,24 @@
   function recalcInvoice(form){
     if (!form) return;
     let total = 0;
-    form.querySelectorAll('[data-line-row]').forEach(row => total += recalcLine(row));
+    let subtotal = 0;
+    let taxTotal = 0;
+    form.querySelectorAll('[data-line-row]').forEach(row => {
+      const price = numberValue(row.querySelector('[data-price]')?.value);
+      const tax = numberValue(row.querySelector('[data-tax]')?.value);
+      const qty = numberValue(row.querySelector('[data-quantity]')?.value);
+      const sub = price * qty;
+      const imp = Math.round(sub * tax / 100);
+      subtotal += sub;
+      taxTotal += imp;
+      total += recalcLine(row);
+    });
     const target = form.querySelector('[data-invoice-total]');
+    const subTarget = form.querySelector('[data-invoice-subtotal]');
+    const taxTarget = form.querySelector('[data-invoice-tax]');
     if (target) target.textContent = currency(total);
+    if (subTarget) subTarget.textContent = currency(subtotal);
+    if (taxTarget) taxTarget.textContent = currency(taxTotal);
   }
 
   function fillRowWithItem(row, item){
@@ -170,7 +203,20 @@
     const hidden = row.querySelector('[data-item-id]');
     const exact = findItem(search?.value);
     if (exact) fillRowWithItem(row, exact);
-    else if (hidden) hidden.value = '';
+    else {
+      if (hidden) hidden.value = '';
+      if (!String(search?.value || '').trim()) {
+        const price = row.querySelector('[data-price]');
+        const tax = row.querySelector('[data-tax]');
+        const desc = row.querySelector('[data-description]');
+        const note = row.querySelector('[data-note]');
+        if (price) price.value = '0';
+        if (tax) tax.value = '0';
+        if (desc) desc.value = '';
+        if (note) note.value = '';
+        recalcInvoice(row.closest('[data-invoice-form]'));
+      }
+    }
   }
 
   function openQuickItemDialog(row){
@@ -348,11 +394,13 @@
     if (!script) return;
     let data;
     try { data = JSON.parse(script.textContent || '{}'); } catch(e){ return; }
-    renderMonthlyChart(data.monthly || []);
-    renderDonutChart(data.totals || {ventas:0, compras:0});
+    const labels = data.labels || {ventas:'Ventas', compras:'Compras', empty:'Registra facturas'};
+    renderMonthlyChart(data.monthly || [], labels);
+    renderDonutChart(data.totals || {ventas:0, compras:0}, labels);
   }
+  window.FinexCharts = { renderCharts };
 
-  function renderMonthlyChart(rows){
+  function renderMonthlyChart(rows, labels){
     const target = document.getElementById('monthlyChart');
     if (!target) return;
     const w = 900, h = 310, padL = 62, padB = 42, padT = 20, padR = 20;
@@ -374,8 +422,8 @@
       const compraH = (Number(r.compras || 0) / maxVal) * plotH;
       const yV = padT + plotH - ventaH;
       const yC = padT + plotH - compraH;
-      svg += `<rect class="bar bar-ventas" data-tip="<strong>${r.mes}</strong><br>Ventas: ${currency(r.ventas)}" x="${baseX}" y="${yV}" width="${bw}" height="${ventaH}" rx="5" fill="#2468f2"></rect>`;
-      svg += `<rect class="bar bar-compras" data-tip="<strong>${r.mes}</strong><br>Compras: ${currency(r.compras)}" x="${baseX+bw+5}" y="${yC}" width="${bw}" height="${compraH}" rx="5" fill="#f4a62a"></rect>`;
+      svg += `<rect class="bar bar-ventas" data-tip="<strong>${r.mes}</strong><br>${labels.ventas || 'Ventas'}: ${currency(r.ventas)}" x="${baseX}" y="${yV}" width="${bw}" height="${ventaH}" rx="5" fill="#2468f2"></rect>`;
+      svg += `<rect class="bar bar-compras" data-tip="<strong>${r.mes}</strong><br>${labels.compras || 'Compras'}: ${currency(r.compras)}" x="${baseX+bw+5}" y="${yC}" width="${bw}" height="${compraH}" rx="5" fill="#f4a62a"></rect>`;
       svg += `<text class="label" x="${padL + idx * group + group*.38}" y="${h-14}" text-anchor="middle">${r.mes}</text>`;
     });
     svg += '</svg>';
@@ -396,24 +444,24 @@
     const rad = (angle - 90) * Math.PI / 180.0;
     return {x: cx + (r * Math.cos(rad)), y: cy + (r * Math.sin(rad))};
   }
-  function renderDonutChart(totals){
+  function renderDonutChart(totals, labels){
     const target = document.getElementById('donutChart');
     const summary = document.getElementById('donutSummary');
     if (!target) return;
     const ventas = Number(totals.ventas || 0), compras = Number(totals.compras || 0), sum = ventas + compras;
     if (sum <= 0) {
-      target.innerHTML = `<svg viewBox="0 0 260 260" class="svg-chart"><circle cx="130" cy="130" r="82" fill="none" stroke="#dbe4ef" stroke-width="34"></circle><text class="donut-center" x="130" y="126" text-anchor="middle">Sin datos</text><text class="label" x="130" y="148" text-anchor="middle">Registra facturas</text></svg>`;
-      if (summary) summary.innerHTML = '<div class="summary-row"><span>Ventas</span><strong>$ 0</strong></div><div class="summary-row"><span>Compras</span><strong>$ 0</strong></div>';
+      target.innerHTML = `<svg viewBox="0 0 260 260" class="svg-chart"><circle cx="130" cy="130" r="82" fill="none" stroke="#dbe4ef" stroke-width="34"></circle><text class="donut-center" x="130" y="126" text-anchor="middle">Sin datos</text><text class="label" x="130" y="148" text-anchor="middle">${labels.empty || 'Registra facturas'}</text></svg>`;
+      if (summary) summary.innerHTML = `<div class="summary-row"><span>${labels.ventas || 'Ventas'}</span><strong>$ 0</strong></div><div class="summary-row"><span>${labels.compras || 'Compras'}</span><strong>$ 0</strong></div>`;
       return;
     }
     const vAngle = ventas / sum * 360;
     const cAngle = compras / sum * 360;
     let svg = `<svg viewBox="0 0 260 260" class="svg-chart" role="img">`;
-    svg += `<path class="donut-segment" data-tip="<strong>Ventas</strong><br>${currency(ventas)}<br>${Math.round(ventas/sum*100)}% del total" d="${donutSegment(130,130,82,0,vAngle)}" fill="none" stroke="#2468f2" stroke-width="34" stroke-linecap="round"></path>`;
-    if (compras > 0) svg += `<path class="donut-segment" data-tip="<strong>Compras</strong><br>${currency(compras)}<br>${Math.round(compras/sum*100)}% del total" d="${donutSegment(130,130,82,vAngle,vAngle+cAngle)}" fill="none" stroke="#f4a62a" stroke-width="34" stroke-linecap="round"></path>`;
+    svg += `<path class="donut-segment" data-tip="<strong>${labels.ventas || 'Ventas'}</strong><br>${currency(ventas)}<br>${Math.round(ventas/sum*100)}% del total" d="${donutSegment(130,130,82,0,vAngle)}" fill="none" stroke="#2468f2" stroke-width="34" stroke-linecap="round"></path>`;
+    if (compras > 0) svg += `<path class="donut-segment" data-tip="<strong>${labels.compras || 'Compras'}</strong><br>${currency(compras)}<br>${Math.round(compras/sum*100)}% del total" d="${donutSegment(130,130,82,vAngle,vAngle+cAngle)}" fill="none" stroke="#f4a62a" stroke-width="34" stroke-linecap="round"></path>`;
     svg += `<text class="donut-center" x="130" y="126" text-anchor="middle">${currency(sum)}</text><text class="label" x="130" y="148" text-anchor="middle">Total general</text></svg>`;
     target.innerHTML = svg;
-    if (summary) summary.innerHTML = `<div class="summary-row"><span><span class="dot ventas"></span> Ventas</span><strong>${currency(ventas)}</strong></div><div class="summary-row"><span><span class="dot compras"></span> Compras</span><strong>${currency(compras)}</strong></div>`;
+    if (summary) summary.innerHTML = `<div class="summary-row"><span><span class="dot ventas"></span> ${labels.ventas || 'Ventas'}</span><strong>${currency(ventas)}</strong></div><div class="summary-row"><span><span class="dot compras"></span> ${labels.compras || 'Compras'}</span><strong>${currency(compras)}</strong></div>`;
     target.querySelectorAll('[data-tip]').forEach(el => {
       el.addEventListener('mousemove', e => showTip(el.dataset.tip, e));
       el.addEventListener('mouseleave', hideTip);
@@ -422,3 +470,57 @@
 
   renderCharts();
 })();
+
+
+
+const sidebar = document.getElementById("sidebar");
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+if (mobileMenuBtn && sidebar && sidebarOverlay) {
+
+  function openMenu() {
+  sidebar.classList.add("active");
+  sidebarOverlay.classList.add("active");
+  document.body.classList.add("menu-open");
+
+  mobileMenuBtn.classList.add("hidden");
+  }
+
+  function closeMenu() {
+    sidebar.classList.remove("active");
+    sidebarOverlay.classList.remove("active");
+    document.body.classList.remove("menu-open");
+
+    mobileMenuBtn.classList.remove("hidden");
+  }
+
+  mobileMenuBtn.addEventListener("click", openMenu);
+
+  sidebarOverlay.addEventListener("click", closeMenu);
+
+  /* CERRAR AL DAR CLICK EN UN MODULO */
+
+  const menuLinks = sidebar.querySelectorAll("nav a");
+
+  menuLinks.forEach(link => {
+
+  link.addEventListener("click", () => {
+
+    /* QUITAR ANIMACIONES */
+    sidebar.style.transition = "none";
+    sidebarOverlay.style.transition = "none";
+
+    /* CERRAR INMEDIATAMENTE */
+    sidebar.classList.remove("active");
+    sidebarOverlay.classList.remove("active");
+
+    document.body.classList.remove("menu-open");
+
+    mobileMenuBtn.classList.remove("hidden");
+
+  });
+
+});
+
+}

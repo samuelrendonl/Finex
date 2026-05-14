@@ -9,53 +9,17 @@ from db import get_db
 
 finex_bp = Blueprint("finex", __name__)
 
-DEFAULT_EMPRESA_ID = int(os.getenv("EMPRESA_ID", "1"))
-
-def build_initials(name, email=""):
-    base = (name or email or "Usuario").strip()
-    parts = [p for p in base.replace("@", " ").split() if p]
-    if not parts:
-        return "US"
-    if len(parts) == 1:
-        return parts[0][:2].upper()
-    return (parts[0][0] + parts[1][0]).upper()
-
-
-def current_user_display():
-    nombre = session.get("usuario_nombre") or "Usuario"
-    email = session.get("usuario_email") or ""
-    return {"nombre": nombre, "email": email, "iniciales": build_initials(nombre, email)}
-
-
-def ensure_empresa_profile():
-    if "usuario_id" not in session:
-        return redirect(url_for("main.login"))
-    if session.get("usuario_tipo") == "persona":
-        return redirect(url_for("persona.dashboard"))
-    if session.get("empresa_id"):
-        return None
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT id, nombre_contacto, razon_social, email_contacto FROM empresas WHERE usuario_id=%s ORDER BY id LIMIT 1", (session.get("usuario_id"),))
-            empresa = cur.fetchone()
-            if empresa:
-                session["empresa_id"] = empresa["id"]
-                session["usuario_nombre"] = empresa.get("razon_social") or empresa.get("nombre_contacto") or session.get("usuario_email")
-                return None
-            nombre = session.get("usuario_nombre") or "Administrador"
-            email = session.get("usuario_email") or ""
-            cur.execute("""
-                INSERT INTO empresas (usuario_id, nombre_contacto, razon_social, nombre_empresa, nit, email_contacto)
-                VALUES (%s,%s,%s,%s,%s,%s)
-            """, (session.get("usuario_id"), nombre, "FINEX", "FINEX", "Sin configurar", email))
-            session["empresa_id"] = cur.lastrowid
-        conn.commit()
-    return None
-
-
 @finex_bp.before_request
 def require_empresa_session():
-    return ensure_empresa_profile()
+    # Protege el modulo empresarial: solo entra una cuenta tipo empresa.
+    allowed_public = {"static"}
+    if not session.get("usuario_id"):
+        return redirect(url_for("main.login"))
+    if session.get("usuario_tipo") != "empresa":
+        return redirect(url_for("persona.dashboard"))
+
+
+DEFAULT_EMPRESA_ID = int(os.getenv("EMPRESA_ID", "1"))
 
 def current_empresa_id():
     try:
@@ -77,6 +41,18 @@ def fetch_one(sql, params=None):
             return cur.fetchone()
 
 
+def get_empresa():
+    """Obtiene la empresa activa para encabezados, reportes PDF y Excel."""
+    try:
+        return fetch_one("SELECT * FROM empresas WHERE id=%s", (current_empresa_id(),)) or {
+            "nombre_empresa": "FINEX",
+            "razon_social": "FINEX",
+            "nit": "Sin configurar",
+        }
+    except Exception:
+        return {"nombre_empresa": "FINEX", "razon_social": "FINEX", "nit": "Sin configurar"}
+
+
 def execute(sql, params=None):
     with get_db() as conn:
         with conn.cursor() as cur:
@@ -90,7 +66,7 @@ def money(value):
         if value is None or value == "":
             return Decimal("0")
         cleaned = str(value).strip().replace("$", "").replace(" ", "")
-        # Inputs use Colombian thousands dots and no decimals.
+        
         cleaned = cleaned.replace(".", "").replace(",", "")
         if cleaned == "":
             return Decimal("0")
@@ -189,14 +165,9 @@ def html_d_filter(value):
 
 @finex_bp.context_processor
 def inject_empresa():
-    empresa = None
-    try:
-        empresa = fetch_one("SELECT * FROM empresas WHERE id=%s", (current_empresa_id(),))
-    except Exception:
-        empresa = None
+    """Inyecta datos de empresa para todas las plantillas del modulo empresa."""
     return {
-        "empresa": empresa or {"nombre_empresa": "FINEX", "nit": "Sin configurar"},
-        "usuario_actual": current_user_display(),
+        "empresa": get_empresa(),
         "today": date.today().isoformat(),
         "now_local": datetime.now().strftime("%Y-%m-%dT%H:%M"),
     }
@@ -747,17 +718,153 @@ def eliminar_compra(invoice_id):
     return redirect(url_for("finex.facturas_compra"))
 
 
-@finex_bp.route("/movimientos")
-def movimientos():
-    movimientos = fetch_all(
-        """
+def _movimientos_query(desde=None, hasta=None):
+    # Consulta movimientos empresariales con filtros opcionales de fecha.
+    query = """
         SELECT * FROM movimientos_contables
         WHERE empresa_id=%s
-        ORDER BY fecha DESC, id DESC
-        """,
-        (current_empresa_id(),),
+    """
+    params = [current_empresa_id()]
+    if desde:
+        query += " AND DATE(fecha) >= %s"
+        params.append(desde)
+    if hasta:
+        query += " AND DATE(fecha) <= %s"
+        params.append(hasta)
+    query += " ORDER BY fecha DESC, id DESC"
+    return fetch_all(query, params)
+
+
+@finex_bp.route("/movimientos")
+def movimientos():
+    desde = request.args.get("desde", "").strip()
+    hasta = request.args.get("hasta", "").strip()
+    movimientos = _movimientos_query(desde, hasta)
+    return render_template(
+        "finex.html",
+        page="movimientos",
+        active="movimientos",
+        movimientos=movimientos,
+        filtros={"desde": desde, "hasta": hasta},
     )
-    return render_template("finex.html", page="movimientos", active="movimientos", movimientos=movimientos)
+
+
+@finex_bp.route("/movimientos/pdf-completo")
+def movimientos_pdf_completo():
+    # Genera un PDF completo de movimientos empresariales filtrados por fecha.
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.units import inch
+    from reportlab.pdfgen import canvas
+    from reportlab.lib import colors
+    from pathlib import Path
+
+    desde = request.args.get("desde", "").strip()
+    hasta = request.args.get("hasta", "").strip()
+    movimientos = _movimientos_query(desde, hasta)
+    empresa = get_empresa()
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    logo = Path(__file__).resolve().parents[1] / "static" / "logo_finex.png"
+
+    def header(title):
+        y = height - 0.75 * inch
+        if logo.exists():
+            try:
+                p.drawImage(str(logo), width - 1.35 * inch, height - 1.05 * inch, width=0.55 * inch, height=0.55 * inch, mask="auto")
+            except Exception:
+                pass
+        p.setFillColor(colors.HexColor("#061c35"))
+        p.setFont("Helvetica-Bold", 17)
+        p.drawString(0.7 * inch, y, title)
+        y -= 0.25 * inch
+        p.setFont("Helvetica", 9)
+        p.setFillColor(colors.HexColor("#536680"))
+        p.drawString(0.7 * inch, y, f"Empresa: {empresa.get('nombre_empresa') or empresa.get('razon_social') or 'FINEX'}  |  NIT: {empresa.get('nit') or ''}")
+        y -= 0.22 * inch
+        p.drawString(0.7 * inch, y, f"Desde: {desde or 'Inicio'}   Hasta: {hasta or 'Actual'}")
+        y -= 0.2 * inch
+        p.setStrokeColor(colors.HexColor("#e5ebf3"))
+        p.line(0.7 * inch, y, width - 0.7 * inch, y)
+        return y - 0.28 * inch
+
+    y = header("FINEX - Reporte completo de movimientos")
+    p.setFont("Helvetica-Bold", 8)
+    headers = [("N°", .7), ("Fecha", 1.25), ("Tipo", 2.35), ("Categoría", 3.1), ("Factura", 4.2), ("Valor", 5.35), ("Estado", 6.25)]
+    for text, x in headers:
+        p.drawString(x * inch, y, text)
+    y -= 0.18 * inch
+    p.setFont("Helvetica", 8)
+    if not movimientos:
+        p.drawString(0.7 * inch, y, "Sin movimientos en el rango seleccionado.")
+    for mov in movimientos:
+        if y < 0.75 * inch:
+            p.showPage()
+            y = header("FINEX - Reporte completo de movimientos")
+            p.setFont("Helvetica", 8)
+        p.drawString(.7 * inch, y, str(mov.get('numero_movimiento') or ''))
+        p.drawString(1.25 * inch, y, format_dt(mov.get('fecha'))[:16])
+        p.drawString(2.35 * inch, y, str(mov.get('tipo') or ''))
+        p.drawString(3.1 * inch, y, str(mov.get('categoria') or '')[:16])
+        p.drawString(4.2 * inch, y, str(mov.get('factura_numero') or '')[:16])
+        p.drawRightString(6.05 * inch, y, cop(mov.get('valor')))
+        p.drawString(6.25 * inch, y, str(mov.get('estado') or ''))
+        y -= 0.22 * inch
+    p.save()
+    buffer.seek(0)
+    return make_response(buffer.read(), 200, {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": "attachment; filename=finex_movimientos_empresa.pdf",
+    })
+
+
+@finex_bp.route("/movimientos/excel-completo")
+def movimientos_excel_completo():
+    # Genera un Excel completo de movimientos empresariales filtrados por fecha.
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+
+    desde = request.args.get("desde", "").strip()
+    hasta = request.args.get("hasta", "").strip()
+    movimientos = _movimientos_query(desde, hasta)
+    empresa = get_empresa()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Movimientos"
+    header_fill = PatternFill("solid", fgColor="0B438C")
+    header_font = Font(bold=True, color="FFFFFF")
+    ws.append(["FINEX - Movimientos empresariales"])
+    ws.append(["Empresa", empresa.get('nombre_empresa') or empresa.get('razon_social') or 'FINEX'])
+    ws.append(["NIT", empresa.get('nit') or ''])
+    ws.append(["Desde", desde or 'Inicio', "Hasta", hasta or 'Actual'])
+    ws.append([])
+    headers = ["N°", "Fecha", "Tipo", "Categoría", "Factura", "Descripción", "Valor", "Estado"]
+    ws.append(headers)
+    for cell in ws[6]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+    for mov in movimientos:
+        ws.append([
+            mov.get('numero_movimiento'),
+            format_dt(mov.get('fecha')),
+            mov.get('tipo'),
+            mov.get('categoria'),
+            mov.get('factura_numero'),
+            mov.get('descripcion'),
+            float(mov.get('valor') or 0),
+            mov.get('estado'),
+        ])
+    for col in range(1, 9):
+        ws.column_dimensions[get_column_letter(col)].width = 22
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return make_response(output.read(), 200, {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": "attachment; filename=finex_movimientos_empresa.xlsx",
+    })
 
 
 @finex_bp.route("/movimientos/<int:movimiento_id>/pdf")
@@ -898,6 +1005,17 @@ def clientes():
     return render_template("finex.html", page="clientes", active="clientes", clientes=list_clients())
 
 
+@finex_bp.post("/clientes/rapido")
+def crear_cliente_rapido():
+    # Crea un cliente desde facturacion para no salir de la pantalla.
+    execute(
+        "INSERT INTO clientes (empresa_id, tipo, nombre, documento, email, telefono, direccion) VALUES (%s,'empresa',%s,%s,%s,%s,%s)",
+        (current_empresa_id(), request.form.get("nombre"), request.form.get("documento"), request.form.get("email"), request.form.get("telefono"), request.form.get("direccion")),
+    )
+    flash("Cliente agregado.", "success")
+    return redirect(request.referrer or url_for("finex.facturacion_venta"))
+
+
 @finex_bp.post("/clientes/<int:cliente_id>/eliminar")
 def eliminar_cliente(cliente_id):
     try:
@@ -926,6 +1044,17 @@ def proveedores():
             flash("Proveedor guardado.", "success")
         return redirect(url_for("finex.proveedores"))
     return render_template("finex.html", page="proveedores", active="proveedores", proveedores=list_providers())
+
+
+@finex_bp.post("/proveedores/rapido")
+def crear_proveedor_rapido():
+    # Crea un proveedor desde facturacion de compra para no salir de la pantalla.
+    execute(
+        "INSERT INTO proveedores (empresa_id, tipo, nombre, numero_proveedor, email, telefono, direccion) VALUES (%s,'empresa',%s,%s,%s,%s,%s)",
+        (current_empresa_id(), request.form.get("nombre"), request.form.get("numero_proveedor"), request.form.get("email"), request.form.get("telefono"), request.form.get("direccion")),
+    )
+    flash("Proveedor agregado.", "success")
+    return redirect(request.referrer or url_for("finex.facturas_compra"))
 
 
 @finex_bp.post("/proveedores/<int:proveedor_id>/eliminar")
@@ -1029,8 +1158,33 @@ def eliminar_item(item_id):
     return redirect(url_for("finex.items"))
 
 
-@finex_bp.route("/configuracion")
+@finex_bp.route("/configuracion", methods=["GET", "POST"])
 def configuracion():
+    # Permite actualizar los datos empresariales mostrados en encabezado y sistema.
+    if request.method == "POST":
+        execute("""
+            UPDATE empresas
+            SET nombre_empresa=%s, razon_social=%s, nit=%s, tipo_empresa=%s,
+                representante_legal=%s, nombre_contacto=%s, email_contacto=%s,
+                telefono=%s, ciudad=%s, departamento=%s, direccion=%s
+            WHERE id=%s
+        """, (
+            request.form.get("nombre_empresa"),
+            request.form.get("nombre_empresa"),
+            request.form.get("nit"),
+            request.form.get("tipo_empresa"),
+            request.form.get("representante_legal"),
+            request.form.get("nombre_contacto"),
+            request.form.get("email_contacto"),
+            request.form.get("telefono"),
+            request.form.get("ciudad"),
+            request.form.get("departamento"),
+            request.form.get("direccion"),
+            current_empresa_id(),
+        ))
+        session["usuario_nombre"] = request.form.get("nombre_empresa") or session.get("usuario_nombre")
+        flash("Configuracion actualizada.", "success")
+        return redirect(url_for("finex.configuracion"))
     return render_template("finex.html", page="configuracion", active="configuracion")
 
 
