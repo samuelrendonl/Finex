@@ -4,23 +4,115 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FINEX Personal</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/Logo-Transparente.png') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='img/Logo-Transparente.png') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
   </head>
-  <body data-personal-app data-active-section="{{ active_section|default('inicio') }}">
+  <body
+    data-personal-app
+    data-active-section="{{ active_section|default('inicio') }}"
+  >
     <div class="menu-overlay" id="menuOverlay"></div>
     <aside class="sidebar">
       <div class="brand">
-        <img class="brand-logo" src="{{ url_for('static', filename='img/Logo-Transparente.png') }}" alt="FINEX" />
-        <div><strong>FINEX</strong><small>Cuenta personal</small></div>
+        <img
+          class="brand-logo"
+          src="{{ url_for('static', filename='img/Logo-Transparente.png') }}"
+          alt="FINEX"
+        />
+        <div>
+          <strong>FINEX</strong>
+          <small>Cuenta personal</small>
+        </div>
       </div>
+
       <nav>
-        <a class="{{ 'active' if active_section == 'inicio' else '' }}" href="{{ url_for('persona.dashboard', section='inicio') }}" data-personal-section="inicio">Inicio</a>
-        <a class="{{ 'active' if active_section == 'ingresos' else '' }}" href="{{ url_for('persona.dashboard', section='ingresos') }}" data-personal-section="ingresos">Ingresos</a>
-        <a class="{{ 'active' if active_section == 'egresos' else '' }}" href="{{ url_for('persona.dashboard', section='egresos') }}" data-personal-section="egresos">Egresos</a>
-        <a class="{{ 'active' if active_section == 'cuentas' else '' }}" href="{{ url_for('persona.dashboard', section='cuentas') }}" data-personal-section="cuentas">Cuentas</a>
-        <a class="{{ 'active' if active_section == 'reportes' else '' }}" href="{{ url_for('persona.dashboard', section='reportes') }}" data-personal-section="reportes">Reportes</a>
-        <a class="{{ 'active' if active_section == 'configuracion' else '' }}" href="{{ url_for('persona.dashboard', section='configuracion') }}" data-personal-section="configuracion">Configuración</a>
+        <a
+          class="{{ 'active' if active_section == 'inicio' else '' }}"
+          href="{{ url_for('persona.dashboard', section='inicio') }}"
+          data-personal-section="inicio"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5 10v10h14V10" />
+            <path d="M9 20v-6h6v6" />
+          </svg>
+          <span>Inicio</span>
+        </a>
+
+        <a
+          class="{{ 'active' if active_section == 'ingresos' else '' }}"
+          href="{{ url_for('persona.dashboard', section='ingresos') }}"
+          data-personal-section="ingresos"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 19V5" />
+            <path d="M6 11l6-6 6 6" />
+            <path d="M5 21h14" />
+          </svg>
+          <span>Ingresos</span>
+        </a>
+
+        <a
+          class="{{ 'active' if active_section == 'egresos' else '' }}"
+          href="{{ url_for('persona.dashboard', section='egresos') }}"
+          data-personal-section="egresos"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14" />
+            <path d="M18 13l-6 6-6-6" />
+            <path d="M5 3h14" />
+          </svg>
+          <span>Egresos</span>
+        </a>
+
+        <a
+          class="{{ 'active' if active_section == 'cuentas' else '' }}"
+          href="{{ url_for('persona.dashboard', section='cuentas') }}"
+          data-personal-section="cuentas"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="6" width="18" height="12" rx="2" />
+            <path d="M3 10h18" />
+            <path d="M7 15h4" />
+          </svg>
+          <span>Cuentas</span>
+        </a>
+
+        <a
+          class="{{ 'active' if active_section == 'reportes' else '' }}"
+          href="{{ url_for('persona.dashboard', section='reportes') }}"
+          data-personal-section="reportes"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 19V5" />
+            <path d="M4 19h16" />
+            <path d="M8 16v-5" />
+            <path d="M12 16V8" />
+            <path d="M16 16v-3" />
+          </svg>
+          <span>Reportes</span>
+        </a>
+
+        <a
+          class="{{ 'active' if active_section == 'configuracion' else '' }}"
+          href="{{ url_for('persona.dashboard', section='configuracion') }}"
+          data-personal-section="configuracion"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+            <path
+              d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1A1.7 1.7 0 0 0 2.9 13H2a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.22.38.58.66 1 .8.18.06.37.09.56.09H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z"
+            />
+          </svg>
+          <span>Configuración</span>
+        </a>
       </nav>
     </aside>
 
@@ -28,122 +120,654 @@
       <header class="topbar compact-topbar account-topbar">
         <button class="menu-toggle" id="menuToggle" type="button">☰</button>
         <div class="user account-user">
-          <span class="avatar">{{ nombre.split()[0][0].upper() if nombre else 'U' }}</span>
+          <span class="avatar"
+            >{{ nombre.split()[0][0].upper() if nombre else 'U' }}</span
+          >
           <div><strong>{{ nombre }}</strong><small>{{ correo }}</small></div>
-          <button type="button" class="logout-icon" data-open-logout title="Cerrar sesión">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="logout-svg"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <button
+            type="button"
+            class="logout-icon"
+            data-open-logout
+            title="Cerrar sesión"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="logout-svg"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
           </button>
         </div>
       </header>
 
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          <div class="flash-wrap">
-            {% for category, message in messages %}
-              <div class="flash {{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="flash-wrap">
+        {% for category, message in messages %}
+        <div class="flash {{ 'error' if category == 'error' else 'success' }}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
 
-      <section id="inicio" class="personal-section {{ 'active-section' if active_section == 'inicio' else '' }}">
-        <section class="page-title"><div><h1>Inicio</h1><p>Resumen general de tu cuenta personal.</p></div></section>
+      <section
+        id="inicio"
+        class="personal-section {{ 'active-section' if active_section == 'inicio' else '' }}"
+      >
+        <section class="page-title">
+          <div>
+            <h1>Inicio</h1>
+            <p>Resumen general de tu cuenta personal.</p>
+          </div>
+        </section>
         <div class="stats-grid personal-stats">
-          <article class="stat-card"><small>Saldo actual</small><strong id="saldoActual">$ 0</strong><span>cuentas + movimientos completados</span></article>
-          <article class="stat-card"><small>Ingresos del mes</small><strong id="ingresosMes">$ 0</strong><span>completados</span></article>
-          <article class="stat-card"><small>Gastos del mes</small><strong id="egresosMes">$ 0</strong><span>completados</span></article>
+          <article class="stat-card">
+            <small>Saldo actual</small><strong id="saldoActual">$ 0</strong
+            ><span>cuentas + movimientos completados</span>
+          </article>
+          <article class="stat-card">
+            <small>Ingresos del mes</small><strong id="ingresosMes">$ 0</strong
+            ><span>completados</span>
+          </article>
+          <article class="stat-card">
+            <small>Gastos del mes</small><strong id="egresosMes">$ 0</strong
+            ><span>completados</span>
+          </article>
         </div>
         <section class="dashboard-grid personal-distribution-grid">
           <article class="card chart-card monthly-wide">
-            <div class="section-head"><div><h2>Gráfica mensual</h2><p class="subtext">Comparación mensual entre ingresos y egresos completados.</p></div><div class="legend"><span class="dot ventas"></span>Ingresos <span class="dot compras"></span>Egresos</div></div>
-            <div id="monthlyChart" class="chart-box" aria-label="Gráfica mensual personal"></div>
+            <div class="section-head">
+              <div>
+                <h2>Gráfica mensual</h2>
+                <p class="subtext">
+                  Comparación mensual entre ingresos y egresos completados.
+                </p>
+              </div>
+              <div class="legend">
+                <span class="dot ventas"></span>Ingresos
+                <span class="dot compras"></span>Egresos
+              </div>
+            </div>
+            <div
+              id="monthlyChart"
+              class="chart-box"
+              aria-label="Gráfica mensual personal"
+            ></div>
           </article>
-          <article class="card chart-card compact-chart distribution-card"><div class="section-head stacked"><div><h2>Distribución de ingresos</h2><p class="subtext">Ingresos completados agrupados por categoría.</p></div></div><div id="donutIngresosChart" class="donut-box"></div><div id="donutIngresosSummary" class="donut-summary"></div></article>
-          <article class="card chart-card compact-chart distribution-card"><div class="section-head stacked"><div><h2>Distribución de egresos</h2><p class="subtext">Egresos completados agrupados por categoría.</p></div></div><div id="donutEgresosChart" class="donut-box"></div><div id="donutEgresosSummary" class="donut-summary"></div></article>
+          <article class="card chart-card compact-chart distribution-card">
+            <div class="section-head stacked">
+              <div>
+                <h2>Distribución de ingresos</h2>
+                <p class="subtext">
+                  Ingresos completados agrupados por categoría.
+                </p>
+              </div>
+            </div>
+            <div id="donutIngresosChart" class="donut-box"></div>
+            <div id="donutIngresosSummary" class="donut-summary"></div>
+          </article>
+          <article class="card chart-card compact-chart distribution-card">
+            <div class="section-head stacked">
+              <div>
+                <h2>Distribución de egresos</h2>
+                <p class="subtext">
+                  Egresos completados agrupados por categoría.
+                </p>
+              </div>
+            </div>
+            <div id="donutEgresosChart" class="donut-box"></div>
+            <div id="donutEgresosSummary" class="donut-summary"></div>
+          </article>
         </section>
         <section class="card full">
-          <div class="section-head"><div><h2>Resumen por cuentas</h2><p class="subtext">Muestra cuánto ha ingresado, cuánto se ha gastado y el saldo actual en cada cuenta.</p></div></div>
-          <div class="table-scroll"><table><thead><tr><th>Cuenta</th><th>Tipo</th><th>Ingresado</th><th>Gastado</th><th>Saldo actual</th><th>Saldo inicial</th></tr></thead><tbody id="resumenCuentasBody"></tbody></table></div>
+          <div class="section-head">
+            <div>
+              <h2>Resumen por cuentas</h2>
+              <p class="subtext">
+                Muestra cuánto ha ingresado, cuánto se ha gastado y el saldo
+                actual en cada cuenta.
+              </p>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cuenta</th>
+                  <th>Tipo</th>
+                  <th>Ingresado</th>
+                  <th>Gastado</th>
+                  <th>Saldo actual</th>
+                  <th>Saldo inicial</th>
+                </tr>
+              </thead>
+              <tbody id="resumenCuentasBody"></tbody>
+            </table>
+          </div>
         </section>
       </section>
 
-      <section id="ingresos" class="personal-section {{ 'active-section' if active_section == 'ingresos' else '' }}">
-        <section class="page-title"><div><h1>Ingresos</h1><p>Registra y administra tus ingresos personales.</p></div></section>
-        <section class="card sheet"><div class="section-head"><h2>Nuevo ingreso</h2><span class="hint">Todos los campos principales son editables.</span></div>
+      <section
+        id="ingresos"
+        class="personal-section {{ 'active-section' if active_section == 'ingresos' else '' }}"
+      >
+        <section class="page-title">
+          <div>
+            <h1>Ingresos</h1>
+            <p>Registra y administra tus ingresos personales.</p>
+          </div>
+        </section>
+        <section class="card sheet">
+          <div class="section-head">
+            <h2>Nuevo ingreso</h2>
+            <span class="hint"
+              >Todos los campos principales son editables.</span
+            >
+          </div>
           <form class="form-grid" data-movement-form data-type="ingreso">
-            <label>Categoría<select name="categoria" required data-category-select="ingreso"><option value="">Seleccione...</option></select></label>
-            <label>Cuenta<select name="cuenta_id" data-account-select><option value="">Seleccione...</option></select></label>
-            <label>Monto<input name="monto" inputmode="numeric" data-format-int required placeholder="0" /></label>
-            <label class="span-3">Descripción<textarea name="descripcion" rows="2" required></textarea></label>
-            <label>Fecha<input type="datetime-local" name="fecha" required /></label>
-            <label>Estado<select name="estado" required><option value="completado">completado</option><option value="vencido">vencido</option><option value="anulado">anulado</option></select></label>
-            <div class="form-actions span-3"><button class="btn" type="submit">Guardar ingreso</button></div>
+            <label
+              >Categoría<select
+                name="categoria"
+                required
+                data-category-select="ingreso"
+              >
+                <option value="">Seleccione...</option>
+              </select></label
+            >
+            <label
+              >Cuenta<select name="cuenta_id" data-account-select>
+                <option value="">Seleccione...</option>
+              </select></label
+            >
+            <label
+              >Monto<input
+                name="monto"
+                inputmode="numeric"
+                data-format-int
+                required
+                placeholder="0"
+            /></label>
+            <label class="span-3"
+              >Descripción<textarea
+                name="descripcion"
+                rows="2"
+                required
+              ></textarea>
+            </label>
+            <label
+              >Fecha<input type="datetime-local" name="fecha" required
+            /></label>
+            <label
+              >Estado<select name="estado" required>
+                <option value="completado">completado</option>
+                <option value="vencido">vencido</option>
+                <option value="anulado">anulado</option>
+              </select></label
+            >
+            <div class="form-actions span-3">
+              <button class="btn" type="submit">Guardar ingreso</button>
+            </div>
           </form>
         </section>
-        <section class="card full"><h2>Ingresos registrados</h2><div class="table-scroll"><table><thead><tr><th>N°</th><th>Fecha</th><th>Categoría</th><th>Cuenta</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaIngresos"></tbody></table></div></section>
+        <section class="card full">
+          <h2>Ingresos registrados</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Cuenta</th>
+                  <th>Descripción</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaIngresos"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
 
-      <section id="egresos" class="personal-section {{ 'active-section' if active_section == 'egresos' else '' }}">
-        <section class="page-title"><div><h1>Egresos</h1><p>Registra y administra tus egresos personales.</p></div></section>
-        <section class="card sheet"><div class="section-head"><h2>Nuevo egreso</h2><span class="hint">Todos los campos principales son editables.</span></div>
+      <section
+        id="egresos"
+        class="personal-section {{ 'active-section' if active_section == 'egresos' else '' }}"
+      >
+        <section class="page-title">
+          <div>
+            <h1>Egresos</h1>
+            <p>Registra y administra tus egresos personales.</p>
+          </div>
+        </section>
+        <section class="card sheet">
+          <div class="section-head">
+            <h2>Nuevo egreso</h2>
+            <span class="hint"
+              >Todos los campos principales son editables.</span
+            >
+          </div>
           <form class="form-grid" data-movement-form data-type="egreso">
-            <label>Categoría<select name="categoria" required data-category-select="egreso"><option value="">Seleccione...</option></select></label>
-            <label>Cuenta<select name="cuenta_id" data-account-select><option value="">Seleccione...</option></select></label>
-            <label>Monto<input name="monto" inputmode="numeric" data-format-int required placeholder="0" /></label>
-            <label class="span-3">Descripción<textarea name="descripcion" rows="2" required></textarea></label>
-            <label>Fecha<input type="datetime-local" name="fecha" required /></label>
-            <label>Estado<select name="estado" required><option value="completado">completado</option><option value="vencido">vencido</option><option value="anulado">anulado</option></select></label>
-            <div class="form-actions span-3"><button class="btn danger" type="submit">Guardar egreso</button></div>
+            <label
+              >Categoría<select
+                name="categoria"
+                required
+                data-category-select="egreso"
+              >
+                <option value="">Seleccione...</option>
+              </select></label
+            >
+            <label
+              >Cuenta<select name="cuenta_id" data-account-select>
+                <option value="">Seleccione...</option>
+              </select></label
+            >
+            <label
+              >Monto<input
+                name="monto"
+                inputmode="numeric"
+                data-format-int
+                required
+                placeholder="0"
+            /></label>
+            <label class="span-3"
+              >Descripción<textarea
+                name="descripcion"
+                rows="2"
+                required
+              ></textarea>
+            </label>
+            <label
+              >Fecha<input type="datetime-local" name="fecha" required
+            /></label>
+            <label
+              >Estado<select name="estado" required>
+                <option value="completado">completado</option>
+                <option value="vencido">vencido</option>
+                <option value="anulado">anulado</option>
+              </select></label
+            >
+            <div class="form-actions span-3">
+              <button class="btn danger" type="submit">Guardar egreso</button>
+            </div>
           </form>
         </section>
-        <section class="card full"><h2>Egresos registrados</h2><div class="table-scroll"><table><thead><tr><th>N°</th><th>Fecha</th><th>Categoría</th><th>Cuenta</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="tablaEgresos"></tbody></table></div></section>
+        <section class="card full">
+          <h2>Egresos registrados</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Cuenta</th>
+                  <th>Descripción</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaEgresos"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
 
-      <section id="cuentas" class="personal-section {{ 'active-section' if active_section == 'cuentas' else '' }}">
-        <section class="page-title"><div><h1>Cuentas</h1><p>Registra tus billeteras, bancos, efectivo o tarjetas.</p></div></section>
-        <section class="card sheet"><div class="section-head"><h2>Nueva cuenta</h2><span class="hint">Sirve para identificar dónde está tu dinero.</span></div>
+      <section
+        id="cuentas"
+        class="personal-section {{ 'active-section' if active_section == 'cuentas' else '' }}"
+      >
+        <section class="page-title">
+          <div>
+            <h1>Cuentas</h1>
+            <p>Registra tus billeteras, bancos, efectivo o tarjetas.</p>
+          </div>
+        </section>
+        <section class="card sheet">
+          <div class="section-head">
+            <h2>Nueva cuenta</h2>
+            <span class="hint"
+              >Sirve para identificar dónde está tu dinero.</span
+            >
+          </div>
           <form class="form-grid" data-account-form>
-            <label>Nombre de la cuenta<input name="nombre" placeholder="Ej: Efectivo, Bancolombia, Nequi" required /></label>
-            <label>Tipo<select name="tipo" required><option value="efectivo">Efectivo</option><option value="banco">Banco</option><option value="billetera">Billetera</option><option value="tarjeta">Tarjeta</option></select></label>
-            <label>Saldo inicial<input name="saldo_inicial" inputmode="numeric" data-format-int placeholder="0" /></label>
-            <div class="form-actions span-3"><button class="btn" type="submit">Guardar cuenta</button></div>
+            <label
+              >Nombre de la cuenta<input
+                name="nombre"
+                placeholder="Ej: Efectivo, Bancolombia, Nequi"
+                required
+            /></label>
+            <label
+              >Tipo<select name="tipo" required>
+                <option value="efectivo">Efectivo</option>
+                <option value="banco">Banco</option>
+                <option value="billetera">Billetera</option>
+                <option value="tarjeta">Tarjeta</option>
+              </select></label
+            >
+            <label
+              >Saldo inicial<input
+                name="saldo_inicial"
+                inputmode="numeric"
+                data-format-int
+                placeholder="0"
+            /></label>
+            <div class="form-actions span-3">
+              <button class="btn" type="submit">Guardar cuenta</button>
+            </div>
           </form>
         </section>
-        <section class="card full"><h2>Cuentas registradas</h2><div class="table-scroll"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Saldo inicial</th><th>Saldo actual</th><th>Acciones</th></tr></thead><tbody id="tablaCuentas"></tbody></table></div></section>
-      </section>
-
-      <section id="reportes" class="personal-section {{ 'active-section' if active_section == 'reportes' else '' }}">
-        <section class="page-title"><div><h1>Reportes y movimientos</h1><p>Consulta, filtra y exporta tus ingresos y egresos.</p></div></section>
-        <section class="card full"><div class="section-head"><div><h2>Movimientos personales</h2><p class="subtext">El PDF y Excel se generan con la información actualizada.</p></div><div class="actions report-actions"><input type="date" id="desde" /><input type="date" id="hasta" /><button class="btn secondary small" type="button" data-filter-report>Filtrar</button><a class="btn secondary small" id="reportePdfGeneral" href="/reportes/movimientos/pdf">Movimientos PDF</a><a class="btn secondary small" id="reporteExcelGeneral" href="/reportes/movimientos/excel">Movimientos Excel</a></div></div>
-          <div class="table-scroll"><table><thead><tr><th>N°</th><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Cuenta</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="reporteBody"></tbody></table></div>
+        <section class="card full">
+          <h2>Cuentas registradas</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Tipo</th>
+                  <th>Saldo inicial</th>
+                  <th>Saldo actual</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaCuentas"></tbody>
+            </table>
+          </div>
         </section>
       </section>
 
-      <section id="configuracion" class="personal-section {{ 'active-section' if active_section == 'configuracion' else '' }}">
-        <section class="page-title"><div><h1>Configuración</h1><p>Datos de registro de tu cuenta personal.</p></div></section>
-        <section class="card sheet"><div class="section-head stacked"><div><h2>Editar datos personales</h2><p class="subtext">Actualiza tu información básica. La contraseña es opcional.</p></div></div>
-          <form method="post" action="{{ url_for('persona.configuracion_personal') }}" class="form-grid" autocomplete="off">
-            <label>Nombre<input name="nombre" required value="{{ perfil.nombre if perfil else '' }}" /></label>
-            <label>Apellido<input name="apellido" required value="{{ perfil.apellido if perfil else '' }}" /></label>
-            <label>Correo electrónico<input type="email" name="email" required value="{{ perfil.email if perfil else correo }}" /></label>
-            <label>Documento de identidad<input name="documento_identidad" required value="{{ perfil.documento_identidad if perfil else '' }}" /></label>
-            <label>Teléfono<input name="telefono" required inputmode="numeric" pattern="[0-9]+" oninput="this.value = this.value.replace(/\D/g, '')" value="{{ perfil.telefono if perfil else '' }}" /></label>
-            <label>Dirección<input name="direccion" value="{{ perfil.direccion if perfil else '' }}" /></label>
-            <label>Nueva contraseña<input type="password" name="nueva_contrasena" autocomplete="new-password" placeholder="Solo si deseas cambiarla" /></label>
-            <label>Confirmar contraseña<input type="password" name="confirmar_contrasena" autocomplete="new-password" placeholder="Repite la nueva contraseña" /></label>
-            <div class="form-actions span-3"><button class="btn" type="submit">Guardar configuración</button></div>
+      <section
+        id="reportes"
+        class="personal-section {{ 'active-section' if active_section == 'reportes' else '' }}"
+      >
+        <section class="page-title">
+          <div>
+            <h1>Reportes y movimientos</h1>
+            <p>Consulta, filtra y exporta tus ingresos y egresos.</p>
+          </div>
+        </section>
+        <section class="card full">
+          <div class="section-head">
+            <div>
+              <h2>Movimientos personales</h2>
+              <p class="subtext">
+                El PDF y Excel se generan con la información actualizada.
+              </p>
+            </div>
+            <div class="actions report-actions">
+              <input type="date" id="desde" /><input
+                type="date"
+                id="hasta"
+              /><button
+                class="btn secondary small"
+                type="button"
+                data-filter-report
+              >
+                Filtrar</button
+              ><a
+                class="btn secondary small"
+                id="reportePdfGeneral"
+                href="/reportes/movimientos/pdf"
+                >Movimientos PDF</a
+              ><a
+                class="btn secondary small"
+                id="reporteExcelGeneral"
+                href="/reportes/movimientos/excel"
+                >Movimientos Excel</a
+              >
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Categoría</th>
+                  <th>Cuenta</th>
+                  <th>Descripción</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="reporteBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section
+        id="configuracion"
+        class="personal-section {{ 'active-section' if active_section == 'configuracion' else '' }}"
+      >
+        <section class="page-title">
+          <div>
+            <h1>Configuración</h1>
+            <p>Datos de registro de tu cuenta personal.</p>
+          </div>
+        </section>
+        <section class="card sheet">
+          <div class="section-head stacked">
+            <div>
+              <h2>Editar datos personales</h2>
+              <p class="subtext">
+                Actualiza tu información básica. La contraseña es opcional.
+              </p>
+            </div>
+          </div>
+          <form
+            method="post"
+            action="{{ url_for('persona.configuracion_personal') }}"
+            class="form-grid"
+            autocomplete="off"
+          >
+            <label
+              >Nombre<input
+                name="nombre"
+                required
+                value="{{ perfil.nombre if perfil else '' }}"
+            /></label>
+            <label
+              >Apellido<input
+                name="apellido"
+                required
+                value="{{ perfil.apellido if perfil else '' }}"
+            /></label>
+            <label
+              >Correo electrónico<input
+                type="email"
+                name="email"
+                required
+                value="{{ perfil.email if perfil else correo }}"
+            /></label>
+            <label
+              >Documento de identidad<input
+                name="documento_identidad"
+                required
+                value="{{ perfil.documento_identidad if perfil else '' }}"
+            /></label>
+            <label
+              >Teléfono<input
+                name="telefono"
+                required
+                inputmode="numeric"
+                pattern="[0-9]+"
+                oninput="this.value = this.value.replace(/\D/g, '')"
+                value="{{ perfil.telefono if perfil else '' }}"
+            /></label>
+            <label
+              >Dirección<input
+                name="direccion"
+                value="{{ perfil.direccion if perfil else '' }}"
+            /></label>
+            <label
+              >Nueva contraseña<input
+                type="password"
+                name="nueva_contrasena"
+                autocomplete="new-password"
+                placeholder="Solo si deseas cambiarla"
+            /></label>
+            <label
+              >Confirmar contraseña<input
+                type="password"
+                name="confirmar_contrasena"
+                autocomplete="new-password"
+                placeholder="Repite la nueva contraseña"
+            /></label>
+            <label
+              >Código de verificación<input
+                name="codigo_contrasena"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="Código enviado a tu correo"
+            /></label>
+            <div class="form-actions span-3">
+              <button
+                class="btn secondary"
+                type="button"
+                data-send-config-password-code
+              >
+                Enviar código para contraseña</button
+              ><button class="btn" type="submit">Guardar configuración</button>
+            </div>
           </form>
         </section>
       </section>
     </main>
 
-    <dialog class="modal" id="editMovementDialog"><div class="modal-content large-modal"><button class="modal-close" type="button" data-close-dialog>×</button><h2>Editar movimiento</h2><form class="form-grid" id="editMovementForm"><input type="hidden" name="id" /><input type="hidden" name="tipo" /><label>Categoría<input name="categoria" required /></label><label>Cuenta<select name="cuenta_id" data-account-select><option value="">Seleccione...</option></select></label><label>Monto<input name="monto" inputmode="numeric" data-format-int required /></label><label>Fecha<input type="datetime-local" name="fecha" required /></label><label>Estado<select name="estado"><option value="completado">completado</option><option value="vencido">vencido</option><option value="anulado">anulado</option></select></label><label class="span-3">Descripción<textarea name="descripcion" rows="3" required></textarea></label><div class="form-actions span-3"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div></form></div></dialog>
-    <dialog class="modal" id="editAccountDialog"><div class="modal-content large-modal"><button class="modal-close" type="button" data-close-dialog>×</button><h2>Editar cuenta</h2><form class="form-grid" id="editAccountForm"><input type="hidden" name="id" /><label>Nombre<input name="nombre" required /></label><label>Tipo<select name="tipo" required><option value="efectivo">Efectivo</option><option value="banco">Banco</option><option value="billetera">Billetera</option><option value="tarjeta">Tarjeta</option></select></label><label>Saldo inicial<input name="saldo_inicial" inputmode="numeric" data-format-int /></label><div class="form-actions span-3"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div></form></div></dialog>
-    <dialog class="modal" id="deleteMovementDialog"><div class="modal-content confirm-modal"><h2>Eliminar movimiento</h2><p>¿Seguro que deseas eliminar este registro? Esta acción no se puede deshacer.</p><div class="form-actions"><button class="btn secondary" type="button" data-close-dialog>Cancelar</button><button class="btn danger" type="button" id="confirmDeleteMovement">Eliminar</button></div></div></dialog>
-    <dialog class="modal" id="deleteAccountDialog"><div class="modal-content confirm-modal"><h2>Eliminar cuenta</h2><p>¿Seguro que deseas eliminar esta cuenta?</p><div class="form-actions"><button class="btn secondary" type="button" data-close-dialog>Cancelar</button><button class="btn danger" type="button" id="confirmDeleteAccount">Eliminar</button></div></div></dialog>
-    <dialog class="modal" id="logoutDialog"><div class="modal-content confirm-modal"><h2>Cerrar sesión</h2><p>¿Seguro que deseas cerrar sesión?</p><div class="form-actions"><button class="btn secondary" type="button" data-close-dialog>Cancelar</button><a class="btn danger" href="{{ url_for('auth.logout') }}">Cerrar sesión</a></div></div></dialog>
+    <dialog class="modal" id="editMovementDialog">
+      <div class="modal-content large-modal">
+        <button class="modal-close" type="button" data-close-dialog>×</button>
+        <h2>Editar movimiento</h2>
+        <form class="form-grid" id="editMovementForm">
+          <input type="hidden" name="id" /><input
+            type="hidden"
+            name="tipo"
+          /><label>Categoría<input name="categoria" required /></label
+          ><label
+            >Cuenta<select name="cuenta_id" data-account-select>
+              <option value="">Seleccione...</option>
+            </select></label
+          ><label
+            >Monto<input
+              name="monto"
+              inputmode="numeric"
+              data-format-int
+              required /></label
+          ><label
+            >Fecha<input type="datetime-local" name="fecha" required /></label
+          ><label
+            >Estado<select name="estado">
+              <option value="completado">completado</option>
+              <option value="vencido">vencido</option>
+              <option value="anulado">anulado</option>
+            </select></label
+          ><label class="span-3"
+            >Descripción<textarea
+              name="descripcion"
+              rows="3"
+              required
+            ></textarea>
+          </label>
+          <div class="form-actions span-3">
+            <button class="btn" type="submit">Guardar cambios</button
+            ><button class="btn secondary" type="button" data-close-dialog>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+    <dialog class="modal" id="editAccountDialog">
+      <div class="modal-content large-modal">
+        <button class="modal-close" type="button" data-close-dialog>×</button>
+        <h2>Editar cuenta</h2>
+        <form class="form-grid" id="editAccountForm">
+          <input type="hidden" name="id" /><label
+            >Nombre<input name="nombre" required /></label
+          ><label
+            >Tipo<select name="tipo" required>
+              <option value="efectivo">Efectivo</option>
+              <option value="banco">Banco</option>
+              <option value="billetera">Billetera</option>
+              <option value="tarjeta">Tarjeta</option>
+            </select></label
+          ><label
+            >Saldo inicial<input
+              name="saldo_inicial"
+              inputmode="numeric"
+              data-format-int
+          /></label>
+          <div class="form-actions span-3">
+            <button class="btn" type="submit">Guardar cambios</button
+            ><button class="btn secondary" type="button" data-close-dialog>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+    <dialog class="modal" id="deleteMovementDialog">
+      <div class="modal-content confirm-modal">
+        <h2>Eliminar movimiento</h2>
+        <p>
+          ¿Seguro que deseas eliminar este registro? Esta acción no se puede
+          deshacer.
+        </p>
+        <div class="form-actions">
+          <button class="btn secondary" type="button" data-close-dialog>
+            Cancelar</button
+          ><button class="btn danger" type="button" id="confirmDeleteMovement">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <dialog class="modal" id="deleteAccountDialog">
+      <div class="modal-content confirm-modal">
+        <h2>Eliminar cuenta</h2>
+        <p>¿Seguro que deseas eliminar esta cuenta?</p>
+        <div class="form-actions">
+          <button class="btn secondary" type="button" data-close-dialog>
+            Cancelar</button
+          ><button class="btn danger" type="button" id="confirmDeleteAccount">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <dialog class="modal" id="logoutDialog">
+      <div class="modal-content confirm-modal">
+        <h2>Cerrar sesión</h2>
+        <p>¿Seguro que deseas cerrar sesión?</p>
+        <div class="form-actions">
+          <button class="btn secondary" type="button" data-close-dialog>
+            Cancelar</button
+          ><a class="btn danger" href="{{ url_for('auth.logout') }}"
+            >Cerrar sesión</a
+          >
+        </div>
+      </div>
+    </dialog>
     <div id="globalTooltip" class="chart-tooltip" hidden></div>
-    <script id="dashboard-data" type="application/json">{{ dashboard_json|tojson }}</script>
+    <script id="dashboard-data" type="application/json">
+      {{ dashboard_json|tojson }}
+    </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/personal.js') }}"></script>
   </body>

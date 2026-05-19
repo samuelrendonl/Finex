@@ -14,15 +14,107 @@
       <div><strong>FINEX</strong><small>Empresa</small></div>
     </div>
     <nav>
-      <a class="{{ 'active' if active == 'inicio' else '' }}" href="{{ url_for('finex.index') }}">Inicio</a>
-      <a class="{{ 'active' if active == 'venta' else '' }}" href="{{ url_for('finex.facturacion_venta') }}">Facturacion venta</a>
-      <a class="{{ 'active' if active == 'compra' else '' }}" href="{{ url_for('finex.facturas_compra') }}">Facturas compra</a>
-      <a class="{{ 'active' if active == 'clientes' else '' }}" href="{{ url_for('finex.clientes') }}">Clientes</a>
-      <a class="{{ 'active' if active == 'proveedores' else '' }}" href="{{ url_for('finex.proveedores') }}">Proveedores</a>
-      <a class="{{ 'active' if active == 'items' else '' }}" href="{{ url_for('finex.items') }}">Items/Servicios</a>
-      <a class="{{ 'active' if active == 'movimientos' else '' }}" href="{{ url_for('finex.movimientos') }}">Movimientos</a>
-      <a class="{{ 'active' if active == 'configuracion' else '' }}" href="{{ url_for('finex.configuracion') }}">Configuracion</a>
-    </nav>
+  <a
+    class="{{ 'active' if active == 'inicio' else '' }}"
+    href="{{ url_for('finex.index') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 10v10h14V10" />
+      <path d="M9 20v-6h6v6" />
+    </svg>
+    <span>Inicio</span>
+  </a>
+
+  <a
+    class="{{ 'active' if active == 'venta' else '' }}"
+    href="{{ url_for('finex.facturacion_venta') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 3h10a2 2 0 0 1 2 2v16l-3-2-3 2-3-2-3 2-2-1.3V5a2 2 0 0 1 2-2Z" />
+      <path d="M9 8h6" />
+      <path d="M9 12h6" />
+      <path d="M9 16h3" />
+    </svg>
+    <span>Facturación venta</span>
+  </a>
+
+  <a
+    class="{{ 'active' if active == 'compra' else '' }}"
+    href="{{ url_for('finex.facturas_compra') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z" />
+      <path d="M9 7h6" />
+      <path d="M9 11h6" />
+      <path d="M9 15h4" />
+      <path d="M16 17l2 2 4-4" />
+    </svg>
+    <span>Facturas compra</span>
+  </a>
+
+  <a
+    class="{{ 'active' if active == 'clientes' else '' }}"
+    href="{{ url_for('finex.clientes') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+    <span>Clientes</span>
+  </a>
+
+  <a
+    class="{{ 'active' if active == 'proveedores' else '' }}"
+    href="{{ url_for('finex.proveedores') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 7h11v10H3z" />
+      <path d="M14 10h4l3 3v4h-7z" />
+      <circle cx="7" cy="19" r="2" />
+      <circle cx="17" cy="19" r="2" />
+    </svg>
+    <span>Proveedores</span>
+  </a>
+
+  <a
+    class="{{ 'active' if active == 'items' else '' }}"
+    href="{{ url_for('finex.items') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <path d="M3.3 7 12 12l8.7-5" />
+      <path d="M12 22V12" />
+    </svg>
+    <span>Items/Servicios</span>
+  </a>
+
+  <a
+    class="{{ 'active' if active == 'movimientos' else '' }}"
+    href="{{ url_for('finex.movimientos') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 7h14" />
+      <path d="M17 3l4 4-4 4" />
+      <path d="M17 17H3" />
+      <path d="M7 13l-4 4 4 4" />
+    </svg>
+    <span>Movimientos</span>
+  </a>
+
+  <a
+    class="{{ 'active' if active == 'configuracion' else '' }}"
+    href="{{ url_for('finex.configuracion') }}"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1A1.7 1.7 0 0 0 2.9 13H2a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.22.38.58.66 1 .8.18.06.37.09.56.09H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z" />
+    </svg>
+    <span>Configuración</span>
+  </a>
+</nav>
     
   </aside>
 
@@ -761,7 +853,10 @@
     <label>Ciudad<input name="ciudad" value="{{ empresa.ciudad or '' }}"></label>
     <label>Departamento<input name="departamento" value="{{ empresa.departamento or '' }}"></label>
     <label class="span-3">Direccion<input name="direccion" value="{{ empresa.direccion or '' }}"></label>
-    <div class="form-actions span-3"><button class="btn" type="submit">Guardar configuracion</button></div>
+    <label>Nueva contraseña<input type="password" name="nueva_contrasena" autocomplete="new-password" placeholder="Solo si deseas cambiarla"></label>
+    <label>Confirmar contraseña<input type="password" name="confirmar_contrasena" autocomplete="new-password" placeholder="Repite la nueva contraseña"></label>
+    <label>Código de verificación<input name="codigo_contrasena" inputmode="numeric" maxlength="6" placeholder="Código enviado a tu correo"></label>
+    <div class="form-actions span-3"><button class="btn secondary" type="button" data-send-config-password-code>Enviar código para contraseña</button><button class="btn" type="submit">Guardar configuracion</button></div>
   </form>
 </section>
 

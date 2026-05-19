@@ -3,6 +3,44 @@
   padding: 0;
   box-sizing: border-box;
 }
+.field-error {
+  border: 2px solid #ff2d2d !important;
+  background-color: #fffafa;
+}
+
+.field-error-message {
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-left: 4px solid #ff6b6b;
+  border-radius: 8px;
+  background-color: #ffe1e1;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.input-invalid {
+  border: 2px solid #ff2d2d !important;
+  background-color: #fffafa !important;
+  box-shadow: 0 0 0 3px rgba(255, 45, 45, 0.08) !important;
+}
+
+.field-error-message {
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-left: 4px solid #ff6b6b;
+  border-radius: 8px;
+  background-color: #ffe1e1;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 500;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.field-error-message.show {
+  display: block;
+}
 
 :root {
   --primary-color: #003d7a;
@@ -1164,7 +1202,11 @@ svg {
 @media (max-width: 640px) {
   body {
     background:
-      radial-gradient(circle at top left, rgba(0, 102, 204, 0.18), transparent 280px),
+      radial-gradient(
+        circle at top left,
+        rgba(0, 102, 204, 0.18),
+        transparent 280px
+      ),
       linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
   }
 
@@ -1476,4 +1518,47 @@ svg {
   .auth-right-panel {
     padding: 24px 22px;
   }
+}
+
+/* ========================================================= */
+/* VALIDACIONES VISUALES DE FORMULARIOS */
+/* Campos vacios o invalidos */
+/* ========================================================= */
+
+.form-group input.input-invalid,
+.form-group input.input-invalid:focus {
+  border: 2px solid #ff2d2d !important;
+  background-color: #fffafa !important;
+  box-shadow: 0 0 0 3px rgba(255, 45, 45, 0.08) !important;
+}
+
+.field-error-message {
+  display: block !important;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-left: 4px solid #ff6b6b;
+  border-radius: 8px;
+  background-color: #ffe1e1;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 500;
+  box-sizing: border-box;
+  line-height: 1.4;
+}
+
+.field-error-message.message {
+  margin-top: 10px;
+}
+
+.field-error-message.show {
+  display: block !important;
+}
+
+.form-group:has(.input-invalid) label {
+  color: #b42318;
+}
+
+.field-error-message {
+  display: none !important;
 }

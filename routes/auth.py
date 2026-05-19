@@ -19,55 +19,81 @@ PASSWORD_RESET_SESSION_KEY = "password_reset"
 PASSWORD_RESET_CODE_TTL_MINUTES = int(os.getenv("PASSWORD_RESET_CODE_TTL_MINUTES", "10"))
 PASSWORD_RESET_MAX_ATTEMPTS = int(os.getenv("PASSWORD_RESET_MAX_ATTEMPTS", "5"))
 
+EMAIL_VERIFICATION_SESSION_KEY = "email_verification_codes"
+REGISTRATION_VERIFICATION_PURPOSE = "registro"
+CONFIG_PASSWORD_VERIFICATION_PURPOSE = "config_password"
+EMAIL_VERIFICATION_CODE_TTL_MINUTES = int(os.getenv("EMAIL_VERIFICATION_CODE_TTL_MINUTES", "10"))
+EMAIL_VERIFICATION_MAX_ATTEMPTS = int(os.getenv("EMAIL_VERIFICATION_MAX_ATTEMPTS", "5"))
+
 
 def _now_utc():
     return datetime.now(timezone.utc)
 
 
 def _smtp_enabled():
-    return bool(os.getenv("SMTP_HOST")) and bool(os.getenv("SMTP_FROM") or os.getenv("SMTP_USER"))
+    return all([
+        os.getenv("SMTP_HOST"),
+        os.getenv("SMTP_PORT"),
+        os.getenv("SMTP_USER"),
+        os.getenv("SMTP_PASSWORD"),
+        os.getenv("SMTP_FROM") or os.getenv("SMTP_USER"),
+    ])
 
 
-def _send_password_reset_email(email, code):
-    """Envia el codigo de recuperacion usando SMTP configurado por variables .env."""
+def _generate_six_digit_code():
+    return f"{secrets.randbelow(1000000):06d}"
+
+
+def _send_verification_email(email, code, subject, action_text, ttl_minutes):
+    """Envia un codigo de verificacion usando SMTP configurado en .env."""
     smtp_host = os.getenv("SMTP_HOST")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_password = (os.getenv("SMTP_PASSWORD") or "").strip()
+    if smtp_host and "gmail" in smtp_host.lower():
+        smtp_password = smtp_password.replace(" ", "")
     smtp_from = os.getenv("SMTP_FROM") or smtp_user
     smtp_from_name = os.getenv("SMTP_FROM_NAME", "FINEX")
     use_ssl = os.getenv("SMTP_USE_SSL", "false").lower() in ("1", "true", "yes", "si")
     use_tls = os.getenv("SMTP_USE_TLS", "true").lower() in ("1", "true", "yes", "si")
 
-    if not smtp_host or not smtp_from:
-        raise RuntimeError("Configura SMTP_HOST y SMTP_FROM en el archivo .env para enviar codigos de recuperacion.")
+    if not smtp_host or not smtp_port or not smtp_user or not smtp_password or not smtp_from:
+        raise RuntimeError("Configura SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en el archivo .env para enviar codigos.")
 
     message = EmailMessage()
-    message["Subject"] = "Codigo de recuperacion FINEX"
+    message["Subject"] = subject
     message["From"] = f"{smtp_from_name} <{smtp_from}>"
     message["To"] = email
     message.set_content(
         f"Hola,\n\n"
-        f"Tu codigo de recuperacion de FINEX es: {code}\n\n"
-        f"Este codigo vence en {PASSWORD_RESET_CODE_TTL_MINUTES} minutos. "
-        f"Si no solicitaste este cambio, puedes ignorar este correo.\n\n"
+        f"Tu codigo para {action_text} en FINEX es: {code}\n\n"
+        f"Este codigo vence en {ttl_minutes} minutos. "
+        f"Si no solicitaste este codigo, puedes ignorar este correo.\n\n"
         f"FINEX"
     )
 
     if use_ssl:
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
-            if smtp_user and smtp_password:
-                server.login(smtp_user, smtp_password)
+            server.login(smtp_user, smtp_password)
             server.send_message(message)
         return
 
     with smtplib.SMTP(smtp_host, smtp_port) as server:
         if use_tls:
             server.starttls(context=ssl.create_default_context())
-        if smtp_user and smtp_password:
-            server.login(smtp_user, smtp_password)
+        server.login(smtp_user, smtp_password)
         server.send_message(message)
+
+
+def _send_password_reset_email(email, code):
+    _send_verification_email(
+        email,
+        code,
+        "Codigo de recuperacion FINEX",
+        "recuperar tu contraseña",
+        PASSWORD_RESET_CODE_TTL_MINUTES,
+    )
 
 
 def _store_password_reset_code(email, code):
@@ -103,6 +129,102 @@ def _get_password_reset_data():
 def _clear_password_reset_data():
     session.pop(PASSWORD_RESET_SESSION_KEY, None)
     session.modified = True
+
+
+def _store_email_verification_code(purpose, email, code, usuario_id=None):
+    codes = session.get(EMAIL_VERIFICATION_SESSION_KEY) or {}
+    codes[purpose] = {
+        "email": email,
+        "usuario_id": str(usuario_id) if usuario_id is not None else None,
+        "code_hash": generate_password_hash(code),
+        "expires_at": (_now_utc() + timedelta(minutes=EMAIL_VERIFICATION_CODE_TTL_MINUTES)).isoformat(),
+        "attempts": 0,
+    }
+    session[EMAIL_VERIFICATION_SESSION_KEY] = codes
+    session.modified = True
+
+
+def _get_email_verification_data(purpose):
+    codes = session.get(EMAIL_VERIFICATION_SESSION_KEY) or {}
+    data = codes.get(purpose)
+    if not data:
+        return None
+
+    try:
+        expires_at = datetime.fromisoformat(data.get("expires_at", ""))
+    except ValueError:
+        _clear_email_verification_code(purpose)
+        return None
+
+    if expires_at < _now_utc():
+        _clear_email_verification_code(purpose)
+        return None
+
+    return data
+
+
+def _save_email_verification_data(purpose, data):
+    codes = session.get(EMAIL_VERIFICATION_SESSION_KEY) or {}
+    codes[purpose] = data
+    session[EMAIL_VERIFICATION_SESSION_KEY] = codes
+    session.modified = True
+
+
+def _clear_email_verification_code(purpose):
+    codes = session.get(EMAIL_VERIFICATION_SESSION_KEY) or {}
+    if purpose in codes:
+        codes.pop(purpose, None)
+        session[EMAIL_VERIFICATION_SESSION_KEY] = codes
+        session.modified = True
+
+
+def _verify_email_verification_code(purpose, codigo, email=None, usuario_id=None, missing_message=None):
+    codigo = (codigo or "").strip()
+    if not codigo:
+        return False, "Ingresa el codigo de verificacion enviado a tu correo."
+
+    if not codigo.isdigit() or len(codigo) != 6:
+        return False, "El codigo de verificacion debe tener 6 digitos."
+
+    data = _get_email_verification_data(purpose)
+    if not data:
+        return False, missing_message or "Solicita un codigo de verificacion antes de continuar."
+
+    if email and data.get("email") != email:
+        return False, "El codigo no corresponde al correo indicado. Solicita un nuevo codigo."
+
+    if usuario_id is not None and data.get("usuario_id") != str(usuario_id):
+        return False, "El codigo no corresponde a esta sesion. Solicita un nuevo codigo."
+
+    attempts = int(data.get("attempts", 0))
+    if attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS:
+        _clear_email_verification_code(purpose)
+        return False, "Demasiados intentos fallidos. Solicita un nuevo codigo."
+
+    if not check_password_hash(data.get("code_hash", ""), codigo):
+        data["attempts"] = attempts + 1
+        _save_email_verification_data(purpose, data)
+        return False, "Codigo de verificacion incorrecto."
+
+    _clear_email_verification_code(purpose)
+    return True, None
+
+
+def verify_config_password_code(codigo):
+    usuario_id = session.get("usuario_id")
+    if not usuario_id:
+        raise ValueError("Usuario no autenticado.")
+
+    ok, error = _verify_email_verification_code(
+        CONFIG_PASSWORD_VERIFICATION_PURPOSE,
+        codigo,
+        usuario_id=usuario_id,
+        missing_message="Solicita el codigo enviado a tu correo antes de cambiar la contraseña.",
+    )
+    if not ok:
+        raise ValueError(error)
+    return True
+
 
 
 def _empresa_id_for_user(cursor, usuario_id):
@@ -141,11 +263,13 @@ def _login_oauth_user(provider, email, nombre, provider_id=None, foto=None):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT id, tipo_cuenta FROM usuarios WHERE email=%s LIMIT 1", (email,))
+            cursor.execute("SELECT id, tipo_cuenta, contraseña FROM usuarios WHERE email=%s LIMIT 1", (email,))
             usuario = cursor.fetchone()
+            password_configurada = False
             if usuario:
                 usuario_id = usuario["id"]
                 tipo_cuenta = usuario["tipo_cuenta"]
+                password_configurada = bool(usuario.get("contraseña"))
                 cursor.execute(f"UPDATE usuarios SET {id_column}=%s, foto=COALESCE(%s, foto) WHERE id=%s", (provider_id, foto, usuario_id))
             else:
                 cursor.execute(f"""
@@ -162,6 +286,9 @@ def _login_oauth_user(provider, email, nombre, provider_id=None, foto=None):
                 nombre = nombre_empresa or nombre
             connection.commit()
         _set_session(usuario_id, email, tipo_cuenta, nombre, empresa_id)
+        if provider == "google" and tipo_cuenta == "persona" and not password_configurada:
+            flash("Cuenta creada con Google. Configura una contraseña desde esta seccion si tambien quieres iniciar con correo y contraseña.", "success")
+            return redirect(url_for("persona.dashboard", section="configuracion"))
         return redirect(_redirect_for(tipo_cuenta))
     finally:
         connection.close()
@@ -220,6 +347,50 @@ def callback_microsoft():
         return redirect(url_for("main.login"))
 
 
+@auth_bp.route("/api/solicitar-codigo-registro", methods=["POST"])
+def solicitar_codigo_registro():
+    connection = None
+    try:
+        data = request.get_json() or {}
+        email = (data.get("email") or "").strip().lower()
+
+        if not email:
+            return jsonify({"error": "El correo electronico es obligatorio"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM usuarios WHERE email=%s LIMIT 1", (email,))
+            if cursor.fetchone():
+                return jsonify({"error": "Ese correo ya esta registrado."}), 400
+
+        if not _smtp_enabled():
+            return jsonify({
+                "error": "No se pudo enviar el codigo porque el correo SMTP no esta configurado en el servidor. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en .env."
+            }), 500
+
+        code = _generate_six_digit_code()
+        _send_verification_email(
+            email,
+            code,
+            "Codigo de verificacion FINEX",
+            "verificar tu correo antes de crear la cuenta",
+            EMAIL_VERIFICATION_CODE_TTL_MINUTES,
+        )
+        _store_email_verification_code(REGISTRATION_VERIFICATION_PURPOSE, email, code)
+
+        return jsonify({
+            "success": True,
+            "message": "Enviamos un codigo de verificacion a tu correo. Ingresalo para completar el registro.",
+            "expires_in_minutes": EMAIL_VERIFICATION_CODE_TTL_MINUTES,
+        })
+    except Exception as e:
+        _clear_email_verification_code(REGISTRATION_VERIFICATION_PURPOSE)
+        return jsonify({"error": f"No se pudo enviar el codigo: {e}"}), 500
+    finally:
+        if connection:
+            connection.close()
+
+
 @auth_bp.route("/api/registro", methods=["POST"])
 def registro():
     connection = None
@@ -227,15 +398,29 @@ def registro():
         data = request.get_json() or {}
         email = (data.get("email") or "").strip().lower()
         contraseña = data.get("contraseña") or ""
+        codigo_verificacion = (data.get("codigo_verificacion") or data.get("codigo") or "").strip()
         tipo_cuenta = data.get("tipo_cuenta") or "empresa"
         if not email or not contraseña:
             return jsonify({"error": "Email y contraseña son obligatorios"}), 400
+
+        if len(contraseña) < 6:
+            return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute("SELECT id FROM usuarios WHERE email=%s", (email,))
             if cursor.fetchone():
                 return jsonify({"error": "Email ya existe"}), 400
+
+            ok, error = _verify_email_verification_code(
+                REGISTRATION_VERIFICATION_PURPOSE,
+                codigo_verificacion,
+                email=email,
+                missing_message="Solicita el codigo enviado a tu correo antes de completar el registro.",
+            )
+            if not ok:
+                return jsonify({"error": error}), 400
+
             cursor.execute("""
                 INSERT INTO usuarios (email, contraseña, tipo_cuenta, activo, fecha_creacion)
                 VALUES (%s,%s,%s,1,NOW())
@@ -283,6 +468,54 @@ def registro():
             connection.close()
 
 
+@auth_bp.route("/api/solicitar-codigo-configuracion", methods=["POST"])
+def solicitar_codigo_configuracion():
+    connection = None
+    try:
+        usuario_id = session.get("usuario_id")
+        if not usuario_id:
+            return jsonify({"error": "Debes iniciar sesion para solicitar el codigo."}), 401
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT email FROM usuarios WHERE id=%s LIMIT 1", (usuario_id,))
+            user = cursor.fetchone()
+
+        if not user:
+            return jsonify({"error": "No se encontro la cuenta activa."}), 404
+
+        email = (user.get("email") or session.get("usuario_email") or "").strip().lower()
+        if not email:
+            return jsonify({"error": "La cuenta no tiene un correo registrado."}), 400
+
+        if not _smtp_enabled():
+            return jsonify({
+                "error": "No se pudo enviar el codigo porque el correo SMTP no esta configurado en el servidor. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en .env."
+            }), 500
+
+        code = _generate_six_digit_code()
+        _send_verification_email(
+            email,
+            code,
+            "Codigo para cambiar contraseña FINEX",
+            "cambiar la contraseña de tu cuenta",
+            EMAIL_VERIFICATION_CODE_TTL_MINUTES,
+        )
+        _store_email_verification_code(CONFIG_PASSWORD_VERIFICATION_PURPOSE, email, code, usuario_id=usuario_id)
+
+        return jsonify({
+            "success": True,
+            "message": "Enviamos un codigo de verificacion al correo registrado en tu cuenta.",
+            "expires_in_minutes": EMAIL_VERIFICATION_CODE_TTL_MINUTES,
+        })
+    except Exception as e:
+        _clear_email_verification_code(CONFIG_PASSWORD_VERIFICATION_PURPOSE)
+        return jsonify({"error": f"No se pudo enviar el codigo: {e}"}), 500
+    finally:
+        if connection:
+            connection.close()
+
+
 @auth_bp.route("/api/solicitar-codigo-recuperacion", methods=["POST"])
 def solicitar_codigo_recuperacion():
     connection = None
@@ -314,7 +547,7 @@ def solicitar_codigo_recuperacion():
                 "error": "No se pudo enviar el codigo porque el correo SMTP no esta configurado en el servidor. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en .env."
             }), 500
 
-        code = f"{secrets.randbelow(1000000):06d}"
+        code = _generate_six_digit_code()
         _send_password_reset_email(email, code)
         _store_password_reset_code(email, code)
 

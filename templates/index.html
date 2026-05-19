@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FINEX - Sistema Contable Profesional</title>
     <link rel="stylesheet" href="/static/css/style.css" />
-    <link rel="icon" type="image/png" href="/static/img/Logo-Transparente.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/static/img/Logo-Transparente.png"
+    />
   </head>
 
   <body>
@@ -57,7 +61,7 @@
                   </p>
                 </div>
 
-                <form id="formLogin">
+                <form id="formLogin" novalidate>
                   <div class="form-group">
                     <label for="loginEmail">Correo electrónico *</label>
                     <input
@@ -123,7 +127,9 @@
 
                 <div class="form-footer">
                   <p>
-                    <a href="#" onclick="showPasswordRecovery(event)">¿Olvidaste tu contraseña?</a>
+                    <a href="#" onclick="showPasswordRecovery(event)"
+                      >¿Olvidaste tu contraseña?</a
+                    >
                   </p>
                   <p>
                     ¿No tienes cuenta?
@@ -140,11 +146,12 @@
                   <span class="form-tab-label">Recuperación</span>
                   <h2>Recuperar contraseña</h2>
                   <p class="form-subtitle">
-                    Ingresa tu correo, recibe un código de confirmación y crea una nueva contraseña.
+                    Ingresa tu correo, recibe un código de confirmación y crea
+                    una nueva contraseña.
                   </p>
                 </div>
 
-                <form id="formRecoverPassword">
+                <form id="formRecoverPassword" novalidate>
                   <div class="form-group">
                     <label for="recoverEmail">Correo electrónico *</label>
                     <input
@@ -156,7 +163,11 @@
                     />
                   </div>
 
-                  <button type="button" class="btn btn-primary" id="recoverSendCodeBtn">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="recoverSendCodeBtn"
+                  >
                     Enviar código
                   </button>
 
@@ -189,7 +200,9 @@
                     </div>
 
                     <div class="form-group">
-                      <label for="recoverPasswordConfirm">Confirmar nueva contraseña *</label>
+                      <label for="recoverPasswordConfirm"
+                        >Confirmar nueva contraseña *</label
+                      >
                       <input
                         type="text"
                         data-secure-password
@@ -211,7 +224,9 @@
 
                 <div class="form-footer">
                   <p>
-                    <a href="#" onclick="backToLogin(event)">← Volver al inicio</a>
+                    <a href="#" onclick="backToLogin(event)"
+                      >← Volver al inicio</a
+                    >
                   </p>
                 </div>
 
@@ -273,20 +288,14 @@
                         stroke-linejoin="round"
                         class="company-svg"
                       >
-                        <!-- edificio -->
                         <path d="M4 21h16"></path>
                         <path d="M7 21V7l5-3 5 3v14"></path>
-
-                        <!-- ventanas -->
                         <path d="M9 10h.01"></path>
                         <path d="M12 10h.01"></path>
                         <path d="M15 10h.01"></path>
-
                         <path d="M9 13h.01"></path>
                         <path d="M12 13h.01"></path>
                         <path d="M15 13h.01"></path>
-
-                        <!-- puerta -->
                         <path d="M11 21v-4h2v4"></path>
                       </svg>
                     </div>
@@ -317,7 +326,7 @@
                   <h2>Crear cuenta personal</h2>
                 </div>
 
-                <form id="formRegisterPersona">
+                <form id="formRegisterPersona" novalidate>
                   <div class="form-row">
                     <div class="form-group">
                       <label for="personaNombre">Nombre *</label>
@@ -411,9 +420,38 @@
                       required
                     />
                   </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="personaCodigoVerificacion"
+                        >Código de verificación *</label
+                      >
+                      <input
+                        type="text"
+                        id="personaCodigoVerificacion"
+                        name="codigo_verificacion"
+                        placeholder="Código de 6 dígitos"
+                        required
+                        inputmode="numeric"
+                        maxlength="6"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>&nbsp;</label>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        id="personaSendRegisterCodeBtn"
+                      >
+                        Enviar código
+                      </button>
+                    </div>
+                  </div>
+
                   <button type="submit" class="btn btn-primary">
                     Crear Cuenta Personal
                   </button>
+
                   <div>
                     <a href="/login/google" class="google-btn">
                       <div class="google-icon">
@@ -457,7 +495,7 @@
                   <h2>Crear cuenta empresa</h2>
                 </div>
 
-                <form id="formRegisterEmpresa">
+                <form id="formRegisterEmpresa" novalidate>
                   <div class="form-group">
                     <label for="empresaRazonSocial"
                       >Nombre de la empresa *</label
@@ -562,6 +600,33 @@
                       placeholder="Repite tu contraseña"
                       required
                     />
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="empresaCodigoVerificacion"
+                        >Código de verificación *</label
+                      >
+                      <input
+                        type="text"
+                        id="empresaCodigoVerificacion"
+                        name="codigo_verificacion"
+                        placeholder="Código de 6 dígitos"
+                        required
+                        inputmode="numeric"
+                        maxlength="6"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>&nbsp;</label>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        id="empresaSendRegisterCodeBtn"
+                      >
+                        Enviar código
+                      </button>
+                    </div>
                   </div>
 
                   <button type="submit" class="btn btn-primary">

@@ -173,6 +173,12 @@ def descargar_excel_movimiento(id):
 def actualizar_configuracion_personal():
     """Guarda cambios de configuracion de la cuenta personal."""
     try:
+        nueva = (request.form.get("nueva_contrasena") or "").strip()
+        confirmar = (request.form.get("confirmar_contrasena") or "").strip()
+        if nueva or confirmar:
+            from routes.auth import verify_config_password_code
+            verify_config_password_code(request.form.get("codigo_contrasena"))
+
         actualizado = update_persona_profile(_usuario_id(), request.form)
         session["usuario_nombre"] = actualizado["nombre"]
         session["usuario_email"] = actualizado["email"]

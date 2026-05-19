@@ -406,6 +406,10 @@ def update_persona_profile(usuario_id, data):
 
     if not nombre or not apellido or not email or not documento or not telefono:
         raise ValueError("Nombre, apellido, correo, documento y telefono son obligatorios.")
+    if (nueva or confirmar) and (not nueva or not confirmar):
+        raise ValueError("Debes completar y confirmar la nueva contraseña.")
+    if nueva and len(nueva) < 6:
+        raise ValueError("La contraseña debe tener al menos 6 caracteres.")
     if nueva and nueva != confirmar:
         raise ValueError("Las contraseñas no coinciden.")
 

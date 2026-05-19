@@ -5,7 +5,9 @@ from decimal import Decimal, ROUND_HALF_UP
 from io import BytesIO
 
 from flask import Blueprint, flash, jsonify, make_response, redirect, render_template, request, url_for, session
+from werkzeug.security import generate_password_hash
 from db import get_db
+from routes.auth import verify_config_password_code
 
 finex_bp = Blueprint("finex", __name__)
 
@@ -1162,6 +1164,27 @@ def eliminar_item(item_id):
 def configuracion():
     # Permite actualizar los datos empresariales mostrados en encabezado y sistema.
     if request.method == "POST":
+        nueva = (request.form.get("nueva_contrasena") or "").strip()
+        confirmar = (request.form.get("confirmar_contrasena") or "").strip()
+        password_hash = None
+
+        if nueva or confirmar:
+            if not nueva or not confirmar:
+                flash("Debes completar y confirmar la nueva contraseña.", "error")
+                return redirect(url_for("finex.configuracion"))
+            if len(nueva) < 6:
+                flash("La contraseña debe tener al menos 6 caracteres.", "error")
+                return redirect(url_for("finex.configuracion"))
+            if nueva != confirmar:
+                flash("Las contraseñas no coinciden.", "error")
+                return redirect(url_for("finex.configuracion"))
+            try:
+                verify_config_password_code(request.form.get("codigo_contrasena"))
+            except ValueError as exc:
+                flash(str(exc), "error")
+                return redirect(url_for("finex.configuracion"))
+            password_hash = generate_password_hash(nueva)
+
         execute("""
             UPDATE empresas
             SET nombre_empresa=%s, razon_social=%s, nit=%s, tipo_empresa=%s,
@@ -1182,6 +1205,8 @@ def configuracion():
             request.form.get("direccion"),
             current_empresa_id(),
         ))
+        if password_hash:
+            execute("UPDATE usuarios SET contraseña=%s WHERE id=%s", (password_hash, session.get("usuario_id")))
         session["usuario_nombre"] = request.form.get("nombre_empresa") or session.get("usuario_nombre")
         flash("Configuracion actualizada.", "success")
         return redirect(url_for("finex.configuracion"))
