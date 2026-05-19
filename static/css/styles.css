@@ -48,13 +48,15 @@ body {
   transition: left 0.35s ease;
   transition: left 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.sidebar nav a {
+.sidebar nav a,
+nav a {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.sidebar nav a svg {
+.sidebar nav a svg,
+nav a svg {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
@@ -65,7 +67,8 @@ body {
   stroke-linejoin: round;
 }
 
-.sidebar nav a span {
+.sidebar nav a span,
+nav a span {
   line-height: 1;
 }
 .brand {
