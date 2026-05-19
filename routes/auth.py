@@ -77,19 +77,87 @@ def _send_verification_email(email, code, subject, action_text, ttl_minutes):
     )
 
     html_content = f"""
-        <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
-            <h2>FINEX</h2>
-            <p>Hola,</p>
-            <p>Tu código para {action_text} en FINEX es:</p>
-            <div style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 20px 0;">
-                {code}
-            </div>
-            <p>Este código vence en {ttl_minutes} minutos.</p>
-            <p>Si no solicitaste este código, puedes ignorar este correo.</p>
-            <br>
-            <p>FINEX</p>
-        </div>
-    """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{subject}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f3f6fb; font-family: Arial, Helvetica, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f6fb; padding:32px 12px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:18px; overflow:hidden; box-shadow:0 12px 30px rgba(15, 23, 42, 0.12);">
+                    
+                    <tr>
+                        <td style="background:linear-gradient(135deg, #003b73 0%, #0057b8 55%, #00b894 100%); padding:34px 28px; text-align:center;">
+                            <div style="font-size:30px; font-weight:800; color:#ffffff; letter-spacing:1px;">
+                                FINEX
+                            </div>
+                            <div style="margin-top:8px; font-size:14px; color:#dbeafe;">
+                                Código de verificación seguro
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:34px 30px 10px 30px; color:#0f172a;">
+                            <h1 style="margin:0; font-size:24px; line-height:1.3; color:#0f172a;">
+                                Verifica tu correo
+                            </h1>
+
+                            <p style="margin:18px 0 0 0; font-size:15px; line-height:1.7; color:#475569;">
+                                Hola,
+                            </p>
+
+                            <p style="margin:10px 0 0 0; font-size:15px; line-height:1.7; color:#475569;">
+                                Tu código para {action_text} en <strong style="color:#0f172a;">FINEX</strong> es:
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="padding:20px 30px;">
+                            <div style="display:inline-block; background:#f8fafc; border:1px solid #dbeafe; border-radius:16px; padding:20px 30px;">
+                                <div style="font-size:34px; font-weight:800; color:#003b73; letter-spacing:9px; line-height:1;">
+                                    {code}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:6px 30px 26px 30px;">
+                            <div style="background:#ecfdf5; border:1px solid #bbf7d0; border-radius:14px; padding:14px 16px; color:#065f46; font-size:14px; line-height:1.6;">
+                                Este código vence en <strong>{ttl_minutes} minutos</strong>. No lo compartas con nadie.
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 30px 30px 30px;">
+                            <p style="margin:0; font-size:13px; line-height:1.6; color:#64748b;">
+                                Si no solicitaste este código, puedes ignorar este correo de forma segura.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background:#f8fafc; border-top:1px solid #e2e8f0; padding:22px 30px; text-align:center;">
+                            <p style="margin:0; font-size:12px; color:#94a3b8;">
+                                © FINEX · Plataforma de acceso seguro
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+"""
 
     # =========================
     # OPCION 1: BREVO API
