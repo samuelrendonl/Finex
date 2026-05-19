@@ -1,11 +1,108 @@
 """Rutas de autenticacion: login normal, registro, OAuth y cierre de sesion."""
 import os
+import secrets
+import smtplib
+import ssl
+from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
+
 from flask import Blueprint, request, jsonify, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from oauth_config import oauth
 from db import get_db_connection
 
 auth_bp = Blueprint("auth", __name__)
+
+
+
+PASSWORD_RESET_SESSION_KEY = "password_reset"
+PASSWORD_RESET_CODE_TTL_MINUTES = int(os.getenv("PASSWORD_RESET_CODE_TTL_MINUTES", "10"))
+PASSWORD_RESET_MAX_ATTEMPTS = int(os.getenv("PASSWORD_RESET_MAX_ATTEMPTS", "5"))
+
+
+def _now_utc():
+    return datetime.now(timezone.utc)
+
+
+def _smtp_enabled():
+    return bool(os.getenv("SMTP_HOST")) and bool(os.getenv("SMTP_FROM") or os.getenv("SMTP_USER"))
+
+
+def _send_password_reset_email(email, code):
+    """Envia el codigo de recuperacion usando SMTP configurado por variables .env."""
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM") or smtp_user
+    smtp_from_name = os.getenv("SMTP_FROM_NAME", "FINEX")
+    use_ssl = os.getenv("SMTP_USE_SSL", "false").lower() in ("1", "true", "yes", "si")
+    use_tls = os.getenv("SMTP_USE_TLS", "true").lower() in ("1", "true", "yes", "si")
+
+    if not smtp_host or not smtp_from:
+        raise RuntimeError("Configura SMTP_HOST y SMTP_FROM en el archivo .env para enviar codigos de recuperacion.")
+
+    message = EmailMessage()
+    message["Subject"] = "Codigo de recuperacion FINEX"
+    message["From"] = f"{smtp_from_name} <{smtp_from}>"
+    message["To"] = email
+    message.set_content(
+        f"Hola,\n\n"
+        f"Tu codigo de recuperacion de FINEX es: {code}\n\n"
+        f"Este codigo vence en {PASSWORD_RESET_CODE_TTL_MINUTES} minutos. "
+        f"Si no solicitaste este cambio, puedes ignorar este correo.\n\n"
+        f"FINEX"
+    )
+
+    if use_ssl:
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
+            if smtp_user and smtp_password:
+                server.login(smtp_user, smtp_password)
+            server.send_message(message)
+        return
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        if use_tls:
+            server.starttls(context=ssl.create_default_context())
+        if smtp_user and smtp_password:
+            server.login(smtp_user, smtp_password)
+        server.send_message(message)
+
+
+def _store_password_reset_code(email, code):
+    session[PASSWORD_RESET_SESSION_KEY] = {
+        "email": email,
+        "code_hash": generate_password_hash(code),
+        "expires_at": (_now_utc() + timedelta(minutes=PASSWORD_RESET_CODE_TTL_MINUTES)).isoformat(),
+        "attempts": 0,
+    }
+    session.modified = True
+
+
+def _get_password_reset_data():
+    data = session.get(PASSWORD_RESET_SESSION_KEY) or {}
+    if not data:
+        return None
+
+    try:
+        expires_at = datetime.fromisoformat(data.get("expires_at", ""))
+    except ValueError:
+        session.pop(PASSWORD_RESET_SESSION_KEY, None)
+        session.modified = True
+        return None
+
+    if expires_at < _now_utc():
+        session.pop(PASSWORD_RESET_SESSION_KEY, None)
+        session.modified = True
+        return None
+
+    return data
+
+
+def _clear_password_reset_data():
+    session.pop(PASSWORD_RESET_SESSION_KEY, None)
+    session.modified = True
 
 
 def _empresa_id_for_user(cursor, usuario_id):
@@ -170,8 +267,125 @@ def registro():
                 empresa_id = cursor.lastrowid
                 nombre_sesion = nombre_empresa
             connection.commit()
-        _set_session(usuario_id, email, tipo_cuenta, nombre_sesion, empresa_id)
-        return jsonify({"success": True, "message": "Registro exitoso", "redirect": _redirect_for(tipo_cuenta)})
+        # No iniciar sesión automáticamente después del registro.
+        # El usuario debe ir al login e ingresar con sus credenciales.
+        return jsonify({
+            "success": True,
+            "message": "Registro exitoso. Ahora inicia sesión con tus credenciales.",
+            "redirect": url_for("main.login"),
+        })
+    except Exception as e:
+        if connection:
+            connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if connection:
+            connection.close()
+
+
+@auth_bp.route("/api/solicitar-codigo-recuperacion", methods=["POST"])
+def solicitar_codigo_recuperacion():
+    connection = None
+    try:
+        data = request.get_json() or {}
+        email = (data.get("email") or "").strip().lower()
+
+        if not email:
+            return jsonify({"error": "El correo electronico es obligatorio"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id, contraseña FROM usuarios WHERE email=%s LIMIT 1", (email,))
+            user = cursor.fetchone()
+
+        if not user:
+            _clear_password_reset_data()
+            return jsonify({
+                "success": True,
+                "message": "Si el correo existe, enviaremos un codigo de confirmacion.",
+            })
+
+        if not user.get("contraseña"):
+            _clear_password_reset_data()
+            return jsonify({"error": "Esta cuenta usa Google o Microsoft. Recupera el acceso desde ese proveedor."}), 400
+
+        if not _smtp_enabled():
+            return jsonify({
+                "error": "No se pudo enviar el codigo porque el correo SMTP no esta configurado en el servidor. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en .env."
+            }), 500
+
+        code = f"{secrets.randbelow(1000000):06d}"
+        _send_password_reset_email(email, code)
+        _store_password_reset_code(email, code)
+
+        return jsonify({
+            "success": True,
+            "message": "Enviamos un codigo de confirmacion a tu correo. Revisa tu bandeja de entrada.",
+            "expires_in_minutes": PASSWORD_RESET_CODE_TTL_MINUTES,
+        })
+    except Exception as e:
+        _clear_password_reset_data()
+        return jsonify({"error": f"No se pudo enviar el codigo: {e}"}), 500
+    finally:
+        if connection:
+            connection.close()
+
+
+@auth_bp.route("/api/recuperar-contrasena", methods=["POST"])
+def recuperar_contrasena():
+    connection = None
+    try:
+        data = request.get_json() or {}
+        email = (data.get("email") or "").strip().lower()
+        codigo = (data.get("codigo") or "").strip()
+        nueva_contraseña = data.get("nueva_contraseña") or data.get("contraseña") or ""
+
+        if not email or not codigo or not nueva_contraseña:
+            return jsonify({"error": "Correo, codigo y nueva contraseña son obligatorios"}), 400
+
+        if len(nueva_contraseña) < 6:
+            return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
+
+        reset_data = _get_password_reset_data()
+        if not reset_data or reset_data.get("email") != email:
+            return jsonify({"error": "Solicita un codigo de confirmacion antes de cambiar la contraseña."}), 400
+
+        attempts = int(reset_data.get("attempts", 0))
+        if attempts >= PASSWORD_RESET_MAX_ATTEMPTS:
+            _clear_password_reset_data()
+            return jsonify({"error": "Demasiados intentos fallidos. Solicita un nuevo codigo."}), 400
+
+        if not check_password_hash(reset_data.get("code_hash", ""), codigo):
+            reset_data["attempts"] = attempts + 1
+            session[PASSWORD_RESET_SESSION_KEY] = reset_data
+            session.modified = True
+            return jsonify({"error": "Codigo de confirmacion incorrecto."}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id, contraseña FROM usuarios WHERE email=%s LIMIT 1", (email,))
+            user = cursor.fetchone()
+
+            if not user:
+                _clear_password_reset_data()
+                return jsonify({"error": "No existe una cuenta registrada con ese correo"}), 404
+
+            if not user.get("contraseña"):
+                _clear_password_reset_data()
+                return jsonify({"error": "Esta cuenta usa Google o Microsoft. Recupera el acceso desde ese proveedor."}), 400
+
+            cursor.execute(
+                "UPDATE usuarios SET contraseña=%s WHERE id=%s",
+                (generate_password_hash(nueva_contraseña), user["id"]),
+            )
+            connection.commit()
+
+        session.clear()
+        return jsonify({
+            "success": True,
+            "message": "Contraseña actualizada. Ya puedes iniciar sesión.",
+            "redirect": url_for("main.login"),
+        })
     except Exception as e:
         if connection:
             connection.rollback()

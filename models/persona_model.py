@@ -1,9 +1,13 @@
+"""Consultas del modulo personal de FINEX.
 
+Cada funcion usa el usuario autenticado para mantener los movimientos,
+categorias y reportes separados por cuenta personal.
+"""
 from datetime import datetime, date
 from decimal import Decimal, ROUND_HALF_UP
 from db import get_db_connection
 
-VALID_STATES = ("emitida", "pagada", "vencida", "anulada")
+VALID_STATES = ("completado", "vencido", "anulado")
 
 
 def _money(value):
@@ -28,16 +32,35 @@ def _user_filter(usuario_id):
     return int(usuario_id)
 
 
+
+def _cuentas_resumen(cursor, usuario_id):
+    """Resumen por cuenta sin crear cuentas por defecto."""
+    cursor.execute("""
+        SELECT cp.id, cp.nombre, cp.tipo, cp.saldo_inicial, cp.activo, cp.created_at,
+               COALESCE(SUM(CASE WHEN m.tipo='ingreso' AND m.estado='completado' THEN m.valor ELSE 0 END),0) AS ingresos,
+               COALESCE(SUM(CASE WHEN m.tipo='egreso' AND m.estado='completado' THEN m.valor ELSE 0 END),0) AS egresos,
+               cp.saldo_inicial
+               + COALESCE(SUM(CASE WHEN m.tipo='ingreso' AND m.estado='completado' THEN m.valor ELSE 0 END),0)
+               - COALESCE(SUM(CASE WHEN m.tipo='egreso' AND m.estado='completado' THEN m.valor ELSE 0 END),0) AS saldo_actual
+        FROM cuentas_personales cp
+        LEFT JOIN movimientos_persona m ON m.cuenta_id=cp.id AND m.usuario_id=cp.usuario_id
+        WHERE cp.usuario_id=%s AND cp.activo=1
+        GROUP BY cp.id, cp.nombre, cp.tipo, cp.saldo_inicial, cp.activo, cp.created_at
+        ORDER BY cp.nombre ASC
+    """, (usuario_id,))
+    return cursor.fetchall()
+
 def dashboard_data(usuario_id):
-    """Retorna totales y datos mensuales; solo cuenta estados pagados."""
+    """Retorna totales, saldos de cuentas, datos mensuales y distribuciones."""
     usuario_id = _user_filter(usuario_id)
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
+            cuentas = _cuentas_resumen(cursor, usuario_id)
             cursor.execute("""
                 SELECT tipo, COALESCE(SUM(valor),0) AS total
                 FROM movimientos_persona
-                WHERE usuario_id=%s AND estado='pagada'
+                WHERE usuario_id=%s AND estado='completado'
                 GROUP BY tipo
             """, (usuario_id,))
             totals_rows = cursor.fetchall()
@@ -46,10 +69,31 @@ def dashboard_data(usuario_id):
             cursor.execute("""
                 SELECT MONTH(fecha) AS mes, tipo, COALESCE(SUM(valor),0) AS total
                 FROM movimientos_persona
-                WHERE usuario_id=%s AND estado='pagada'
+                WHERE usuario_id=%s AND estado='completado'
                 GROUP BY MONTH(fecha), tipo
             """, (usuario_id,))
             monthly_rows = cursor.fetchall()
+
+            cursor.execute("""
+                SELECT m.tipo,
+                       COALESCE(c.nombre, 'Sin categoría') AS categoria,
+                       COALESCE(SUM(m.valor),0) AS total
+                FROM movimientos_persona m
+                LEFT JOIN categorias c ON c.id = m.categoria_id
+                LEFT JOIN cuentas_personales cp ON cp.id = m.cuenta_id
+                WHERE m.usuario_id=%s AND m.estado='completado'
+                GROUP BY m.tipo, COALESCE(c.nombre, 'Sin categoría')
+                ORDER BY total DESC, categoria ASC
+            """, (usuario_id,))
+            dist_rows = cursor.fetchall()
+
+            cursor.execute("""
+                SELECT tipo, COALESCE(SUM(valor),0) AS total
+                FROM movimientos_persona
+                WHERE usuario_id=%s AND estado='completado' AND cuenta_id IS NULL
+                GROUP BY tipo
+            """, (usuario_id,))
+            sin_cuenta_rows = cursor.fetchall()
     finally:
         connection.close()
 
@@ -58,14 +102,44 @@ def dashboard_data(usuario_id):
     monthly = []
     for idx, nombre in enumerate(meses, start=1):
         monthly.append({"mes": nombre, "ventas": maps.get((idx, "ingreso"), 0), "compras": maps.get((idx, "egreso"), 0)})
+
     ingresos = totals.get("ingreso", 0)
     egresos = totals.get("egreso", 0)
+    sin_cuenta = {r["tipo"]: int(_money(r["total"])) for r in sin_cuenta_rows}
+    cuentas_json = []
+    saldo_cuentas = 0
+    for c in cuentas:
+        saldo_actual = int(_money(c.get("saldo_actual")))
+        saldo_cuentas += saldo_actual
+        cuentas_json.append({
+            "id": c.get("id"),
+            "nombre": c.get("nombre"),
+            "tipo": c.get("tipo"),
+            "saldo_inicial": int(_money(c.get("saldo_inicial"))),
+            "ingresos": int(_money(c.get("ingresos"))),
+            "egresos": int(_money(c.get("egresos"))),
+            "saldo_actual": saldo_actual,
+        })
+
+    dist_ingresos = []
+    dist_egresos = []
+    for row in dist_rows:
+        item = {"categoria": row.get("categoria") or "Sin categoría", "total": int(_money(row.get("total")))}
+        if row.get("tipo") == "ingreso":
+            dist_ingresos.append(item)
+        elif row.get("tipo") == "egreso":
+            dist_egresos.append(item)
+
+    saldo = saldo_cuentas + sin_cuenta.get("ingreso", 0) - sin_cuenta.get("egreso", 0)
     return {
-        "saldo": ingresos - egresos,
+        "saldo": saldo,
         "ingresos": ingresos,
         "egresos": egresos,
         "monthly": monthly,
         "totals": {"ventas": ingresos, "compras": egresos},
+        "cuentas": cuentas_json,
+        "distribution_ingresos": dist_ingresos,
+        "distribution_egresos": dist_egresos,
         "labels": {"ventas": "Ingresos", "compras": "Egresos", "empty": "Registra movimientos"},
     }
 
@@ -131,6 +205,8 @@ def get_movimientos_filtrados(usuario_id, desde=None, hasta=None, tipo=None):
                 SELECT m.id,
                        LPAD(m.id,4,'0') AS numero_registro,
                        m.tipo,
+                       m.cuenta_id,
+                       cp.nombre AS cuenta,
                        c.nombre AS categoria,
                        m.descripcion,
                        m.valor,
@@ -138,6 +214,7 @@ def get_movimientos_filtrados(usuario_id, desde=None, hasta=None, tipo=None):
                        m.estado
                 FROM movimientos_persona m
                 LEFT JOIN categorias c ON c.id = m.categoria_id
+                LEFT JOIN cuentas_personales cp ON cp.id = m.cuenta_id
                 WHERE m.usuario_id=%s
             """
             params = [usuario_id]
@@ -167,6 +244,8 @@ def get_movimiento_by_id(usuario_id, movimiento_id):
                 SELECT m.id,
                        LPAD(m.id,4,'0') AS numero_registro,
                        m.tipo,
+                       m.cuenta_id,
+                       cp.nombre AS cuenta,
                        c.nombre AS categoria,
                        m.descripcion,
                        m.valor,
@@ -174,6 +253,7 @@ def get_movimiento_by_id(usuario_id, movimiento_id):
                        m.estado
                 FROM movimientos_persona m
                 LEFT JOIN categorias c ON c.id = m.categoria_id
+                LEFT JOIN cuentas_personales cp ON cp.id = m.cuenta_id
                 WHERE m.usuario_id=%s AND m.id=%s
                 LIMIT 1
             """, (usuario_id, movimiento_id))
@@ -181,6 +261,24 @@ def get_movimiento_by_id(usuario_id, movimiento_id):
     finally:
         connection.close()
 
+
+
+def _validar_cuenta(cursor, usuario_id, cuenta_id):
+    """Valida una cuenta personal; permite vacío para mantener compatibilidad."""
+    if cuenta_id in (None, "", "0"):
+        return None
+    try:
+        cuenta_id = int(cuenta_id)
+    except Exception:
+        raise ValueError("Selecciona una cuenta válida.")
+    cursor.execute("""
+        SELECT id FROM cuentas_personales
+        WHERE id=%s AND usuario_id=%s AND activo=1
+        LIMIT 1
+    """, (cuenta_id, usuario_id))
+    if not cursor.fetchone():
+        raise ValueError("La cuenta seleccionada no existe o está inactiva.")
+    return cuenta_id
 
 def insert_movimiento(data, usuario_id):
     """Registra un ingreso o egreso personal."""
@@ -190,9 +288,9 @@ def insert_movimiento(data, usuario_id):
     descripcion = (data.get("descripcion") or "").strip()
     valor = _money(data.get("monto") or data.get("valor"))
     fecha = _date_value(data.get("fecha"))
-    estado = (data.get("estado") or "emitida").strip().lower()
+    estado = (data.get("estado") or "completado").strip().lower()
     if estado not in VALID_STATES:
-        estado = "emitida"
+        estado = "completado"
     if valor <= 0:
         raise ValueError("El monto debe ser mayor que cero.")
 
@@ -200,11 +298,12 @@ def insert_movimiento(data, usuario_id):
     try:
         with connection.cursor() as cursor:
             categoria_id = ensure_categoria(categoria, tipo, usuario_id, cursor)
+            cuenta_id = _validar_cuenta(cursor, usuario_id, data.get("cuenta_id"))
             cursor.execute("""
                 INSERT INTO movimientos_persona
-                (usuario_id, categoria_id, tipo, descripcion, valor, fecha, estado)
-                VALUES (%s,%s,%s,%s,%s,%s,%s)
-            """, (usuario_id, categoria_id, tipo, descripcion, valor, fecha, estado))
+                (usuario_id, categoria_id, cuenta_id, tipo, descripcion, valor, fecha, estado)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            """, (usuario_id, categoria_id, cuenta_id, tipo, descripcion, valor, fecha, estado))
             movimiento_id = cursor.lastrowid
             connection.commit()
             return movimiento_id
@@ -220,19 +319,20 @@ def update_movimiento(usuario_id, movimiento_id, data):
     valor = _money(data.get("monto") or data.get("valor"))
     descripcion = (data.get("descripcion") or "").strip()
     fecha = _date_value(data.get("fecha"))
-    estado = (data.get("estado") or "emitida").strip().lower()
+    estado = (data.get("estado") or "completado").strip().lower()
     if estado not in VALID_STATES:
-        estado = "emitida"
+        estado = "completado"
 
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
             categoria_id = ensure_categoria(categoria, tipo, usuario_id, cursor)
+            cuenta_id = _validar_cuenta(cursor, usuario_id, data.get("cuenta_id"))
             cursor.execute("""
                 UPDATE movimientos_persona
-                SET categoria_id=%s, tipo=%s, descripcion=%s, valor=%s, fecha=%s, estado=%s
+                SET categoria_id=%s, cuenta_id=%s, tipo=%s, descripcion=%s, valor=%s, fecha=%s, estado=%s
                 WHERE id=%s AND usuario_id=%s
-            """, (categoria_id, tipo, descripcion, valor, fecha, estado, movimiento_id, usuario_id))
+            """, (categoria_id, cuenta_id, tipo, descripcion, valor, fecha, estado, movimiento_id, usuario_id))
             connection.commit()
     finally:
         connection.close()
@@ -241,9 +341,9 @@ def update_movimiento(usuario_id, movimiento_id, data):
 def update_estado_movimiento(usuario_id, movimiento_id, estado):
     """Actualiza solamente el estado del movimiento."""
     usuario_id = _user_filter(usuario_id)
-    estado = (estado or "emitida").strip().lower()
+    estado = (estado or "completado").strip().lower()
     if estado not in VALID_STATES:
-        estado = "emitida"
+        estado = "completado"
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
@@ -340,3 +440,86 @@ def update_persona_profile(usuario_id, data):
         connection.close()
 
     return {"nombre": f"{nombre} {apellido}".strip(), "email": email}
+
+
+def get_cuentas_personales(usuario_id):
+    """Lista cuentas personales activas con saldo calculado."""
+    usuario_id = _user_filter(usuario_id)
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            return _cuentas_resumen(cursor, usuario_id)
+    finally:
+        connection.close()
+
+
+def get_cuenta_personal(usuario_id, cuenta_id):
+    """Obtiene una cuenta personal activa."""
+    usuario_id = _user_filter(usuario_id)
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, nombre, tipo, saldo_inicial
+                FROM cuentas_personales
+                WHERE id=%s AND usuario_id=%s AND activo=1
+                LIMIT 1
+            """, (cuenta_id, usuario_id))
+            return cursor.fetchone()
+    finally:
+        connection.close()
+
+
+def insert_cuenta_personal(usuario_id, data):
+    """Crea una cuenta personal."""
+    usuario_id = _user_filter(usuario_id)
+    nombre = (data.get("nombre") or "").strip()
+    tipo = (data.get("tipo") or "efectivo").strip().lower()
+    saldo = _money(data.get("saldo_inicial"))
+    if not nombre:
+        raise ValueError("El nombre de la cuenta es obligatorio.")
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO cuentas_personales (usuario_id, nombre, tipo, saldo_inicial)
+                VALUES (%s,%s,%s,%s)
+            """, (usuario_id, nombre, tipo, saldo))
+            cuenta_id = cursor.lastrowid
+            connection.commit()
+            return cuenta_id
+    finally:
+        connection.close()
+
+
+def update_cuenta_personal(usuario_id, cuenta_id, data):
+    """Actualiza una cuenta personal."""
+    usuario_id = _user_filter(usuario_id)
+    nombre = (data.get("nombre") or "").strip()
+    tipo = (data.get("tipo") or "efectivo").strip().lower()
+    saldo = _money(data.get("saldo_inicial"))
+    if not nombre:
+        raise ValueError("El nombre de la cuenta es obligatorio.")
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE cuentas_personales
+                SET nombre=%s, tipo=%s, saldo_inicial=%s
+                WHERE id=%s AND usuario_id=%s AND activo=1
+            """, (nombre, tipo, saldo, cuenta_id, usuario_id))
+            connection.commit()
+    finally:
+        connection.close()
+
+
+def delete_cuenta_personal(usuario_id, cuenta_id):
+    """Desactiva una cuenta para conservar historial."""
+    usuario_id = _user_filter(usuario_id)
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("UPDATE cuentas_personales SET activo=0 WHERE id=%s AND usuario_id=%s", (cuenta_id, usuario_id))
+            connection.commit()
+    finally:
+        connection.close()

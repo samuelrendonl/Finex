@@ -66,7 +66,7 @@ def money(value):
         if value is None or value == "":
             return Decimal("0")
         cleaned = str(value).strip().replace("$", "").replace(" ", "")
-        
+        # Inputs use Colombian thousands dots and no decimals.
         cleaned = cleaned.replace(".", "").replace(",", "")
         if cleaned == "":
             return Decimal("0")

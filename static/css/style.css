@@ -1018,3 +1018,462 @@ input[data-secure-password] {
       drop-shadow(0 0 14px rgba(255, 255, 255, 0.12));
   }
 }
+
+/* ========================================================= */
+/* RESPONSIVE LOGIN FINEX - PEGAR AL FINAL DEL style.css */
+/* ========================================================= */
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  width: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Corrige el problema de altura fija */
+.auth-page {
+  min-height: 100dvh;
+  padding: 20px;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 1200px;
+  height: auto;
+  min-height: auto;
+}
+
+.auth-grid {
+  min-height: min(700px, calc(100dvh - 40px));
+  height: auto;
+}
+
+/* Panel derecho cómodo en escritorio */
+.auth-right-panel {
+  min-height: 0;
+}
+
+/* Inputs siempre fluidos */
+.form-group input,
+.btn,
+.google-btn,
+.type-option {
+  width: 100%;
+}
+
+/* Botón de Google mejor separado */
+.google-btn {
+  margin-top: 0;
+}
+
+/* Evita que los SVG desborden */
+svg {
+  max-width: 100%;
+}
+
+/* ========================================================= */
+/* TABLET */
+/* ========================================================= */
+
+@media (max-width: 968px) {
+  body {
+    display: block;
+    padding: 0;
+    align-items: initial;
+    justify-content: initial;
+  }
+
+  .auth-page {
+    padding: 16px;
+    align-items: flex-start;
+  }
+
+  .auth-container {
+    max-width: 760px;
+  }
+
+  .auth-grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    border-radius: 24px;
+  }
+
+  .auth-left-panel {
+    min-height: auto;
+    padding: 34px 28px;
+  }
+
+  .brand-content {
+    max-width: 100%;
+    padding: 2rem 1.5rem;
+    border-radius: 24px;
+  }
+
+  .logo {
+    width: 130px;
+    height: auto;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    margin-bottom: 16px;
+  }
+
+  .brand-description {
+    max-width: 520px;
+    font-size: 0.95rem;
+  }
+
+  .auth-right-panel {
+    padding: 38px 32px;
+    overflow: visible;
+  }
+
+  .forms-wrapper {
+    width: 100%;
+  }
+
+  .form-header {
+    margin-bottom: 28px;
+  }
+
+  .form-header h2 {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  .register-type-selector {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .type-option {
+    min-height: 180px;
+  }
+}
+
+/* ========================================================= */
+/* MÓVIL */
+/* ========================================================= */
+
+@media (max-width: 640px) {
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(0, 102, 204, 0.18), transparent 280px),
+      linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  }
+
+  .auth-page {
+    padding: 10px;
+  }
+
+  .auth-grid {
+    border-radius: 20px;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+  }
+
+  .auth-left-panel {
+    padding: 24px 18px;
+  }
+
+  .brand-content {
+    padding: 1.4rem 1rem;
+    border-radius: 20px;
+  }
+
+  .logo {
+    width: 95px;
+    height: auto;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    margin-top: 0.6rem;
+    margin-bottom: 12px;
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+
+  .brand-description {
+    max-width: 310px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .auth-right-panel {
+    padding: 28px 18px;
+  }
+
+  .form-header {
+    margin-bottom: 24px;
+  }
+
+  .form-tab-label {
+    font-size: 11px;
+  }
+
+  .form-header h2 {
+    font-size: 24px;
+    line-height: 1.15;
+  }
+
+  .form-header p,
+  .form-subtitle {
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  form {
+    gap: 15px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .form-group {
+    gap: 7px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="password"],
+  .form-group input[type="tel"] {
+    min-height: 48px;
+    padding: 13px 14px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  .form-group.checkbox {
+    align-items: flex-start;
+  }
+
+  .form-group.checkbox label {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .btn {
+    min-height: 50px;
+    padding: 14px 18px;
+    border-radius: 13px;
+    font-size: 15px;
+  }
+
+  .google-btn {
+    min-height: 50px;
+    padding: 13px 16px;
+    border-radius: 13px;
+    font-size: 14px;
+  }
+
+  .register-type-selector {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .register-type-selector .type-option,
+  .type-option {
+    min-height: auto;
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+
+  .type-icon,
+  .type-icon.company-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 17px;
+    margin-bottom: 12px;
+  }
+
+  .type-title {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .type-description {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  .form-footer {
+    margin-top: 18px;
+    font-size: 13.5px;
+  }
+
+  .message {
+    padding: 12px 14px;
+    font-size: 13.5px;
+    border-radius: 12px;
+  }
+
+  .login-flash-wrap {
+    position: fixed;
+    top: 12px;
+    left: 10px;
+    right: 10px;
+    max-width: none;
+    z-index: 999;
+  }
+}
+
+/* ========================================================= */
+/* MÓVIL PEQUEÑO */
+/* ========================================================= */
+
+@media (max-width: 420px) {
+  .auth-page {
+    padding: 8px;
+  }
+
+  .auth-grid {
+    border-radius: 18px;
+  }
+
+  .auth-left-panel {
+    padding: 20px 14px;
+  }
+
+  .brand-content {
+    padding: 1.2rem 0.9rem;
+  }
+
+  .logo {
+    width: 82px;
+  }
+
+  .brand-description {
+    font-size: 13px;
+  }
+
+  .auth-right-panel {
+    padding: 24px 14px;
+  }
+
+  .form-header h2 {
+    font-size: 22px;
+  }
+
+  .form-header p,
+  .form-subtitle {
+    font-size: 13px;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="password"],
+  .form-group input[type="tel"] {
+    min-height: 46px;
+    padding: 12px 13px;
+  }
+
+  .btn,
+  .google-btn {
+    min-height: 48px;
+  }
+
+  .type-option {
+    padding: 20px 15px;
+  }
+
+  .type-icon,
+  .type-icon.company-icon {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* ========================================================= */
+/* MÓVIL MUY PEQUEÑO */
+/* ========================================================= */
+
+@media (max-width: 360px) {
+  .auth-page {
+    padding: 6px;
+  }
+
+  .auth-left-panel {
+    padding: 18px 12px;
+  }
+
+  .auth-right-panel {
+    padding: 22px 12px;
+  }
+
+  .logo {
+    width: 74px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+
+  .brand-description {
+    font-size: 12.5px;
+  }
+
+  .form-header h2 {
+    font-size: 20px;
+  }
+
+  .type-title {
+    font-size: 15px;
+  }
+
+  .type-description {
+    font-size: 12px;
+  }
+}
+
+/* ========================================================= */
+/* LANDSCAPE EN CELULAR */
+/* ========================================================= */
+
+@media (max-height: 560px) and (orientation: landscape) {
+  body {
+    display: block;
+    overflow-y: auto;
+  }
+
+  .auth-page {
+    align-items: flex-start;
+  }
+
+  .auth-grid {
+    grid-template-columns: 0.8fr 1.2fr;
+    min-height: auto;
+  }
+
+  .auth-left-panel {
+    padding: 22px 18px;
+  }
+
+  .brand-content {
+    padding: 1.2rem;
+  }
+
+  .logo {
+    width: 78px;
+  }
+
+  .brand-description {
+    display: none;
+  }
+
+  .auth-right-panel {
+    padding: 24px 22px;
+  }
+}

@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FINEX Empresa</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/Logo-White.jpeg') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/Logo-Transparente.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <img class="brand-logo" src="{{ url_for('static', filename='img/Logo-White.jpeg') }}" alt="FINEX">
+      <img class="brand-logo" src="{{ url_for('static', filename='img/Logo-Transparente.png') }}" alt="FINEX">
       <div><strong>FINEX</strong><small>Empresa</small></div>
     </div>
     <nav>
@@ -562,7 +562,7 @@
           <td>{{ c.nombre }}</td><td>{{ c.documento }}</td><td>{{ c.email }}</td><td>{{ c.telefono }}</td><td>{{ c.direccion }}</td>
           <td class="actions">
             <button class="btn small" type="button" data-open-dialog="edit-client-{{ c.id }}">Editar</button>
-            <form method="post" action="{{ url_for('finex.eliminar_cliente', cliente_id=c.id) }}" onsubmit="return confirm('Eliminar este cliente?');"><button class="btn danger small" type="submit">Eliminar</button></form>
+            <form method="post" action="{{ url_for('finex.eliminar_cliente', cliente_id=c.id) }}" data-confirm-message="Eliminar este cliente?"><button class="btn danger small" type="submit">Eliminar</button></form>
           </td>
         </tr>
         {% else %}<tr><td colspan="6" class="empty">Sin clientes.</td></tr>{% endfor %}
@@ -616,7 +616,7 @@
           <td>{{ p.nombre }}</td><td>{{ p.numero_proveedor }}</td><td>{{ p.email }}</td><td>{{ p.telefono }}</td><td>{{ p.direccion }}</td>
           <td class="actions">
             <button class="btn small" type="button" data-open-dialog="edit-provider-{{ p.id }}">Editar</button>
-            <form method="post" action="{{ url_for('finex.eliminar_proveedor', proveedor_id=p.id) }}" onsubmit="return confirm('Eliminar este proveedor?');"><button class="btn danger small" type="submit">Eliminar</button></form>
+            <form method="post" action="{{ url_for('finex.eliminar_proveedor', proveedor_id=p.id) }}" data-confirm-message="Eliminar este proveedor?"><button class="btn danger small" type="submit">Eliminar</button></form>
           </td>
         </tr>
         {% else %}<tr><td colspan="6" class="empty">Sin proveedores.</td></tr>{% endfor %}
@@ -672,7 +672,7 @@
           <td>{{ i.codigo }}</td><td>{{ i.nombre }}</td><td>{{ i.tipo }}</td><td>{{ i.precio_unitario|cop }}</td><td>{{ i.cantidad|num }}</td><td>{{ i.impuesto_porcentaje|num }}%</td>
           <td class="actions">
             <button class="btn small" type="button" data-open-dialog="edit-item-{{ i.id }}">Editar</button>
-            <form method="post" action="{{ url_for('finex.eliminar_item', item_id=i.id) }}" onsubmit="return confirm('Eliminar este item?');"><button class="btn danger small" type="submit">Eliminar</button></form>
+            <form method="post" action="{{ url_for('finex.eliminar_item', item_id=i.id) }}" data-confirm-message="Eliminar este item?"><button class="btn danger small" type="submit">Eliminar</button></form>
           </td>
         </tr>
         {% else %}<tr><td colspan="7" class="empty">Sin items.</td></tr>{% endfor %}

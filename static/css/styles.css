@@ -529,14 +529,17 @@ textarea:focus {
   position: relative;
 }
 .product-results {
-  position: fixed;
+  position: static;
   background: white;
   border: 1px solid var(--line);
   border-radius: 14px;
-  box-shadow: 0 18px 42px rgba(15, 35, 60, 0.2);
+  box-shadow: 0 10px 24px rgba(15, 35, 60, 0.14);
   z-index: 5000;
-  overflow: auto;
+  overflow: visible;
   padding: 6px;
+  margin-top: 8px;
+  width: 100%;
+  max-height: none;
 }
 .product-option {
   width: 100%;
@@ -1063,3 +1066,32 @@ input[data-secure-password] {
   pointer-events:none;
   transform:scale(0.8);
 }
+/* Ajuste final: inicio personal con dos graficas circulares separadas. */
+.personal-distribution-grid {
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr) minmax(280px, 1fr);
+}
+.personal-distribution-grid .monthly-wide {
+  min-height: 420px;
+}
+.personal-distribution-grid .distribution-card {
+  min-height: 420px;
+}
+.personal-distribution-grid .summary-row small {
+  color: var(--muted);
+  font-weight: 700;
+  margin-left: 6px;
+}
+@media (max-width: 1250px) {
+  .personal-distribution-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Estados de movimientos personales */
+.pill.state-completado { background: #e6fff3; color: #06784a; }
+.pill.state-vencido { background: #ffe7e7; color: #b00020; }
+.pill.state-anulado { background: #eef4ff; color: #17416f; }
+.row-anulado td { text-decoration: line-through; text-decoration-color: #dc3545; }
+
+.invoice-lines-card.search-open { padding-bottom: 24px; }
+.invoice-lines-card.search-open .invoice-line { vertical-align: top; }

@@ -100,8 +100,8 @@ def pdf_movimientos():
     movimientos = get_movimientos_filtrados(usuario_id, desde, hasta)
     ingresos = [m for m in movimientos if m.get("tipo") == "ingreso"]
     egresos = [m for m in movimientos if m.get("tipo") == "egreso"]
-    total_ingresos = sum(float(m.get("valor") or 0) for m in ingresos if m.get("estado") == "pagada")
-    total_egresos = sum(float(m.get("valor") or 0) for m in egresos if m.get("estado") == "pagada")
+    total_ingresos = sum(float(m.get("valor") or 0) for m in ingresos if m.get("estado") == "completado")
+    total_egresos = sum(float(m.get("valor") or 0) for m in egresos if m.get("estado") == "completado")
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
@@ -113,9 +113,9 @@ def pdf_movimientos():
     rango = f"Desde: {desde or 'Inicio'}   Hasta: {hasta or 'Actual'}"
     p.drawString(0.75 * inch, y, rango)
     y -= 0.35 * inch
-    p.drawString(0.75 * inch, y, f"Ingresos pagados: {_money(total_ingresos)}")
+    p.drawString(0.75 * inch, y, f"Ingresos completados: {_money(total_ingresos)}")
     y -= 0.25 * inch
-    p.drawString(0.75 * inch, y, f"Egresos pagados: {_money(total_egresos)}")
+    p.drawString(0.75 * inch, y, f"Egresos completados: {_money(total_egresos)}")
     y -= 0.25 * inch
     p.drawString(0.75 * inch, y, f"Saldo: {_money(total_ingresos - total_egresos)}")
     p.showPage()
@@ -146,12 +146,12 @@ def excel_movimientos():
     ws.append(["Desde", desde or "Inicio"])
     ws.append(["Hasta", hasta or "Actual"])
     ws.append([])
-    ws.append(["Tipo", "Total pagado", "Registros"])
+    ws.append(["Tipo", "Total completado", "Registros"])
     for cell in ws[7]:
         cell.fill = header_fill
         cell.font = header_font
     for title, rows in sheets:
-        total = sum(float(m.get("valor") or 0) for m in rows if m.get("estado") == "pagada")
+        total = sum(float(m.get("valor") or 0) for m in rows if m.get("estado") == "completado")
         ws.append([title, total, len(rows)])
     for col in range(1, 4):
         ws.column_dimensions[get_column_letter(col)].width = 25

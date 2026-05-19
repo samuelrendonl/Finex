@@ -1,4 +1,4 @@
-
+"""Rutas del modulo personal usando Blueprint de Flask."""
 from flask import Blueprint, request
 from decorators import login_required
 from controller.persona_controller import *
@@ -86,3 +86,35 @@ def cambiar_estado(id):
 @login_required
 def configuracion_personal():
     return actualizar_configuracion_personal()
+
+
+# Rutas de cuentas personales.
+@persona_bp.route("/api/cuentas", methods=["GET"])
+@login_required
+def api_cuentas_personales():
+    return obtener_cuentas_personales()
+
+@persona_bp.route("/api/cuentas", methods=["POST"])
+@login_required
+def api_crear_cuenta_personal():
+    return crear_cuenta_personal()
+
+@persona_bp.route("/api/cuentas/<int:id>", methods=["GET"])
+@login_required
+def api_obtener_cuenta_personal(id):
+    return obtener_cuenta_personal(id)
+
+@persona_bp.route("/api/cuentas/<int:id>", methods=["PUT"])
+@login_required
+def api_actualizar_cuenta_personal(id):
+    return actualizar_cuenta_personal(id)
+
+@persona_bp.route("/api/cuentas/<int:id>", methods=["DELETE"])
+@login_required
+def api_eliminar_cuenta_personal(id):
+    return eliminar_cuenta_personal(id)
+
+@persona_bp.route("/cuentas", methods=["POST"])
+@login_required
+def cuentas_personales_form():
+    return crear_cuenta_personal()

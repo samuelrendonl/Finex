@@ -1,4 +1,4 @@
-
+"""Decoradores reutilizables para proteger rutas privadas."""
 from functools import wraps
 from flask import session, redirect, url_for
 

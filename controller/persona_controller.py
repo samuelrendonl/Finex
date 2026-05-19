@@ -21,6 +21,11 @@ from models.persona_model import (
     update_estado_movimiento,
     get_persona_profile,
     update_persona_profile,
+    get_cuentas_personales,
+    get_cuenta_personal,
+    insert_cuenta_personal,
+    update_cuenta_personal,
+    delete_cuenta_personal,
 )
 
 
@@ -29,17 +34,23 @@ def _usuario_id():
 
 
 def render_dashboard():
-    """Renderiza el tablero personal con datos actualizados de registro."""
+    """Renderiza el tablero personal con el apartado correcto abierto."""
     perfil = get_persona_profile(_usuario_id())
     nombre_completo = (f"{perfil.get('nombre') or ''} {perfil.get('apellido') or ''}".strip()
                       or session.get("usuario_nombre") or "Usuario")
     correo = perfil.get("email") or session.get("usuario_email") or ""
+    secciones = {"inicio", "ingresos", "egresos", "cuentas", "reportes", "configuracion"}
+    active_section = (request.args.get("section") or "inicio").strip().lower()
+    if active_section not in secciones:
+        active_section = "inicio"
     return render_template(
         "dashboard.html",
         nombre=nombre_completo,
         correo=correo,
         perfil=perfil,
+        active_section=active_section,
         dashboard_json=dashboard_data(_usuario_id()),
+        cuentas=get_cuentas_personales(_usuario_id()),
     )
 
 
@@ -169,3 +180,32 @@ def actualizar_configuracion_personal():
     except Exception as exc:
         flash(str(exc), "error")
     return redirect(url_for("persona.dashboard") + "#configuracion")
+
+
+# =========================
+# Cuentas personales
+# =========================
+
+def obtener_cuentas_personales():
+    return jsonify(get_cuentas_personales(_usuario_id()))
+
+def obtener_cuenta_personal(id):
+    cuenta = get_cuenta_personal(_usuario_id(), id)
+    return jsonify(cuenta or {})
+
+def crear_cuenta_personal():
+    data = request.get_json(silent=True) or request.form.to_dict()
+    cuenta_id = insert_cuenta_personal(_usuario_id(), data)
+    if request.is_json:
+        return jsonify({"success": True, "id": cuenta_id})
+    flash("Cuenta guardada correctamente.", "success")
+    return redirect(url_for("persona.dashboard", section="cuentas"))
+
+def actualizar_cuenta_personal(id):
+    data = request.get_json(silent=True) or request.form.to_dict()
+    update_cuenta_personal(_usuario_id(), id, data)
+    return jsonify({"success": True})
+
+def eliminar_cuenta_personal(id):
+    delete_cuenta_personal(_usuario_id(), id)
+    return jsonify({"success": True})

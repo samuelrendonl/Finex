@@ -4,10 +4,55 @@
   const digits = (value) => String(value || '').replace(/\D/g, '');
   const numberValue = (value) => Number(digits(value) || 0);
 
+  function getAppAlertDialog(){
+    let dialog = document.getElementById('appAlertDialog');
+    if (dialog) return dialog;
+    dialog = document.createElement('dialog');
+    dialog.className = 'modal';
+    dialog.id = 'appAlertDialog';
+    dialog.innerHTML = '<div class="modal-content confirm-modal"><h2 data-app-alert-title>Aviso</h2><p data-app-alert-message></p><div class="form-actions"><button class="btn secondary" type="button" data-app-alert-cancel>Cancelar</button><button class="btn" type="button" data-app-alert-accept>Aceptar</button></div></div>';
+    document.body.appendChild(dialog);
+    return dialog;
+  }
+
+  function showAppAlert(message, options = {}){
+    const dialog = getAppAlertDialog();
+    const title = dialog.querySelector('[data-app-alert-title]');
+    const text = dialog.querySelector('[data-app-alert-message]');
+    const cancel = dialog.querySelector('[data-app-alert-cancel]');
+    const accept = dialog.querySelector('[data-app-alert-accept]');
+    const isConfirm = options.confirm === true;
+    title.textContent = options.title || (isConfirm ? 'Confirmar acción' : 'Aviso');
+    text.textContent = message || '';
+    cancel.hidden = !isConfirm;
+    accept.textContent = options.acceptText || 'Aceptar';
+    cancel.textContent = options.cancelText || 'Cancelar';
+
+    return new Promise((resolve) => {
+      const finish = (result) => {
+        accept.removeEventListener('click', onAccept);
+        cancel.removeEventListener('click', onCancel);
+        dialog.removeEventListener('cancel', onCancel);
+        if (dialog.open) dialog.close();
+        resolve(result);
+      };
+      const onAccept = () => finish(true);
+      const onCancel = (event) => { if (event) event.preventDefault(); finish(false); };
+      accept.addEventListener('click', onAccept);
+      cancel.addEventListener('click', onCancel);
+      dialog.addEventListener('cancel', onCancel);
+      if (dialog.showModal) dialog.showModal();
+      else dialog.setAttribute('open', '');
+      accept.focus();
+    });
+  }
+
+  const showAppConfirm = (message) => showAppAlert(message, { confirm: true, acceptText: 'Aceptar', cancelText: 'Cancelar' });
+
   function showNumericAlert(input){
     if (input.dataset.warned === '1') return;
     input.dataset.warned = '1';
-    alert('Solo es permitido un dato numerico.');
+    showAppAlert('Solo es permitido un dato numerico.');
     setTimeout(() => { input.dataset.warned = '0'; }, 700);
   }
 
@@ -62,6 +107,24 @@
     fillFromSelect(select, map);
   });
 
+
+  document.addEventListener('submit', async (event) => {
+    const form = event.target;
+    const message = form?.dataset?.confirmMessage;
+    if (!message) return;
+    if (form.dataset.confirmedSubmit === '1') {
+      form.dataset.confirmedSubmit = '';
+      return;
+    }
+    event.preventDefault();
+    const confirmed = await showAppConfirm(message);
+    if (confirmed) {
+      form.dataset.confirmedSubmit = '1';
+      if (form.requestSubmit) form.requestSubmit();
+      else form.submit();
+    }
+  });
+
   document.querySelectorAll('[data-open-dialog]').forEach((button) => {
     button.addEventListener('click', () => {
       const dialog = document.getElementById(button.dataset.openDialog);
@@ -79,7 +142,7 @@
       if (dialog) dialog.close();
     }
     if (!event.target.closest('[data-product-search-wrap]')) {
-      document.querySelectorAll('[data-product-results]').forEach(box => box.hidden = true);
+      document.querySelectorAll('[data-product-results]').forEach(box => { box.hidden = true; box.closest('.invoice-lines-card')?.classList.remove('search-open'); });
     }
   });
 
@@ -109,24 +172,15 @@
   }
 
   function positionProductResults(row){
-    const input = row?.querySelector('.item-search');
     const box = row?.querySelector('[data-product-results]');
-    if (!input || !box) return;
-    const rect = input.getBoundingClientRect();
-    const margin = 10;
-    const desired = 270;
-    const below = window.innerHeight - rect.bottom - margin;
-    const above = rect.top - margin;
-    let top = rect.bottom + 6;
-    let maxH = Math.min(desired, below);
-    if (maxH < 130 && above > below) {
-      maxH = Math.min(desired, above);
-      top = Math.max(margin, rect.top - maxH - 6);
-    }
-    box.style.left = Math.max(margin, rect.left) + 'px';
-    box.style.top = top + 'px';
-    box.style.width = rect.width + 'px';
-    box.style.maxHeight = Math.max(120, maxH) + 'px';
+    if (!box) return;
+    // El listado queda exactamente debajo del campo Producto/Servicio.
+    // No se calcula con coordenadas de pantalla para evitar que aparezca arriba o en medio del formulario.
+    box.style.position = 'static';
+    box.style.left = '';
+    box.style.top = '';
+    box.style.width = '100%';
+    box.style.maxHeight = 'none';
   }
 
   function recalcLine(row){
@@ -195,6 +249,7 @@
     });
     box.innerHTML = html;
     box.hidden = false;
+    box.closest('.invoice-lines-card')?.classList.add('search-open');
     positionProductResults(row);
   }
 
@@ -237,7 +292,7 @@
     event.preventDefault();
     if (productOption.matches('[data-add-product]')) {
       const box = row.querySelector('[data-product-results]');
-      if (box) box.hidden = true;
+      if (box) { box.hidden = true; box.closest('.invoice-lines-card')?.classList.remove('search-open'); }
       openQuickItemDialog(row);
       return;
     }
@@ -245,7 +300,7 @@
       const item = saleItems.find(x => String(x.id) === String(productOption.dataset.itemId));
       fillRowWithItem(row, item);
       const box = row.querySelector('[data-product-results]');
-      if (box) box.hidden = true;
+      if (box) { box.hidden = true; box.closest('.invoice-lines-card')?.classList.remove('search-open'); }
     }
   }
 
@@ -258,14 +313,14 @@
       const item = saleItems.find(x => String(x.id) === String(option.dataset.itemId));
       fillRowWithItem(row, item);
       const box = row.querySelector('[data-product-results]');
-      if (box) box.hidden = true;
+      if (box) { box.hidden = true; box.closest('.invoice-lines-card')?.classList.remove('search-open'); }
       return;
     }
     const add = event.target.closest('[data-add-product]');
     if (add) {
       const row = add.closest('[data-line-row]');
       const box = row.querySelector('[data-product-results]');
-      if (box) box.hidden = true;
+      if (box) { box.hidden = true; box.closest('.invoice-lines-card')?.classList.remove('search-open'); }
       openQuickItemDialog(row);
     }
   });
@@ -282,7 +337,7 @@
       search.addEventListener('keydown', () => setTimeout(() => positionProductResults(row), 0));
       search.addEventListener('blur', () => setTimeout(() => {
         const box = row.querySelector('[data-product-results]');
-        if (box) box.hidden = true;
+        if (box) { box.hidden = true; box.closest('.invoice-lines-card')?.classList.remove('search-open'); }
       }, 180));
     }
     [qty, price, tax].forEach(input => {
@@ -342,7 +397,7 @@
       });
       if (!valid) {
         event.preventDefault();
-        alert('Agrega al menos un producto o servicio a la factura.');
+        showAppAlert('Agrega al menos un producto o servicio a la factura.');
       }
     });
     recalcInvoice(form);
@@ -373,7 +428,7 @@
         form.reset();
         form.querySelectorAll('[data-format-int]').forEach(bindFormattedInput);
       } catch (err) {
-        alert(err.message || 'No se pudo guardar el item.');
+        showAppAlert(err.message || 'No se pudo guardar el item.');
       }
     });
   });
@@ -394,9 +449,13 @@
     if (!script) return;
     let data;
     try { data = JSON.parse(script.textContent || '{}'); } catch(e){ return; }
-    const labels = data.labels || {ventas:'Ventas', compras:'Compras', empty:'Registra facturas'};
+    const labels = data.labels || {ventas:'Ventas', compras:'Compras', empty:'Registra movimientos'};
     renderMonthlyChart(data.monthly || [], labels);
+    // Compatibilidad con el resumen circular antiguo si existe en alguna plantilla.
     renderDonutChart(data.totals || {ventas:0, compras:0}, labels);
+    // Nuevas gráficas circulares separadas por categoría.
+    renderCategoryDonut('donutIngresosChart', 'donutIngresosSummary', data.distribution_ingresos || [], 'Ingresos', '#2468f2');
+    renderCategoryDonut('donutEgresosChart', 'donutEgresosSummary', data.distribution_egresos || [], 'Egresos', '#f4a62a');
   }
   window.FinexCharts = { renderCharts };
 
@@ -462,6 +521,47 @@
     svg += `<text class="donut-center" x="130" y="126" text-anchor="middle">${currency(sum)}</text><text class="label" x="130" y="148" text-anchor="middle">Total general</text></svg>`;
     target.innerHTML = svg;
     if (summary) summary.innerHTML = `<div class="summary-row"><span><span class="dot ventas"></span> ${labels.ventas || 'Ventas'}</span><strong>${currency(ventas)}</strong></div><div class="summary-row"><span><span class="dot compras"></span> ${labels.compras || 'Compras'}</span><strong>${currency(compras)}</strong></div>`;
+    target.querySelectorAll('[data-tip]').forEach(el => {
+      el.addEventListener('mousemove', e => showTip(el.dataset.tip, e));
+      el.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+
+  function renderCategoryDonut(targetId, summaryId, rows, label, baseColor){
+    const target = document.getElementById(targetId);
+    const summary = document.getElementById(summaryId);
+    if (!target) return;
+    const palette = label === 'Ingresos'
+      ? ['#2468f2','#16a34a','#06b6d4','#7c3aed','#0ea5e9','#22c55e','#1d4ed8','#14b8a6']
+      : ['#f4a62a','#ef4444','#f97316','#eab308','#fb7185','#dc2626','#b45309','#f59e0b'];
+    rows = (rows || []).filter(r => Number(r.total || 0) > 0);
+    const sum = rows.reduce((acc, r) => acc + Number(r.total || 0), 0);
+    if (sum <= 0) {
+      target.innerHTML = `<svg viewBox="0 0 260 260" class="svg-chart"><circle cx="130" cy="130" r="82" fill="none" stroke="#dbe4ef" stroke-width="34"></circle><text class="donut-center" x="130" y="126" text-anchor="middle">Sin datos</text><text class="label" x="130" y="148" text-anchor="middle">Registra ${label.toLowerCase()}</text></svg>`;
+      if (summary) summary.innerHTML = `<div class="summary-row"><span>${label}</span><strong>$ 0</strong></div>`;
+      return;
+    }
+    let angle = 0;
+    let svg = `<svg viewBox="0 0 260 260" class="svg-chart" role="img">`;
+    rows.forEach((row, idx) => {
+      const value = Number(row.total || 0);
+      const next = angle + (value / sum * 360);
+      const color = palette[idx % palette.length] || baseColor;
+      const pct = Math.round(value / sum * 100);
+      svg += `<path class="donut-segment" data-tip="<strong>${escapeHtml(row.categoria || 'Sin categoría')}</strong><br>${currency(value)}<br>${pct}% de ${label.toLowerCase()}" d="${donutSegment(130,130,82,angle,next)}" fill="none" stroke="${color}" stroke-width="34" stroke-linecap="round"></path>`;
+      angle = next;
+    });
+    svg += `<text class="donut-center" x="130" y="126" text-anchor="middle">${currency(sum)}</text><text class="label" x="130" y="148" text-anchor="middle">${label}</text></svg>`;
+    target.innerHTML = svg;
+    if (summary) {
+      summary.innerHTML = rows.map((row, idx) => {
+        const value = Number(row.total || 0);
+        const pct = Math.round(value / sum * 100);
+        const color = palette[idx % palette.length] || baseColor;
+        return `<div class="summary-row"><span><span class="dot" style="background:${color}"></span>${escapeHtml(row.categoria || 'Sin categoría')} <small>${pct}%</small></span><strong>${currency(value)}</strong></div>`;
+      }).join('');
+    }
     target.querySelectorAll('[data-tip]').forEach(el => {
       el.addEventListener('mousemove', e => showTip(el.dataset.tip, e));
       el.addEventListener('mouseleave', hideTip);

@@ -14,6 +14,7 @@ DROP TRIGGER IF EXISTS `trg_facturas_compra_au_movimiento`;
 DROP TRIGGER IF EXISTS `trg_facturas_compra_ad_movimiento`;
 DROP TABLE IF EXISTS `movimientos_contables`;
 DROP TABLE IF EXISTS `movimientos_persona`;
+DROP TABLE IF EXISTS `cuentas_personales`;
 DROP TABLE IF EXISTS `categorias`;
 DROP TABLE IF EXISTS `factura_compra_items`;
 DROP TABLE IF EXISTS `facturas_compra`;
@@ -234,23 +235,41 @@ CREATE TABLE `categorias` (
   CONSTRAINT `fk_categorias_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+CREATE TABLE `cuentas_personales` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `usuario_id` int(11) NOT NULL,
+  `nombre` varchar(120) NOT NULL,
+  `tipo` enum('efectivo','banco','billetera','tarjeta') NOT NULL DEFAULT 'efectivo',
+  `saldo_inicial` decimal(14,0) NOT NULL DEFAULT 0,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_cuentas_personales_usuario` (`usuario_id`),
+  CONSTRAINT `fk_cuentas_personales_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE `movimientos_persona` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `usuario_id` int(11) NOT NULL,
   `categoria_id` int(11) DEFAULT NULL,
+  `cuenta_id` int(11) DEFAULT NULL,
   `tipo` enum('ingreso','egreso') NOT NULL,
   `descripcion` varchar(255) NOT NULL,
   `valor` decimal(14,0) NOT NULL DEFAULT 0,
   `fecha` datetime NOT NULL,
-  `estado` enum('emitida','pagada','vencida','anulada') NOT NULL DEFAULT 'emitida',
+  `estado` enum('completado','vencido','anulado') NOT NULL DEFAULT 'completado',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_mov_persona_usuario_fecha` (`usuario_id`,`fecha`),
   KEY `idx_mov_persona_tipo` (`tipo`),
   KEY `idx_mov_persona_categoria` (`categoria_id`),
+  KEY `idx_mov_persona_cuenta` (`cuenta_id`),
   CONSTRAINT `fk_mov_persona_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_mov_persona_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `fk_mov_persona_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_mov_persona_cuenta` FOREIGN KEY (`cuenta_id`) REFERENCES `cuentas_personales` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `movimientos_contables` (
