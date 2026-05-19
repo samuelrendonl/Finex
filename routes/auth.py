@@ -5,7 +5,9 @@ import smtplib
 import ssl
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
-
+import json
+import urllib.request
+import urllib.error
 from flask import Blueprint, request, jsonify, session, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from oauth_config import oauth
@@ -31,6 +33,10 @@ def _now_utc():
 
 
 def _smtp_enabled():
+   
+    if os.getenv("BREVO_API_KEY"):
+        return bool(os.getenv("SMTP_FROM"))
+
     return all([
         os.getenv("SMTP_HOST"),
         os.getenv("SMTP_PORT"),
@@ -45,26 +51,24 @@ def _generate_six_digit_code():
 
 
 def _send_verification_email(email, code, subject, action_text, ttl_minutes):
-    """Envia un codigo de verificacion usando SMTP configurado en .env."""
+    """Envia un codigo de verificacion usando Brevo API o SMTP configurado en .env."""
+
     smtp_host = os.getenv("SMTP_HOST")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USER")
     smtp_password = (os.getenv("SMTP_PASSWORD") or "").strip()
+
     if smtp_host and "gmail" in smtp_host.lower():
         smtp_password = smtp_password.replace(" ", "")
+
     smtp_from = os.getenv("SMTP_FROM") or smtp_user
     smtp_from_name = os.getenv("SMTP_FROM_NAME", "FINEX")
     use_ssl = os.getenv("SMTP_USE_SSL", "false").lower() in ("1", "true", "yes", "si")
     use_tls = os.getenv("SMTP_USE_TLS", "true").lower() in ("1", "true", "yes", "si")
 
-    if not smtp_host or not smtp_port or not smtp_user or not smtp_password or not smtp_from:
-        raise RuntimeError("Configura SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en el archivo .env para enviar codigos.")
+    brevo_api_key = os.getenv("BREVO_API_KEY")
 
-    message = EmailMessage()
-    message["Subject"] = subject
-    message["From"] = f"{smtp_from_name} <{smtp_from}>"
-    message["To"] = email
-    message.set_content(
+    text_content = (
         f"Hola,\n\n"
         f"Tu codigo para {action_text} en FINEX es: {code}\n\n"
         f"Este codigo vence en {ttl_minutes} minutos. "
@@ -72,19 +76,96 @@ def _send_verification_email(email, code, subject, action_text, ttl_minutes):
         f"FINEX"
     )
 
+    html_content = f"""
+        <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
+            <h2>FINEX</h2>
+            <p>Hola,</p>
+            <p>Tu código para {action_text} en FINEX es:</p>
+            <div style="font-size: 28px; font-weight: bold; letter-spacing: 4px; margin: 20px 0;">
+                {code}
+            </div>
+            <p>Este código vence en {ttl_minutes} minutos.</p>
+            <p>Si no solicitaste este código, puedes ignorar este correo.</p>
+            <br>
+            <p>FINEX</p>
+        </div>
+    """
+
+    # =========================
+    # OPCION 1: BREVO API
+    # =========================
+    if brevo_api_key:
+        if not smtp_from:
+            raise RuntimeError("Configura SMTP_FROM en Render para usar Brevo API.")
+
+        payload = {
+            "sender": {
+                "name": smtp_from_name,
+                "email": smtp_from,
+            },
+            "to": [
+                {
+                    "email": email,
+                }
+            ],
+            "subject": subject,
+            "textContent": text_content,
+            "htmlContent": html_content,
+        }
+
+        request_data = json.dumps(payload).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=request_data,
+            headers={
+                "accept": "application/json",
+                "api-key": brevo_api_key,
+                "content-type": "application/json",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=20) as response:
+                if response.status not in (200, 201, 202):
+                    raise RuntimeError(f"Brevo respondio con estado {response.status}")
+            return
+
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8", errors="ignore")
+            raise RuntimeError(f"Error Brevo API: {e.code} - {error_body}")
+
+        except Exception as e:
+            raise RuntimeError(f"Error enviando email por Brevo API: {e}")
+
+    # =========================
+    # OPCION 2: SMTP NORMAL
+    # =========================
+    if not smtp_host or not smtp_port or not smtp_user or not smtp_password or not smtp_from:
+        raise RuntimeError(
+            "Configura BREVO_API_KEY o configura SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM."
+        )
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = f"{smtp_from_name} <{smtp_from}>"
+    message["To"] = email
+    message.set_content(text_content)
+    message.add_alternative(html_content, subtype="html")
+
     if use_ssl:
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
+        with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context, timeout=20) as server:
             server.login(smtp_user, smtp_password)
             server.send_message(message)
         return
 
-    with smtplib.SMTP(smtp_host, smtp_port) as server:
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
         if use_tls:
             server.starttls(context=ssl.create_default_context())
         server.login(smtp_user, smtp_password)
         server.send_message(message)
-
 
 def _send_password_reset_email(email, code):
     _send_verification_email(

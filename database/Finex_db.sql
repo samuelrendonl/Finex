@@ -1,10 +1,6 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-DROP DATABASE IF EXISTS `finex_db`;
-CREATE DATABASE `finex_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `finex_db`;
-
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TRIGGER IF EXISTS `trg_facturas_venta_ai_movimiento`;
 DROP TRIGGER IF EXISTS `trg_facturas_venta_au_movimiento`;
