@@ -330,10 +330,10 @@ def _clear_email_verification_code(purpose):
 def _verify_email_verification_code(purpose, codigo, email=None, usuario_id=None, missing_message=None):
     codigo = (codigo or "").strip()
     if not codigo:
-        return False, "Ingresa el codigo de verificacion enviado a tu correo."
+        return False, "Ingresa el código de verificacion enviado a tu correo."
 
     if not codigo.isdigit() or len(codigo) != 6:
-        return False, "El codigo de verificacion debe tener 6 digitos."
+        return False, "El código de verificacion debe tener 6 digitos."
 
     data = _get_email_verification_data(purpose)
     if not data:
@@ -353,7 +353,7 @@ def _verify_email_verification_code(purpose, codigo, email=None, usuario_id=None
     if not check_password_hash(data.get("code_hash", ""), codigo):
         data["attempts"] = attempts + 1
         _save_email_verification_data(purpose, data)
-        return False, "Codigo de verificacion incorrecto."
+        return False, "Código de verificacion incorrecto."
 
     _clear_email_verification_code(purpose)
     return True, None
@@ -504,24 +504,24 @@ def solicitar_codigo_registro():
         email = (data.get("email") or "").strip().lower()
 
         if not email:
-            return jsonify({"error": "El correo electronico es obligatorio"}), 400
+            return jsonify({"error": "El correo electrónico es obligatorio"}), 400
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
             cursor.execute("SELECT id FROM usuarios WHERE email=%s LIMIT 1", (email,))
             if cursor.fetchone():
-                return jsonify({"error": "Ese correo ya esta registrado."}), 400
+                return jsonify({"error": "Ese correo ya está registrado."}), 400
 
         if not _smtp_enabled():
             return jsonify({
-                "error": "No se pudo enviar el codigo porque el correo SMTP no esta configurado en el servidor. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en .env."
+                "error": "No se pudo enviar el código porque el correo SMTP no esta configurado en el servidor. Revisa SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD y SMTP_FROM en .env."
             }), 500
 
         code = _generate_six_digit_code()
         _send_verification_email(
             email,
             code,
-            "Codigo de verificacion FINEX",
+            "Código de verificacion FINEX",
             "verificar tu correo antes de crear la cuenta",
             EMAIL_VERIFICATION_CODE_TTL_MINUTES,
         )
@@ -529,7 +529,7 @@ def solicitar_codigo_registro():
 
         return jsonify({
             "success": True,
-            "message": "Enviamos un codigo de verificacion a tu correo. Ingresalo para completar el registro.",
+            "message": "Enviamos un código de verificacion a tu correo. Ingresalo para completar el registro.",
             "expires_in_minutes": EMAIL_VERIFICATION_CODE_TTL_MINUTES,
         })
     except Exception as e:
@@ -565,7 +565,7 @@ def registro():
                 REGISTRATION_VERIFICATION_PURPOSE,
                 codigo_verificacion,
                 email=email,
-                missing_message="Solicita el codigo enviado a tu correo antes de completar el registro.",
+                missing_message="Solicita el código enviado a tu correo antes de completar el registro.",
             )
             if not ok:
                 return jsonify({"error": error}), 400

@@ -168,7 +168,7 @@
                     class="btn btn-primary"
                     id="recoverSendCodeBtn"
                   >
-                    Enviar código
+                    Generar código
                   </button>
 
                   <div id="recoverCodeFields" hidden>
@@ -422,7 +422,10 @@
                   </div>
 
                   <div class="form-row">
-                    <div class="form-group">
+                    <div
+                      class="form-group register-code-group"
+                      id="personaRegisterCodeGroup"
+                    >
                       <label for="personaCodigoVerificacion"
                         >Código de verificación *</label
                       >
@@ -431,19 +434,17 @@
                         id="personaCodigoVerificacion"
                         name="codigo_verificacion"
                         placeholder="Código de 6 dígitos"
-                        required
                         inputmode="numeric"
                         maxlength="6"
                       />
                     </div>
                     <div class="form-group">
-                      <label>&nbsp;</label>
                       <button
                         type="button"
                         class="btn btn-primary"
                         id="personaSendRegisterCodeBtn"
                       >
-                        Enviar código
+                        Generar código
                       </button>
                     </div>
                   </div>
@@ -603,7 +604,10 @@
                   </div>
 
                   <div class="form-row">
-                    <div class="form-group">
+                    <div
+                      class="form-group register-code-group"
+                      id="empresaRegisterCodeGroup"
+                    >
                       <label for="empresaCodigoVerificacion"
                         >Código de verificación *</label
                       >
@@ -612,19 +616,17 @@
                         id="empresaCodigoVerificacion"
                         name="codigo_verificacion"
                         placeholder="Código de 6 dígitos"
-                        required
                         inputmode="numeric"
                         maxlength="6"
                       />
                     </div>
                     <div class="form-group">
-                      <label>&nbsp;</label>
                       <button
                         type="button"
                         class="btn btn-primary"
                         id="empresaSendRegisterCodeBtn"
                       >
-                        Enviar código
+                        Generar código
                       </button>
                     </div>
                   </div>

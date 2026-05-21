@@ -660,7 +660,13 @@ form {
   flex-direction: column;
   gap: 8px;
 }
+.register-code-group {
+  display: none !important;
+}
 
+.register-code-group.show {
+  display: flex !important;
+}
 .form-group label {
   font-weight: 600;
   color: var(--primary-color);

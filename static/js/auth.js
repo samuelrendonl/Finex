@@ -20,6 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const empresaSendRegisterCodeBtn = document.getElementById(
     "empresaSendRegisterCodeBtn",
   );
+  const personaRegisterCodeGroup = document.getElementById(
+    "personaRegisterCodeGroup",
+  );
+  const empresaRegisterCodeGroup = document.getElementById(
+    "empresaRegisterCodeGroup",
+  );
 
   const loginEmail = document.getElementById("loginEmail");
 
@@ -234,6 +240,26 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => document.getElementById("recoverCode")?.focus(), 100);
   }
 
+  function resetRegistrationCodeStep(codeGroup, codeInput) {
+    if (codeGroup) codeGroup.classList.remove("show");
+
+    if (codeInput) {
+      codeInput.required = false;
+      codeInput.value = "";
+      markInvalid(codeInput, false);
+      clearFieldError(codeInput);
+    }
+  }
+
+  function enableRegistrationCodeStep(codeGroup, codeInput) {
+    if (codeGroup) codeGroup.classList.add("show");
+
+    if (codeInput) {
+      codeInput.required = true;
+      setTimeout(() => codeInput.focus(), 100);
+    }
+  }
+
   function showNumericMessage(input, message) {
     const form = input?.closest("form");
     const messageEl =
@@ -334,7 +360,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll("input").forEach(bindClearInvalid);
 
-  async function sendRegistrationCode(emailInput, messageId, button) {
+  async function sendRegistrationCode(
+    emailInput,
+    messageId,
+    button,
+    codeGroup,
+    codeInput,
+  ) {
     clearMessages();
     clearInvalidInputs();
 
@@ -345,24 +377,26 @@ document.addEventListener("DOMContentLoaded", () => {
       showFieldError(emailInput, "Este campo es obligatorio.");
       return showMessage(
         messageId,
-        "Ingresa el correo electronico para enviar el codigo.",
+        "Ingresa el correo electrónico para enviar el código.",
         "error",
       );
     }
 
     if (!validarEmail(email)) {
       markInvalid(emailInput, true);
-      return showMessage(messageId, "Email invalido.", "error");
+      return showMessage(messageId, "Email inválido.", "error");
     }
 
     try {
-      setButtonLoading(button, true, "Enviando codigo...");
+      setButtonLoading(button, true, "Enviando código...");
       const data = await postJSON("/api/solicitar-codigo-registro", { email });
       showMessage(
         messageId,
-        data.message || "Codigo enviado. Revisa tu correo.",
+        data.message || "Código enviado. Revisa tu correo.",
         "success",
       );
+      enableRegistrationCodeStep(codeGroup, codeInput);
+      enableRegistrationCodeStep(codeGroup, codeInput);
     } catch (error) {
       showMessage(messageId, error.message, "error");
     } finally {
@@ -375,14 +409,17 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("personaEmail"),
       "registerPersonaMessage",
       personaSendRegisterCodeBtn,
+      personaRegisterCodeGroup,
+      document.getElementById("personaCodigoVerificacion"),
     );
   });
-
   empresaSendRegisterCodeBtn?.addEventListener("click", () => {
     sendRegistrationCode(
       document.getElementById("empresaEmail"),
       "registerEmpresaMessage",
       empresaSendRegisterCodeBtn,
+      empresaRegisterCodeGroup,
+      document.getElementById("empresaCodigoVerificacion"),
     );
   });
 
@@ -398,6 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const passwordInput = document.getElementById("loginPassword");
 
       const email = emailInput.value.trim();
+
       const contraseña = passwordInput.value;
 
       if (!email || !contraseña) {
@@ -610,6 +648,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const confirmInput = document.getElementById("personaPasswordConfirm");
 
       const email = emailInput.value.trim();
+      if (personaRegisterCodeGroup?.hidden) {
+        return showMessage(
+          "registerPersonaMessage",
+          "Primero envía el código de verificación a tu correo.",
+          "error",
+        );
+      }
       const codigoVerificacion = codeInput.value.trim();
       const contraseña = passwordInput.value;
       const confirmar = confirmInput.value;
@@ -627,7 +672,7 @@ document.addEventListener("DOMContentLoaded", () => {
         markInvalid(codeInput, true);
         return showMessage(
           "registerPersonaMessage",
-          "Ingresa el codigo de 6 digitos enviado a tu correo.",
+          "Ingresa el código de 6 dígitos enviado a tu correo.",
           "error",
         );
       }
@@ -709,6 +754,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const confirmInput = document.getElementById("empresaPasswordConfirm");
 
       const email = emailInput.value.trim();
+      if (empresaRegisterCodeGroup?.hidden) {
+        return showMessage(
+          "registerEmpresaMessage",
+          "Primero envía el código de verificación a tu correo.",
+          "error",
+        );
+      }
       const codigoVerificacion = codeInput.value.trim();
       const contraseña = passwordInput.value;
       const confirmar = confirmInput.value;
