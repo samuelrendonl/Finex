@@ -395,8 +395,12 @@ document.addEventListener("DOMContentLoaded", () => {
         data.message || "Código enviado. Revisa tu correo.",
         "success",
       );
+
       enableRegistrationCodeStep(codeGroup, codeInput);
-      enableRegistrationCodeStep(codeGroup, codeInput);
+
+      if (button) {
+        button.closest(".form-group").style.display = "none";
+      }
     } catch (error) {
       showMessage(messageId, error.message, "error");
     } finally {
