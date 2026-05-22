@@ -167,7 +167,7 @@
       >
         <section class="page-title">
           <div>
-            <h1>Inicio</h1>
+            <h1>INICIO</h1>
             <p>Resumen general de tu cuenta personal.</p>
           </div>
         </section>
@@ -264,7 +264,7 @@
       >
         <section class="page-title">
           <div>
-            <h1>Ingresos</h1>
+            <h1>INGRESOS</h1>
             <p>Registra y administra tus ingresos personales.</p>
           </div>
         </section>
@@ -277,7 +277,7 @@
           </div>
           <form class="form-grid" data-movement-form data-type="ingreso">
             <label
-              >Categoría<select
+              >Categoría *<select
                 name="categoria"
                 required
                 data-category-select="ingreso"
@@ -286,12 +286,12 @@
               </select></label
             >
             <label
-              >Cuenta<select name="cuenta_id" data-account-select>
+              >Cuenta *<select name="cuenta_id" data-account-select required>
                 <option value="">Seleccione...</option>
               </select></label
             >
             <label
-              >Monto<input
+              >Monto *<input
                 name="monto"
                 inputmode="numeric"
                 data-format-int
@@ -299,22 +299,16 @@
                 placeholder="0"
             /></label>
             <label class="span-3"
-              >Descripción<textarea
+              >Descripción *<textarea
                 name="descripcion"
                 rows="2"
                 required
               ></textarea>
             </label>
             <label
-              >Fecha<input type="datetime-local" name="fecha" required
+              >Fecha *<input type="datetime-local" name="fecha" required
             /></label>
-            <label
-              >Estado<select name="estado" required>
-                <option value="completado">completado</option>
-                <option value="vencido">vencido</option>
-                <option value="anulado">anulado</option>
-              </select></label
-            >
+
             <div class="form-actions span-3">
               <button class="btn" type="submit">Guardar ingreso</button>
             </div>
@@ -348,7 +342,7 @@
       >
         <section class="page-title">
           <div>
-            <h1>Egresos</h1>
+            <h1>EGRESOS</h1>
             <p>Registra y administra tus egresos personales.</p>
           </div>
         </section>
@@ -361,7 +355,7 @@
           </div>
           <form class="form-grid" data-movement-form data-type="egreso">
             <label
-              >Categoría<select
+              >Categoría *<select
                 name="categoria"
                 required
                 data-category-select="egreso"
@@ -370,12 +364,12 @@
               </select></label
             >
             <label
-              >Cuenta<select name="cuenta_id" data-account-select>
+              >Cuenta *<select name="cuenta_id" data-account-select required>
                 <option value="">Seleccione...</option>
               </select></label
             >
             <label
-              >Monto<input
+              >Monto *<input
                 name="monto"
                 inputmode="numeric"
                 data-format-int
@@ -383,22 +377,16 @@
                 placeholder="0"
             /></label>
             <label class="span-3"
-              >Descripción<textarea
+              >Descripción *<textarea
                 name="descripcion"
                 rows="2"
                 required
               ></textarea>
             </label>
             <label
-              >Fecha<input type="datetime-local" name="fecha" required
+              >Fecha *<input type="datetime-local" name="fecha" required
             /></label>
-            <label
-              >Estado<select name="estado" required>
-                <option value="completado">completado</option>
-                <option value="vencido">vencido</option>
-                <option value="anulado">anulado</option>
-              </select></label
-            >
+
             <div class="form-actions span-3">
               <button class="btn danger" type="submit">Guardar egreso</button>
             </div>
@@ -432,7 +420,7 @@
       >
         <section class="page-title">
           <div>
-            <h1>Cuentas</h1>
+            <h1>CUENTAS</h1>
             <p>Registra tus billeteras, bancos, efectivo o tarjetas.</p>
           </div>
         </section>
@@ -445,13 +433,13 @@
           </div>
           <form class="form-grid" data-account-form>
             <label
-              >Nombre de la cuenta<input
+              >Nombre de la cuenta *<input
                 name="nombre"
                 placeholder="Ej: Efectivo, Bancolombia, Nequi"
                 required
             /></label>
             <label
-              >Tipo<select name="tipo" required>
+              >Tipo *<select name="tipo" required>
                 <option value="efectivo">Efectivo</option>
                 <option value="banco">Banco</option>
                 <option value="billetera">Billetera</option>
@@ -459,11 +447,12 @@
               </select></label
             >
             <label
-              >Saldo inicial<input
+              >Saldo inicial *<input
                 name="saldo_inicial"
                 inputmode="numeric"
                 data-format-int
                 placeholder="0"
+                required
             /></label>
             <div class="form-actions span-3">
               <button class="btn" type="submit">Guardar cuenta</button>
@@ -495,7 +484,7 @@
       >
         <section class="page-title">
           <div>
-            <h1>Reportes y movimientos</h1>
+            <h1>REPORTES Y MOVIMIENTOS</h1>
             <p>Consulta, filtra y exporta tus ingresos y egresos.</p>
           </div>
         </section>
@@ -511,13 +500,8 @@
               <input type="date" id="desde" /><input
                 type="date"
                 id="hasta"
-              /><button
-                class="btn secondary small"
-                type="button"
-                data-filter-report
-              >
-                Filtrar</button
-              ><a
+              />
+              <a
                 class="btn secondary small"
                 id="reportePdfGeneral"
                 href="/reportes/movimientos/pdf"
@@ -557,7 +541,7 @@
       >
         <section class="page-title">
           <div>
-            <h1>Configuración</h1>
+            <h1>CONFIGURACIÓN</h1>
             <p>Datos de registro de tu cuenta personal.</p>
           </div>
         </section>
@@ -577,32 +561,32 @@
             autocomplete="off"
           >
             <label
-              >Nombre<input
+              >Nombre *<input
                 name="nombre"
                 required
                 value="{{ perfil.nombre if perfil else '' }}"
             /></label>
             <label
-              >Apellido<input
+              >Apellido *<input
                 name="apellido"
                 required
                 value="{{ perfil.apellido if perfil else '' }}"
             /></label>
             <label
-              >Correo electrónico<input
+              >Correo electrónico *<input
                 type="email"
                 name="email"
                 required
                 value="{{ perfil.email if perfil else correo }}"
             /></label>
             <label
-              >Documento de identidad<input
+              >Documento de identidad *<input
                 name="documento_identidad"
                 required
                 value="{{ perfil.documento_identidad if perfil else '' }}"
             /></label>
             <label
-              >Teléfono<input
+              >Teléfono *<input
                 name="telefono"
                 required
                 inputmode="numeric"
@@ -611,8 +595,9 @@
                 value="{{ perfil.telefono if perfil else '' }}"
             /></label>
             <label
-              >Dirección<input
+              >Dirección *<input
                 name="direccion"
+                required
                 value="{{ perfil.direccion if perfil else '' }}"
             /></label>
             <label
@@ -660,25 +645,20 @@
             name="tipo"
           /><label>Categoría<input name="categoria" required /></label
           ><label
-            >Cuenta<select name="cuenta_id" data-account-select>
+            >Cuenta
+            <select name="cuenta_id" data-account-select required>
               <option value="">Seleccione...</option>
             </select></label
           ><label
-            >Monto<input
+            >Monto *<input
               name="monto"
               inputmode="numeric"
               data-format-int
               required /></label
           ><label
-            >Fecha<input type="datetime-local" name="fecha" required /></label
-          ><label
-            >Estado<select name="estado">
-              <option value="completado">completado</option>
-              <option value="vencido">vencido</option>
-              <option value="anulado">anulado</option>
-            </select></label
+            >Fecha *<input type="datetime-local" name="fecha" required /></label
           ><label class="span-3"
-            >Descripción<textarea
+            >Descripción *<textarea
               name="descripcion"
               rows="3"
               required
@@ -699,19 +679,20 @@
         <h2>Editar cuenta</h2>
         <form class="form-grid" id="editAccountForm">
           <input type="hidden" name="id" /><label
-            >Nombre<input name="nombre" required /></label
+            >Nombre *<input name="nombre" required /></label
           ><label
-            >Tipo<select name="tipo" required>
+            >Tipo *<select name="tipo" required>
               <option value="efectivo">Efectivo</option>
               <option value="banco">Banco</option>
               <option value="billetera">Billetera</option>
               <option value="tarjeta">Tarjeta</option>
             </select></label
           ><label
-            >Saldo inicial<input
+            >Saldo inicial *<input
               name="saldo_inicial"
               inputmode="numeric"
               data-format-int
+              required
           /></label>
           <div class="form-actions span-3">
             <button class="btn" type="submit">Guardar cambios</button
@@ -770,5 +751,6 @@
     </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/personal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/password-toggle.js') }}"></script>
   </body>
 </html>

@@ -288,9 +288,7 @@ def insert_movimiento(data, usuario_id):
     descripcion = (data.get("descripcion") or "").strip()
     valor = _money(data.get("monto") or data.get("valor"))
     fecha = _date_value(data.get("fecha"))
-    estado = (data.get("estado") or "completado").strip().lower()
-    if estado not in VALID_STATES:
-        estado = "completado"
+    estado = "completado"
     if valor <= 0:
         raise ValueError("El monto debe ser mayor que cero.")
 
@@ -319,9 +317,7 @@ def update_movimiento(usuario_id, movimiento_id, data):
     valor = _money(data.get("monto") or data.get("valor"))
     descripcion = (data.get("descripcion") or "").strip()
     fecha = _date_value(data.get("fecha"))
-    estado = (data.get("estado") or "completado").strip().lower()
-    if estado not in VALID_STATES:
-        estado = "completado"
+    estado = "completado"
 
     connection = get_db_connection()
     try:

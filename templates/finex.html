@@ -164,7 +164,7 @@
 
 <section class="page-title">
   <div>
-    <h1>Inicio</h1>
+    <h1>INICIO</h1>
     <p>Resumen general de la empresa.</p>
   </div>
 </section>
@@ -183,7 +183,7 @@
   <article class="stat-card">
     <small>Movimientos</small>
     <strong>{{ stats.movimientos.cantidad }}</strong>
-    <span>generados automaticamente</span>
+    <span>generados automáticamente</span>
   </article>
 </div>
 
@@ -191,22 +191,22 @@
   <article class="card chart-card">
     <div class="section-head">
       <div>
-        <h2>Grafica mensual</h2>
-        <p class="subtext">Comparacion mensual entre ventas y compras registradas.</p>
+        <h2>Gráfica mensual</h2>
+        <p class="subtext">Comparación mensual entre ventas y compras registradas.</p>
       </div>
       <div class="legend"><span class="dot ventas"></span>Ventas <span class="dot compras"></span>Compras</div>
     </div>
-    <div id="monthlyChart" class="chart-box" aria-label="Grafica mensual de ventas y compras"></div>
+    <div id="monthlyChart" class="chart-box" aria-label="Gráfica mensual de ventas y compras"></div>
   </article>
 
   <article class="card chart-card compact-chart">
     <div class="section-head stacked">
       <div>
-        <h2>Distribucion</h2>
-        <p class="subtext">Participacion total de ventas y compras.</p>
+        <h2>Distribución</h2>
+        <p class="subtext">Participación total de ventas y compras.</p>
       </div>
     </div>
-    <div id="donutChart" class="donut-box" aria-label="Grafica circular de distribucion"></div>
+    <div id="donutChart" class="donut-box" aria-label="Gráfica circular de distribución"></div>
     <div id="donutSummary" class="donut-summary"></div>
   </article>
 </section>
@@ -220,17 +220,17 @@
   <div class="modal-content">
     <button class="modal-close" type="button" data-close-dialog>×</button>
     <h2>Agregar producto/servicio</h2>
-    <p class="subtext">Guarda el item sin salir de la factura. Al guardarlo se selecciona en la linea actual.</p>
+    <p class="subtext">Guarda el item sin salir de la factura. Al guardarlo se selecciona en la línea actual.</p>
     <form method="post" action="{{ url_for('finex.crear_item_rapido') }}" class="stack-form" data-quick-item-form>
-      <label>Codigo<input name="codigo" required></label>
-      <label>Nombre<input name="nombre" required></label>
-      <label>Descripcion<textarea name="descripcion" rows="3"></textarea></label>
-      <label>Tipo
-        <select name="tipo"><option value="servicio">servicio</option><option value="producto">producto</option></select>
+      <label>Código *<input name="codigo" required></label>
+      <label>Nombre *<input name="nombre" required></label>
+      <label>Descripción<textarea name="descripcion" rows="3"></textarea></label>
+      <label>Tipo *
+        <select name="tipo" required><option value="servicio">servicio</option><option value="producto">producto</option></select>
       </label>
-      <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="0"></label>
-      <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="0"></label>
-      <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0"></label>
+      <label>Precio unitario *<input name="precio_unitario" inputmode="numeric" data-format-int value="0" required></label>
+      <label>Cantidad *<input name="cantidad" inputmode="numeric" data-format-int value="0" required></label>
+      <label>Impuesto % *<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0" required></label>
       <div class="form-actions"><button class="btn" type="submit">Guardar producto/servicio</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
     </form>
   </div>
@@ -241,18 +241,18 @@
 <tr class="invoice-line" data-line-row>
   <td class="product-cell">
     <div class="product-search-wrap" data-product-search-wrap>
-      <input class="item-search" name="item_search[]" autocomplete="off" placeholder="Buscar producto o servicio" value="{% if line %}{{ (line.codigo ~ ' - ' if line.codigo else '') ~ (line.item_nombre or line.descripcion) }}{% endif %}">
+      <input class="item-search" name="item_search[]" autocomplete="off" placeholder="Buscar producto o servicio" required value="{% if line %}{{ (line.codigo ~ ' - ' if line.codigo else '') ~ (line.item_nombre or line.descripcion) }}{% endif %}">
       <div class="product-results" data-product-results hidden></div>
     </div>
     <input type="hidden" name="item_id[]" value="{{ line.item_id if line else '' }}" data-item-id>
   </td>
-  <td><input name="precio_unitario[]" data-format-int data-price value="{{ line.precio_unitario|num if line else '0' }}" inputmode="numeric"></td>
-  <td><input name="impuesto_porcentaje[]" data-format-int data-tax value="{{ line.impuesto_porcentaje|num if line else '0' }}" inputmode="numeric"></td>
-  <td><input class="qty-input" name="cantidad[]" data-format-int data-quantity value="{{ line.cantidad|num if line else '1' }}" inputmode="numeric"></td>
+  <td><input name="precio_unitario[]" data-format-int data-price required value="{{ line.precio_unitario|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input name="impuesto_porcentaje[]" data-format-int data-tax required value="{{ line.impuesto_porcentaje|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input class="qty-input" name="cantidad[]" data-format-int data-quantity required value="{{ line.cantidad|num if line else '1' }}" inputmode="numeric"></td>
   <td><input name="descripcion[]" data-description value="{{ line.descripcion if line else '' }}"></td>
   <td><input name="nota[]" data-note placeholder="Nota editable" value="{{ line.nota if line and line.nota else '' }}"></td>
   <td class="line-total" data-line-total>{{ line.total|cop if line else '$ 0' }}</td>
-  <td><button class="icon-btn danger-text" type="button" data-remove-line title="Eliminar linea">x</button></td>
+  <td><button class="icon-btn danger-text" type="button" data-remove-line title="Eliminar línea">x</button></td>
 </tr>
 {% endmacro %}
 
@@ -261,7 +261,7 @@
   <input type="hidden" name="invoice_id" value="{{ invoice.id if invoice else '' }}">
 
   <div class="form-grid">
-    <label>Cliente
+    <label>Cliente *
       <select name="cliente_id" required data-client-select data-target-email="#{{ form_id }}-email" data-target-phone="#{{ form_id }}-phone" data-target-address="#{{ form_id }}-address">
         <option value="">Seleccione...</option>
         <option value="__new_client__">+ Agregar cliente</option>
@@ -270,23 +270,23 @@
         {% endfor %}
       </select>
     </label>
-    <label>Correo electronico
+    <label>Correo electrónico
       <input id="{{ form_id }}-email" readonly value="{{ invoice.cliente_email if invoice else '' }}">
     </label>
-    <label>Telefono
+    <label>Teléfono
       <input id="{{ form_id }}-phone" readonly value="{{ invoice.cliente_telefono if invoice else '' }}">
     </label>
-    <label class="span-3">Direccion
+    <label class="span-3">Dirección
       <input id="{{ form_id }}-address" readonly value="{{ invoice.cliente_direccion if invoice else '' }}">
     </label>
-    <label>Fecha emision
+    <label>Fecha emisión *
       <input type="datetime-local" name="fecha_emision" required value="{{ invoice.fecha_emision|html_dt if invoice else now_local }}">
     </label>
-    <label>Fecha vencimiento
-      <input type="date" name="fecha_vencimiento" value="{{ invoice.fecha_vencimiento|html_d if invoice else today }}">
+    <label>Fecha vencimiento *
+      <input type="date" name="fecha_vencimiento" required value="{{ invoice.fecha_vencimiento|html_d if invoice else today }}">
     </label>
-    <label>Estado
-      <select name="estado">
+    <label>Estado *
+      <select name="estado" required>
         {% for e in ['emitida','pagada','vencida','anulada'] %}
         <option value="{{ e }}" {% if invoice and invoice.estado == e %}selected{% endif %}>{{ e }}</option>
         {% endfor %}
@@ -298,19 +298,19 @@
     <div class="section-head compact">
       <div>
         <h3>Items de la factura</h3>
-        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripcion se llenan automaticamente, pero puedes editarlos.</p>
+        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripción se llenan automáticamente, pero puedes editarlos.</p>
       </div>
-      <button class="btn secondary small" type="button" data-add-line>+ Agregar linea</button>
+      <button class="btn secondary small" type="button" data-add-line>+ Agregar línea</button>
     </div>
     <div class="table-scroll">
       <table class="line-table">
         <thead>
           <tr>
-            <th>Producto/Servicio</th>
-            <th>Precio</th>
-            <th>Impuesto</th>
-            <th>Cantidad</th>
-            <th>Descripcion</th>
+            <th>Producto/Servicio *</th>
+            <th>Precio *</th>
+            <th>Impuesto *</th>
+            <th>Cantidad *</th>
+            <th>Descripción</th>
             <th>Notas</th>
             <th>Total</th>
             <th></th>
@@ -333,7 +333,7 @@
       <div class="invoice-total-line"><span>Subtotal</span><strong data-invoice-subtotal>{{ invoice.subtotal|cop if invoice else '$ 0' }}</strong></div>
       <div class="invoice-total-line"><span>Impuesto</span><strong data-invoice-tax>{{ invoice.impuestos|cop if invoice else '$ 0' }}</strong></div>
       <div class="invoice-total-line total"><span>Total</span><strong data-invoice-total>{{ invoice.total|cop if invoice else '$ 0' }}</strong></div>
-      <span>Se actualiza con cada linea agregada o modificada.</span>
+      <span>Se actualiza con cada línea agregada o modificada.</span>
     </div>
   </div>
 
@@ -345,7 +345,7 @@
 {% endmacro %}<script id="sale-items-data" type="application/json">{{ items_json|safe }}</script>
 
 <section class="page-title">
-  <div><h1>Facturacion de venta</h1><p>Registra facturas de venta con lineas dinamicas.</p></div>
+  <div><h1> FACTURACIÓN DE VENTA </h1><p>Registra facturas de venta con líneas dinámicas.</p></div>
 </section>
 
 <section class="card sheet" id="hoja">
@@ -364,7 +364,7 @@
     <table>
       <thead>
         <tr>
-          <th>N°</th><th>ID</th><th>Cliente</th><th>Emision</th><th>Vencimiento</th><th>Total</th><th>Acciones</th>
+          <th>N°</th><th>ID</th><th>Cliente</th><th>Emisión</th><th>Vencimiento</th><th>Total</th><th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -383,7 +383,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="empty">Aun no hay facturas de venta.</td></tr>
+        <tr><td colspan="7" class="empty">Aún no hay facturas de venta.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -403,7 +403,7 @@
 <dialog class="modal" id="delete-sale-{{ f.id }}">
   <div class="modal-content confirm-modal">
     <h2>Eliminar factura</h2>
-    <p>Si borras la factura <strong>{{ f.numero }}</strong>, tambien se borrara su movimiento contable.</p>
+    <p>Si borras la factura <strong>{{ f.numero }}</strong>, también se borrará su movimiento contable.</p>
     <form method="post" action="{{ url_for('finex.eliminar_venta', invoice_id=f.id) }}" class="form-actions">
       <button class="btn danger" type="submit">Continuar</button>
       <button class="btn secondary" type="button" data-close-dialog>Cancelar</button>
@@ -421,17 +421,17 @@
   <div class="modal-content">
     <button class="modal-close" type="button" data-close-dialog>×</button>
     <h2>Agregar producto/servicio</h2>
-    <p class="subtext">Guarda el item sin salir de la factura. Al guardarlo se selecciona en la linea actual.</p>
+    <p class="subtext">Guarda el item sin salir de la factura. Al guardarlo se selecciona en la línea actual.</p>
     <form method="post" action="{{ url_for('finex.crear_item_rapido') }}" class="stack-form" data-quick-item-form>
-      <label>Codigo<input name="codigo" required></label>
-      <label>Nombre<input name="nombre" required></label>
-      <label>Descripcion<textarea name="descripcion" rows="3"></textarea></label>
-      <label>Tipo
-        <select name="tipo"><option value="servicio">servicio</option><option value="producto">producto</option></select>
+      <label>Código *<input name="codigo" required></label>
+      <label>Nombre *<input name="nombre" required></label>
+      <label>Descripción<textarea name="descripcion" rows="3"></textarea></label>
+      <label>Tipo *
+        <select name="tipo" required><option value="servicio">servicio</option><option value="producto">producto</option></select>
       </label>
-      <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="0"></label>
-      <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="0"></label>
-      <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0"></label>
+      <label>Precio unitario *<input name="precio_unitario" inputmode="numeric" data-format-int value="0" required></label>
+      <label>Cantidad *<input name="cantidad" inputmode="numeric" data-format-int value="0" required></label>
+      <label>Impuesto % *<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0" required></label>
       <div class="form-actions"><button class="btn" type="submit">Guardar producto/servicio</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
     </form>
   </div>
@@ -442,18 +442,18 @@
 <tr class="invoice-line" data-line-row>
   <td class="product-cell">
     <div class="product-search-wrap" data-product-search-wrap>
-      <input class="item-search" name="item_search[]" autocomplete="off" placeholder="Buscar producto o servicio" value="{% if line %}{{ (line.codigo ~ ' - ' if line.codigo else '') ~ (line.item_nombre or line.descripcion) }}{% endif %}">
+      <input class="item-search" name="item_search[]" autocomplete="off" placeholder="Buscar producto o servicio" required value="{% if line %}{{ (line.codigo ~ ' - ' if line.codigo else '') ~ (line.item_nombre or line.descripcion) }}{% endif %}">
       <div class="product-results" data-product-results hidden></div>
     </div>
     <input type="hidden" name="item_id[]" value="{{ line.item_id if line else '' }}" data-item-id>
   </td>
-  <td><input name="precio_unitario[]" data-format-int data-price value="{{ line.valor_unitario|num if line else '0' }}" inputmode="numeric"></td>
-  <td><input name="impuesto_porcentaje[]" data-format-int data-tax value="{{ line.impuesto_porcentaje|num if line else '0' }}" inputmode="numeric"></td>
-  <td><input class="qty-input" name="cantidad[]" data-format-int data-quantity value="{{ line.cantidad|num if line else '1' }}" inputmode="numeric"></td>
+  <td><input name="precio_unitario[]" data-format-int data-price required value="{{ line.valor_unitario|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input name="impuesto_porcentaje[]" data-format-int data-tax required value="{{ line.impuesto_porcentaje|num if line else '0' }}" inputmode="numeric"></td>
+  <td><input class="qty-input" name="cantidad[]" data-format-int data-quantity required value="{{ line.cantidad|num if line else '1' }}" inputmode="numeric"></td>
   <td><input name="descripcion[]" data-description value="{{ line.descripcion if line else '' }}"></td>
   <td><input name="nota[]" data-note placeholder="Nota editable" value="{{ line.nota if line and line.nota else '' }}"></td>
   <td class="line-total" data-line-total>{{ line.total|cop if line else '$ 0' }}</td>
-  <td><button class="icon-btn danger-text" type="button" data-remove-line title="Eliminar linea">x</button></td>
+  <td><button class="icon-btn danger-text" type="button" data-remove-line title="Eliminar línea">x</button></td>
 </tr>
 {% endmacro %}
 
@@ -461,7 +461,7 @@
 <form method="post" class="invoice-form purchase-form" data-invoice-form data-form-id="{{ form_id }}">
   <input type="hidden" name="invoice_id" value="{{ invoice.id if invoice else '' }}">
   <div class="form-grid">
-    <label>Proveedor
+    <label>Proveedor *
       <select name="proveedor_id" required data-provider-select data-target-number="#{{ form_id }}-number" data-target-email="#{{ form_id }}-email" data-target-phone="#{{ form_id }}-phone" data-target-address="#{{ form_id }}-address">
         <option value="">Seleccione...</option>
         <option value="__new_provider__">+ Agregar proveedor</option>
@@ -470,33 +470,33 @@
         {% endfor %}
       </select>
     </label>
-    <label>No. proveedor
-      <input id="{{ form_id }}-number" name="numero_proveedor" value="{{ invoice.numero_proveedor if invoice else '' }}">
+    <label>No. proveedor *
+      <input id="{{ form_id }}-number" name="numero_proveedor" required value="{{ invoice.numero_proveedor if invoice else '' }}">
     </label>
-    <label>Correo electronico
+    <label>Correo electrónico
       <input id="{{ form_id }}-email" readonly value="{{ invoice.proveedor_email if invoice else '' }}">
     </label>
-    <label>Telefono
+    <label>Teléfono
       <input id="{{ form_id }}-phone" readonly value="{{ invoice.proveedor_telefono if invoice else '' }}">
     </label>
-    <label class="span-2">Direccion
+    <label class="span-2">Dirección
       <input id="{{ form_id }}-address" readonly value="{{ invoice.proveedor_direccion if invoice else '' }}">
     </label>
-    <label>Fecha emision
+    <label>Fecha emisión *
       <input type="datetime-local" name="fecha_emision" required value="{{ invoice.fecha_emision|html_dt if invoice else now_local }}">
     </label>
-    <label>Fecha vencimiento
-      <input type="date" name="fecha_vencimiento" value="{{ invoice.fecha_vencimiento|html_d if invoice else today }}">
+    <label>Fecha vencimiento *
+      <input type="date" name="fecha_vencimiento" required value="{{ invoice.fecha_vencimiento|html_d if invoice else today }}">
     </label>
-    <label>Estado interno
-      <select name="estado">
+    <label>Estado interno *
+      <select name="estado" required>
         {% for e in ['recibida','pagada','vencida','anulada'] %}
         <option value="{{ e }}" {% if invoice and invoice.estado == e %}selected{% endif %}>{{ e }}</option>
         {% endfor %}
       </select>
     </label>
-    <label class="span-3">Descripcion general
-      <input name="descripcion" placeholder="Descripcion general de la compra" value="{{ invoice.descripcion if invoice else '' }}">
+    <label class="span-3">Descripción general
+      <input name="descripcion" placeholder="Descripción general de la compra" value="{{ invoice.descripcion if invoice else '' }}">
     </label>
   </div>
 
@@ -504,19 +504,19 @@
     <div class="section-head compact">
       <div>
         <h3>Productos de la factura</h3>
-        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripcion se llenan automaticamente, pero puedes editarlos.</p>
+        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripción se llenan automáticamente, pero puedes editarlos.</p>
       </div>
-      <button class="btn secondary small" type="button" data-add-line>+ Agregar linea</button>
+      <button class="btn secondary small" type="button" data-add-line>+ Agregar línea</button>
     </div>
     <div class="table-scroll">
       <table class="line-table">
         <thead>
           <tr>
-            <th>Producto/Servicio</th>
-            <th>Precio</th>
-            <th>Impuesto</th>
-            <th>Cantidad</th>
-            <th>Descripcion</th>
+            <th>Producto/Servicio *</th>
+            <th>Precio *</th>
+            <th>Impuesto *</th>
+            <th>Cantidad *</th>
+            <th>Descripción</th>
             <th>Notas</th>
             <th>Total</th>
             <th></th>
@@ -557,7 +557,7 @@
 {% endmacro %}<script id="sale-items-data" type="application/json">{{ items_json|safe }}</script>
 
 <section class="page-title">
-  <div><h1>Facturas de compra</h1><p>Registra facturas recibidas de proveedores.</p></div>
+  <div><h1>FACTURACIÓN DE COMPRA</h1><p>Registra facturas recibidas de proveedores.</p></div>
 </section>
 
 <section class="card sheet" id="hoja">
@@ -577,7 +577,7 @@
     <table>
       <thead>
         <tr>
-          <th>N°</th><th>ID</th><th>No. proveedor</th><th>Emision</th><th>Vencimiento</th><th>Total</th><th>Acciones</th>
+          <th>N°</th><th>ID</th><th>No. proveedor</th><th>Emisión</th><th>Vencimiento</th><th>Total</th><th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -596,7 +596,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="empty">Aun no hay facturas de compra.</td></tr>
+        <tr><td colspan="7" class="empty">Aún no hay facturas de compra.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -616,7 +616,7 @@
 <dialog class="modal" id="delete-purchase-{{ f.id }}">
   <div class="modal-content confirm-modal">
     <h2>Eliminar factura</h2>
-    <p>Si borras la factura <strong>{{ f.numero }}</strong>, tambien se borrara su movimiento contable.</p>
+    <p>Si borras la factura <strong>{{ f.numero }}</strong>, también se borrará su movimiento contable.</p>
     <form method="post" action="{{ url_for('finex.eliminar_compra', invoice_id=f.id) }}" class="form-actions">
       <button class="btn danger" type="submit">Continuar</button>
       <button class="btn secondary" type="button" data-close-dialog>Cancelar</button>
@@ -629,16 +629,16 @@
 
 {% elif page == 'clientes' %}
 
-<section class="page-title"><div><h1>Clientes</h1><p>Gestion de clientes.</p></div></section>
+<section class="page-title"><div><h1>CLIENTES</h1><p>Gestión de clientes.</p></div></section>
 
 <section class="card sheet">
   <h2>Nuevo cliente</h2>
   <form method="post" class="form-grid">
-    <label>Nombre<input name="nombre" required></label>
-    <label>Documento<input name="documento"></label>
-    <label>Email<input name="email" type="email"></label>
-    <label>Telefono<input name="telefono"></label>
-    <label class="span-2">Direccion<input name="direccion"></label>
+    <label>Nombre *<input name="nombre" required></label>
+    <label>Documento *<input name="documento" required></label>
+    <label>Email *<input name="email" type="email" required></label>
+    <label>Teléfono *<input name="telefono" required></label>
+    <label class="span-2">Dirección *<input name="direccion" required></label>
     <div class="form-actions span-3"><button class="btn" type="submit">Guardar cliente</button></div>
   </form>
 </section>
@@ -647,7 +647,7 @@
   <h2>Listado</h2>
   <div class="table-scroll">
     <table>
-      <thead><tr><th>Nombre</th><th>Documento</th><th>Email</th><th>Telefono</th><th>Direccion</th><th>Acciones</th></tr></thead>
+      <thead><tr><th>Nombre</th><th>Documento</th><th>Email</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr></thead>
       <tbody>
         {% for c in clientes %}
         <tr>
@@ -670,11 +670,11 @@
     <h2>Editar cliente</h2>
     <form method="post" class="stack-form">
       <input type="hidden" name="cliente_id" value="{{ c.id }}">
-      <label>Nombre<input name="nombre" required value="{{ c.nombre }}"></label>
-      <label>Documento<input name="documento" value="{{ c.documento or '' }}"></label>
-      <label>Email<input name="email" type="email" value="{{ c.email or '' }}"></label>
-      <label>Telefono<input name="telefono" value="{{ c.telefono or '' }}"></label>
-      <label>Direccion<input name="direccion" value="{{ c.direccion or '' }}"></label>
+      <label>Nombre *<input name="nombre" required value="{{ c.nombre }}"></label>
+      <label>Documento *<input name="documento" required value="{{ c.documento or '' }}"></label>
+      <label>Email *<input name="email" type="email" required value="{{ c.email or '' }}"></label>
+      <label>Teléfono *<input name="telefono" required value="{{ c.telefono or '' }}"></label>
+      <label>Dirección *<input name="direccion" required value="{{ c.direccion or '' }}"></label>
       <div class="form-actions"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
     </form>
   </div>
@@ -683,16 +683,16 @@
 
 {% elif page == 'proveedores' %}
 
-<section class="page-title"><div><h1>Proveedores</h1><p>Gestion de proveedores.</p></div></section>
+<section class="page-title"><div><h1>PROVEEDORES</h1><p>Gestión de proveedores.</p></div></section>
 
 <section class="card sheet">
   <h2>Nuevo proveedor</h2>
   <form method="post" class="form-grid">
-    <label>Nombre<input name="nombre" required></label>
-    <label>No. proveedor<input name="numero_proveedor"></label>
-    <label>Email<input name="email" type="email"></label>
-    <label>Telefono<input name="telefono"></label>
-    <label class="span-2">Direccion<input name="direccion"></label>
+    <label>Nombre *<input name="nombre" required></label>
+    <label>No. proveedor *<input name="numero_proveedor" required></label>
+    <label>Email *<input name="email" type="email" required></label>
+    <label>Teléfono *<input name="telefono" required></label>
+    <label class="span-2">Dirección *<input name="direccion" required></label>
     <div class="form-actions span-3"><button class="btn" type="submit">Guardar proveedor</button></div>
   </form>
 </section>
@@ -701,7 +701,7 @@
   <h2>Listado</h2>
   <div class="table-scroll">
     <table>
-      <thead><tr><th>Nombre</th><th>No. proveedor</th><th>Email</th><th>Telefono</th><th>Direccion</th><th>Acciones</th></tr></thead>
+      <thead><tr><th>Nombre</th><th>No. proveedor</th><th>Email</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr></thead>
       <tbody>
         {% for p in proveedores %}
         <tr>
@@ -724,11 +724,11 @@
     <h2>Editar proveedor</h2>
     <form method="post" class="stack-form">
       <input type="hidden" name="proveedor_id" value="{{ p.id }}">
-      <label>Nombre<input name="nombre" required value="{{ p.nombre }}"></label>
-      <label>No. proveedor<input name="numero_proveedor" value="{{ p.numero_proveedor or '' }}"></label>
-      <label>Email<input name="email" type="email" value="{{ p.email or '' }}"></label>
-      <label>Telefono<input name="telefono" value="{{ p.telefono or '' }}"></label>
-      <label>Direccion<input name="direccion" value="{{ p.direccion or '' }}"></label>
+      <label>Nombre *<input name="nombre" required value="{{ p.nombre }}"></label>
+      <label>No. proveedor *<input name="numero_proveedor" required value="{{ p.numero_proveedor or '' }}"></label>
+      <label>Email *<input name="email" type="email" required value="{{ p.email or '' }}"></label>
+      <label>Teléfono *<input name="telefono" required value="{{ p.telefono or '' }}"></label>
+      <label>Dirección *<input name="direccion" required value="{{ p.direccion or '' }}"></label>
       <div class="form-actions"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
     </form>
   </div>
@@ -737,18 +737,18 @@
 
 {% elif page == 'items' %}
 
-<section class="page-title"><div><h1>Items/Servicios</h1><p>Productos y servicios para facturacion de venta.</p></div></section>
+<section class="page-title"><div><h1>ITEMS/SERVICIOS</h1><p>Productos y servicios para facturación de venta.</p></div></section>
 
 <section class="card sheet">
   <h2>Nuevo item</h2>
   <form method="post" class="form-grid">
-    <label>Codigo<input name="codigo" required></label>
-    <label>Nombre<input name="nombre" required></label>
-    <label>Tipo<select name="tipo"><option value="servicio">servicio</option><option value="producto">producto</option></select></label>
-    <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="0"></label>
-    <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="0"></label>
-    <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0"></label>
-    <label class="span-3">Descripcion<textarea name="descripcion" rows="2"></textarea></label>
+    <label>Código *<input name="codigo" required></label>
+    <label>Nombre *<input name="nombre" required></label>
+    <label>Tipo *<select name="tipo" required><option value="servicio">servicio</option><option value="producto">producto</option></select></label>
+    <label>Precio unitario *<input name="precio_unitario" inputmode="numeric" data-format-int value="0" required></label>
+    <label>Cantidad *<input name="cantidad" inputmode="numeric" data-format-int value="0" required></label>
+    <label>Impuesto % *<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="0" required></label>
+    <label class="span-3">Descripción<textarea name="descripcion" rows="2"></textarea></label>
     <div class="form-actions span-3"><button class="btn" type="submit">Guardar item</button></div>
   </form>
 </section>
@@ -757,7 +757,7 @@
   <h2>Listado</h2>
   <div class="table-scroll">
     <table>
-      <thead><tr><th>Codigo</th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Cantidad</th><th>Impuesto</th><th>Acciones</th></tr></thead>
+      <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Cantidad</th><th>Impuesto</th><th>Acciones</th></tr></thead>
       <tbody>
         {% for i in items %}
         <tr>
@@ -780,13 +780,13 @@
     <h2>Editar item</h2>
     <form method="post" class="stack-form">
       <input type="hidden" name="item_id" value="{{ i.id }}">
-      <label>Codigo<input name="codigo" required value="{{ i.codigo }}"></label>
-      <label>Nombre<input name="nombre" required value="{{ i.nombre }}"></label>
-      <label>Tipo<select name="tipo"><option value="servicio" {% if i.tipo == 'servicio' %}selected{% endif %}>servicio</option><option value="producto" {% if i.tipo == 'producto' %}selected{% endif %}>producto</option></select></label>
-      <label>Precio unitario<input name="precio_unitario" inputmode="numeric" data-format-int value="{{ i.precio_unitario|num }}"></label>
-      <label>Cantidad<input name="cantidad" inputmode="numeric" data-format-int value="{{ i.cantidad|num }}"></label>
-      <label>Impuesto %<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="{{ i.impuesto_porcentaje|num }}"></label>
-      <label>Descripcion<textarea name="descripcion" rows="2">{{ i.descripcion or '' }}</textarea></label>
+      <label>Código *<input name="codigo" required value="{{ i.codigo }}"></label>
+      <label>Nombre *<input name="nombre" required value="{{ i.nombre }}"></label>
+      <label>Tipo *<select name="tipo" required><option value="servicio" {% if i.tipo == 'servicio' %}selected{% endif %}>servicio</option><option value="producto" {% if i.tipo == 'producto' %}selected{% endif %}>producto</option></select></label>
+      <label>Precio unitario *<input name="precio_unitario" inputmode="numeric" data-format-int value="{{ i.precio_unitario|num }}" required></label>
+      <label>Cantidad *<input name="cantidad" inputmode="numeric" data-format-int value="{{ i.cantidad|num }}" required></label>
+      <label>Impuesto % *<input name="impuesto_porcentaje" inputmode="numeric" data-format-int value="{{ i.impuesto_porcentaje|num }}" required></label>
+      <label>Descripción<textarea name="descripcion" rows="2">{{ i.descripcion or '' }}</textarea></label>
       <div class="form-actions"><button class="btn" type="submit">Guardar cambios</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
     </form>
   </div>
@@ -796,7 +796,7 @@
 {% elif page == 'movimientos' %}
 
 <section class="page-title">
-  <div><h1>Movimientos</h1><p>Se registran automaticamente desde facturas de venta y compra.</p></div>
+  <div><h1>MOVIMIENTOS</h1><p>Se registran automáticamente desde facturas de venta y compra.</p></div>
 </section>
 
 <section class="card full">
@@ -816,7 +816,7 @@
   <div class="table-scroll">
     <table>
       <thead>
-        <tr><th>N°</th><th>Fecha</th><th>Tipo</th><th>Categoria</th><th>PDF</th><th>Total</th><th>Estado</th></tr>
+        <tr><th>N°</th><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>PDF</th><th>Total</th><th>Estado</th></tr>
       </thead>
       <tbody>
         {% for m in movimientos %}
@@ -839,33 +839,33 @@
 
 {% elif page == 'configuracion' %}
 
-<section class="page-title"><div><h1>Configuracion</h1><p>Edita los datos basicos de la empresa.</p></div></section>
+<section class="page-title"><div><h1>CONFIGURACIÓN</h1><p>Edita los datos básicos de la empresa.</p></div></section>
 <section class="card sheet">
-  <div class="section-head"><h2>Datos de la empresa</h2><span class="hint">Esta informacion se muestra en el sistema y en la cuenta.</span></div>
+  <div class="section-head"><h2>Datos de la empresa</h2><span class="hint">Esta información se muestra en el sistema y en la cuenta.</span></div>
   <form method="post" class="form-grid">
-    <label>Nombre de la empresa<input name="nombre_empresa" required value="{{ empresa.nombre_empresa or empresa.razon_social or '' }}"></label>
-    <label>NIT/RUT<input name="nit" required inputmode="numeric" value="{{ empresa.nit or '' }}"></label>
-    <label>Tipo de empresa<input name="tipo_empresa" value="{{ empresa.tipo_empresa or '' }}"></label>
-    <label>Representante legal<input name="representante_legal" value="{{ empresa.representante_legal or '' }}"></label>
-    <label>Nombre de contacto<input name="nombre_contacto" value="{{ empresa.nombre_contacto or '' }}"></label>
-    <label>Email de contacto<input name="email_contacto" type="email" value="{{ empresa.email_contacto or '' }}"></label>
-    <label>Telefono<input name="telefono" inputmode="numeric" value="{{ empresa.telefono or '' }}"></label>
-    <label>Ciudad<input name="ciudad" value="{{ empresa.ciudad or '' }}"></label>
-    <label>Departamento<input name="departamento" value="{{ empresa.departamento or '' }}"></label>
-    <label class="span-3">Direccion<input name="direccion" value="{{ empresa.direccion or '' }}"></label>
+    <label>Nombre de la empresa *<input name="nombre_empresa" required value="{{ empresa.nombre_empresa or empresa.razon_social or '' }}"></label>
+    <label>NIT/RUT *<input name="nit" required inputmode="numeric" value="{{ empresa.nit or '' }}"></label>
+    <label>Tipo de empresa *<input name="tipo_empresa" required value="{{ empresa.tipo_empresa or '' }}"></label>
+    <label>Representante legal *<input name="representante_legal" required value="{{ empresa.representante_legal or '' }}"></label>
+    <label>Nombre de contacto *<input name="nombre_contacto" required value="{{ empresa.nombre_contacto or '' }}"></label>
+    <label>Email de contacto *<input name="email_contacto" type="email" required value="{{ empresa.email_contacto or '' }}"></label>
+    <label>Teléfono *<input name="telefono" inputmode="numeric" required value="{{ empresa.telefono or '' }}"></label>
+    <label>Ciudad *<input name="ciudad" required value="{{ empresa.ciudad or '' }}"></label>
+    <label>Departamento *<input name="departamento" required value="{{ empresa.departamento or '' }}"></label>
+    <label class="span-3">Dirección *<input name="direccion" required value="{{ empresa.direccion or '' }}"></label>
     <label>Nueva contraseña<input type="password" name="nueva_contrasena" autocomplete="new-password" placeholder="Solo si deseas cambiarla"></label>
     <label>Confirmar contraseña<input type="password" name="confirmar_contrasena" autocomplete="new-password" placeholder="Repite la nueva contraseña"></label>
     <label>Código de verificación<input name="codigo_contrasena" inputmode="numeric" maxlength="6" placeholder="Código enviado a tu correo"></label>
-    <div class="form-actions span-3"><button class="btn secondary" type="button" data-send-config-password-code>Enviar código para contraseña</button><button class="btn" type="submit">Guardar configuracion</button></div>
+    <div class="form-actions span-3"><button class="btn secondary" type="button" data-send-config-password-code>Enviar código para contraseña</button><button class="btn" type="submit">Guardar configuración</button></div>
   </form>
 </section>
 
 {% elif page == 'error' %}
 
-<section class="card sheet"><h1>Error del servidor</h1><p>Revisa que MySQL este activo y que la base de datos <strong>finex_db</strong> este importada.</p><pre>{{ error }}</pre></section>
+<section class="card sheet"><h1>Error del servidor</h1><p>Revisa que MySQL esté activo y que la base de datos <strong>finex_db</strong> esté importada.</p><pre>{{ error }}</pre></section>
 
 {% else %}
-<section class="card sheet"><h1>Pagina no encontrada</h1></section>
+<section class="card sheet"><h1>Página no encontrada</h1></section>
 {% endif %}
   </main>
 
@@ -874,11 +874,11 @@
       <button class="modal-close" type="button" data-close-dialog>×</button>
       <h2>Agregar cliente</h2>
       <form method="post" action="{{ url_for('finex.crear_cliente_rapido') }}" class="stack-form">
-        <label>Nombre<input name="nombre" required></label>
-        <label>Documento<input name="documento"></label>
-        <label>Email<input name="email" type="email"></label>
-        <label>Telefono<input name="telefono" inputmode="numeric"></label>
-        <label>Direccion<input name="direccion"></label>
+        <label>Nombre *<input name="nombre" required></label>
+        <label>Documento *<input name="documento" required></label>
+        <label>Email *<input name="email" type="email" required></label>
+        <label>Teléfono *<input name="telefono" inputmode="numeric" required></label>
+        <label>Dirección *<input name="direccion" required></label>
         <div class="form-actions"><button class="btn" type="submit">Guardar cliente</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
       </form>
     </div>
@@ -889,11 +889,11 @@
       <button class="modal-close" type="button" data-close-dialog>×</button>
       <h2>Agregar proveedor</h2>
       <form method="post" action="{{ url_for('finex.crear_proveedor_rapido') }}" class="stack-form">
-        <label>Nombre<input name="nombre" required></label>
-        <label>No. proveedor<input name="numero_proveedor"></label>
-        <label>Email<input name="email" type="email"></label>
-        <label>Telefono<input name="telefono" inputmode="numeric"></label>
-        <label>Direccion<input name="direccion"></label>
+        <label>Nombre *<input name="nombre" required></label>
+        <label>No. proveedor *<input name="numero_proveedor" required></label>
+        <label>Email *<input name="email" type="email" required></label>
+        <label>Teléfono *<input name="telefono" inputmode="numeric" required></label>
+        <label>Dirección *<input name="direccion" required></label>
         <div class="form-actions"><button class="btn" type="submit">Guardar proveedor</button><button class="btn secondary" type="button" data-close-dialog>Cancelar</button></div>
       </form>
     </div>
@@ -908,5 +908,6 @@
   </dialog>
   <div id="globalTooltip" class="chart-tooltip" hidden></div>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/password-toggle.js') }}"></script>
 </body>
 </html>

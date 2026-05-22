@@ -303,6 +303,7 @@
       try {
         const data = Object.fromEntries(new FormData(form).entries());
         data.tipo = form.dataset.type;
+        data.estado = "completado";
         if (data.categoria === "__new__") data.categoria = data.nueva_categoria;
         if (!data.categoria)
           throw new Error("Selecciona o crea una categoria.");
@@ -368,7 +369,7 @@
         form.elements["monto"].value = money.format(Number(mov.valor || 0));
         form.elements["descripcion"].value = mov.descripcion || "";
         form.elements["fecha"].value = toDatetimeLocal(mov.fecha);
-        form.elements["estado"].value = mov.estado || "completado";
+
         document.getElementById("editMovementDialog").showModal();
       } catch (err) {
         showNotice(err.message, "error");
@@ -411,6 +412,7 @@
       try {
         const form = e.target;
         const data = Object.fromEntries(new FormData(form).entries());
+        data.estado = "completado";
         data.monto = String(numberValue(data.monto));
         await api(`/dashboard/api/movimientos/${data.id}`, {
           method: "PUT",

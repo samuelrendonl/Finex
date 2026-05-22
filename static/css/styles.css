@@ -879,10 +879,6 @@ pre {
   text-decoration: none;
 }
 
-/* Oculta visualmente contrasenas aunque el input sea de texto, evitando avisos invasivos del navegador en la demo local. */
-input[data-secure-password] {
-  -webkit-text-security: disc;
-}
 
 .logout-icon {
   width: 48px;
@@ -1130,4 +1126,60 @@ input[data-secure-password] {
 }
 .invoice-lines-card.search-open .invoice-line {
   vertical-align: top;
+}
+input,
+textarea {
+  caret-color: #111f36;
+  cursor: text;
+}
+
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  padding-right: 48px;
+  position: relative;
+  z-index: 1;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.password-toggle svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.password-toggle:hover svg {
+  stroke: #1d4ed8;
+}
+
+.password-toggle .eye-slash {
+  opacity: 0;
+}
+
+.password-toggle.is-visible .eye-slash {
+  opacity: 1;
 }
