@@ -298,7 +298,6 @@
     <div class="section-head compact">
       <div>
         <h3>Items de la factura</h3>
-        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripción se llenan automáticamente, pero puedes editarlos.</p>
       </div>
       <button class="btn secondary small" type="button" data-add-line>+ Agregar línea</button>
     </div>
@@ -358,7 +357,6 @@
 <section class="card full">
   <div class="section-head">
     <h2>Facturas registradas</h2>
-    <span class="hint">Editar abre una ventana independiente.</span>
   </div>
   <div class="table-scroll horizontal-list">
     <table>
@@ -504,7 +502,6 @@
     <div class="section-head compact">
       <div>
         <h3>Productos de la factura</h3>
-        <p class="subtext">Busca el producto o servicio; el precio, impuesto y descripción se llenan automáticamente, pero puedes editarlos.</p>
       </div>
       <button class="btn secondary small" type="button" data-add-line>+ Agregar línea</button>
     </div>
@@ -571,7 +568,6 @@
 <section class="card full">
   <div class="section-head">
     <h2>Facturas recibidas</h2>
-    <span class="hint">Editar abre una ventana independiente.</span>
   </div>
   <div class="table-scroll horizontal-list">
     <table>
@@ -737,7 +733,7 @@
 
 {% elif page == 'items' %}
 
-<section class="page-title"><div><h1>ITEMS/SERVICIOS</h1><p>Productos y servicios para facturación de venta.</p></div></section>
+<section class="page-title"><div><h1>ITEMS/SERVICIOS</h1></div></section>
 
 <section class="card sheet">
   <h2>Nuevo item</h2>
@@ -796,7 +792,7 @@
 {% elif page == 'movimientos' %}
 
 <section class="page-title">
-  <div><h1>MOVIMIENTOS</h1><p>Se registran automáticamente desde facturas de venta y compra.</p></div>
+  <div><h1>MOVIMIENTOS</h1></div>
 </section>
 
 <section class="card full">
@@ -839,9 +835,9 @@
 
 {% elif page == 'configuracion' %}
 
-<section class="page-title"><div><h1>CONFIGURACIÓN</h1><p>Edita los datos básicos de la empresa.</p></div></section>
+<section class="page-title"><div><h1>CONFIGURACIÓN</h1></div></section>
 <section class="card sheet">
-  <div class="section-head"><h2>Datos de la empresa</h2><span class="hint">Esta información se muestra en el sistema y en la cuenta.</span></div>
+  <div class="section-head"><h2>Datos de la empresa</h2></div>
   <form method="post" class="form-grid">
     <label>Nombre de la empresa *<input name="nombre_empresa" required value="{{ empresa.nombre_empresa or empresa.razon_social or '' }}"></label>
     <label>NIT/RUT *<input name="nit" required inputmode="numeric" value="{{ empresa.nit or '' }}"></label>
