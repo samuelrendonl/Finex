@@ -204,8 +204,31 @@
     return d.toISOString().slice(0, 16);
   }
 
+  let dashboardFilters = {
+    desde: "",
+    hasta: "",
+  };
+
+  let reportFilters = {
+    desde: "",
+    hasta: "",
+  };
+
   async function loadDashboard() {
-    const data = await api("/dashboard/api/dashboard");
+    const params = new URLSearchParams();
+
+    if (dashboardFilters.desde) {
+      params.set("desde", dashboardFilters.desde);
+    }
+
+    if (dashboardFilters.hasta) {
+      params.set("hasta", dashboardFilters.hasta);
+    }
+
+    const url =
+      "/dashboard/api/dashboard" + (params.toString() ? `?${params}` : "");
+
+    const data = await api(url);
     const saldo = document.getElementById("saldoActual");
     const ingresos = document.getElementById("ingresosMes");
     const egresos = document.getElementById("egresosMes");
@@ -227,10 +250,21 @@
 
   function buildReportQuery() {
     const params = new URLSearchParams();
-    const desde = document.getElementById("desde")?.value || "";
-    const hasta = document.getElementById("hasta")?.value || "";
-    if (desde) params.set("desde", desde);
-    if (hasta) params.set("hasta", hasta);
+
+    const periodo = document.getElementById("reportePeriodo")?.value || "todos";
+
+    if (periodo !== "todos") {
+      params.set("periodo", periodo);
+    }
+
+    if (periodo === "personalizado") {
+      const desde = document.getElementById("desde")?.value || "";
+      const hasta = document.getElementById("hasta")?.value || "";
+
+      if (desde) params.set("desde", desde);
+      if (hasta) params.set("hasta", hasta);
+    }
+
     return params.toString();
   }
 
@@ -487,15 +521,228 @@
   document
     .querySelector("[data-filter-report]")
     ?.addEventListener("click", loadMovements);
-  ["desde", "hasta"].forEach((id) =>
-    document.getElementById(id)?.addEventListener("change", () => {
-      updateReportExports();
+  const reportePeriodo = document.getElementById("reportePeriodo");
+  const desde = document.getElementById("desde");
+  const hasta = document.getElementById("hasta");
+  const filtrar = document.getElementById("filtrarReporte");
+
+  function actualizarFiltroReporte() {
+    const periodo = reportePeriodo.value;
+
+    desde.hidden = periodo !== "personalizado";
+    hasta.hidden = periodo !== "personalizado";
+    filtrar.hidden = periodo !== "personalizado";
+
+    if (periodo !== "personalizado") {
       loadMovements();
-    }),
-  );
+    }
+  }
+
+  reportePeriodo?.addEventListener("change", actualizarFiltroReporte);
+
+  filtrar?.addEventListener("click", () => {
+    loadMovements();
+  });
+
+  ["desde", "hasta"].forEach((id) => {
+    document
+      .getElementById(id)
+      ?.addEventListener("change", updateReportExports);
+  });
+
+  actualizarFiltroReporte();
+
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function actualizarFiltroDashboard() {
+    const periodo = document.getElementById("periodoFiltro").value;
+
+    const desdeInput = document.getElementById("fechaDesde");
+    const hastaInput = document.getElementById("fechaHasta");
+    const aplicarBtn = document.getElementById("aplicarFiltro");
+
+    desdeInput.hidden = true;
+    hastaInput.hidden = true;
+    aplicarBtn.hidden = true;
+
+    const hoy = new Date();
+
+    let desde;
+    let hasta;
+
+    switch (periodo) {
+      case "mes":
+        desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        hasta = hoy;
+
+        break;
+
+      case "mes_anterior":
+        desde = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+        hasta = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+
+        break;
+
+      case "7dias":
+        desde = new Date();
+        desde.setDate(desde.getDate() - 7);
+
+        hasta = hoy;
+
+        break;
+
+      case "30dias":
+        desde = new Date();
+        desde.setDate(desde.getDate() - 30);
+
+        hasta = hoy;
+
+        break;
+
+      case "anio":
+        desde = new Date(hoy.getFullYear(), 0, 1);
+        hasta = hoy;
+
+        break;
+
+      case "personalizado":
+        desdeInput.hidden = false;
+        hastaInput.hidden = false;
+        aplicarBtn.hidden = false;
+
+        return;
+    }
+
+    dashboardFilters.desde = formatDate(desde);
+    dashboardFilters.hasta = formatDate(hasta);
+
+    loadDashboard();
+  }
+  function aplicarFiltroDashboard() {
+    dashboardFilters.desde = document.getElementById("fechaDesde").value;
+
+    dashboardFilters.hasta = document.getElementById("fechaHasta").value;
+
+    loadDashboard();
+  }
+
+  function actualizarFiltroReporte() {
+    const periodo = document.getElementById("reportePeriodo").value;
+
+    const desde = document.getElementById("desde");
+    const hasta = document.getElementById("hasta");
+    const aplicar = document.getElementById("aplicarReporte");
+
+    desde.hidden = true;
+    hasta.hidden = true;
+    aplicar.hidden = true;
+
+    const hoy = new Date();
+
+    function formatDate(fecha) {
+      return fecha.toISOString().split("T")[0];
+    }
+
+    switch (periodo) {
+      case "mes":
+        reportFilters.desde = formatDate(
+          new Date(hoy.getFullYear(), hoy.getMonth(), 1),
+        );
+        reportFilters.hasta = formatDate(hoy);
+        break;
+
+      case "mes_anterior":
+        reportFilters.desde = formatDate(
+          new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1),
+        );
+        reportFilters.hasta = formatDate(
+          new Date(hoy.getFullYear(), hoy.getMonth(), 0),
+        );
+        break;
+
+      case "7dias": {
+        const d = new Date(hoy);
+        d.setDate(d.getDate() - 7);
+        reportFilters.desde = formatDate(d);
+        reportFilters.hasta = formatDate(hoy);
+        break;
+      }
+
+      case "30dias": {
+        const d = new Date(hoy);
+        d.setDate(d.getDate() - 30);
+        reportFilters.desde = formatDate(d);
+        reportFilters.hasta = formatDate(hoy);
+        break;
+      }
+
+      case "anio":
+        reportFilters.desde = formatDate(new Date(hoy.getFullYear(), 0, 1));
+        reportFilters.hasta = formatDate(hoy);
+        break;
+
+      case "personalizado":
+        reportFilters.desde = "";
+        reportFilters.hasta = "";
+
+        desde.hidden = false;
+        hasta.hidden = false;
+        aplicar.hidden = false;
+
+        return;
+    }
+
+    loadMovements();
+  }
 
   async function init() {
     try {
+      const periodo = document.getElementById("periodoFiltro");
+
+      if (periodo) {
+        periodo.addEventListener("change", actualizarFiltroDashboard);
+
+        periodo.value = "mes";
+        actualizarFiltroDashboard();
+      }
+
+      const aplicar = document.getElementById("aplicarFiltro");
+
+      if (aplicar) {
+        aplicar.addEventListener("click", () => {
+          dashboardFilters.desde = document.getElementById("fechaDesde").value;
+
+          dashboardFilters.hasta = document.getElementById("fechaHasta").value;
+
+          loadDashboard();
+        });
+      }
+      const reporte = document.getElementById("reportePeriodo");
+
+      if (reporte) {
+        reporte.addEventListener("change", actualizarFiltroReporte);
+
+        reporte.value = "todos";
+        actualizarFiltroReporte();
+      }
+
+      const aplicarReporte = document.getElementById("filtrarReporte");
+
+      if (aplicarReporte) {
+        aplicarReporte.addEventListener("click", () => {
+          reportFilters.desde = document.getElementById("desde").value;
+
+          reportFilters.hasta = document.getElementById("hasta").value;
+
+          loadMovements();
+        });
+      }
       await Promise.all([
         loadCategories("ingreso"),
         loadCategories("egreso"),

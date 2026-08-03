@@ -55,7 +55,16 @@ def render_dashboard():
 
 
 def obtener_dashboard():
-    return jsonify(dashboard_data(_usuario_id()))
+    desde = request.args.get("desde")
+    hasta = request.args.get("hasta")
+
+    return jsonify(
+        dashboard_data(
+            _usuario_id(),
+            desde=desde,
+            hasta=hasta
+        )
+    )
 
 
 def obtener_movimientos():

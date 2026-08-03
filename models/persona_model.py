@@ -50,49 +50,82 @@ def _cuentas_resumen(cursor, usuario_id):
     """, (usuario_id,))
     return cursor.fetchall()
 
-def dashboard_data(usuario_id):
+def dashboard_data(usuario_id, desde=None, hasta=None):
     """Retorna totales, saldos de cuentas, datos mensuales y distribuciones."""
+    
     usuario_id = _user_filter(usuario_id)
     connection = get_db_connection()
+
+
     try:
         with connection.cursor() as cursor:
+            where_fecha = ""
+            params = [usuario_id]
+
+            if desde and hasta:
+                where_fecha = " AND fecha BETWEEN %s AND %s"
+                params.extend([desde, hasta])
+
+
             cuentas = _cuentas_resumen(cursor, usuario_id)
-            cursor.execute("""
-                SELECT tipo, COALESCE(SUM(valor),0) AS total
-                FROM movimientos_persona
-                WHERE usuario_id=%s AND estado='completado'
-                GROUP BY tipo
-            """, (usuario_id,))
+            query = f"""
+            SELECT tipo, COALESCE(SUM(valor),0) AS total
+            FROM movimientos_persona
+            WHERE usuario_id=%s
+            AND estado='completado'
+            {where_fecha}
+            GROUP BY tipo
+            """
+
+            cursor.execute(query, tuple(params))
+
             totals_rows = cursor.fetchall()
             totals = {r["tipo"]: int(_money(r["total"])) for r in totals_rows}
 
-            cursor.execute("""
-                SELECT MONTH(fecha) AS mes, tipo, COALESCE(SUM(valor),0) AS total
-                FROM movimientos_persona
-                WHERE usuario_id=%s AND estado='completado'
-                GROUP BY MONTH(fecha), tipo
-            """, (usuario_id,))
+            query = f"""
+            SELECT MONTH(fecha) AS mes,
+                tipo,
+                COALESCE(SUM(valor),0) AS total
+            FROM movimientos_persona
+            WHERE usuario_id=%s
+            AND estado='completado'
+            {where_fecha}
+            GROUP BY MONTH(fecha), tipo
+            """
+
+            cursor.execute(query, tuple(params))
+
             monthly_rows = cursor.fetchall()
 
-            cursor.execute("""
+            query = f"""
                 SELECT m.tipo,
-                       COALESCE(c.nombre, 'Sin categoría') AS categoria,
-                       COALESCE(SUM(m.valor),0) AS total
+                    COALESCE(c.nombre, 'Sin categoría') AS categoria,
+                    COALESCE(SUM(m.valor),0) AS total
                 FROM movimientos_persona m
                 LEFT JOIN categorias c ON c.id = m.categoria_id
                 LEFT JOIN cuentas_personales cp ON cp.id = m.cuenta_id
-                WHERE m.usuario_id=%s AND m.estado='completado'
+                WHERE m.usuario_id=%s
+                AND m.estado='completado'
+                {where_fecha.replace("fecha", "m.fecha")}
                 GROUP BY m.tipo, COALESCE(c.nombre, 'Sin categoría')
                 ORDER BY total DESC, categoria ASC
-            """, (usuario_id,))
+            """
+
+            cursor.execute(query, tuple(params))
             dist_rows = cursor.fetchall()
 
-            cursor.execute("""
-                SELECT tipo, COALESCE(SUM(valor),0) AS total
+            query = f"""
+                SELECT tipo,
+                    COALESCE(SUM(valor),0) AS total
                 FROM movimientos_persona
-                WHERE usuario_id=%s AND estado='completado' AND cuenta_id IS NULL
+                WHERE usuario_id=%s
+                AND estado='completado'
+                AND cuenta_id IS NULL
+                {where_fecha}
                 GROUP BY tipo
-            """, (usuario_id,))
+            """
+
+            cursor.execute(query, tuple(params))
             sin_cuenta_rows = cursor.fetchall()
     finally:
         connection.close()

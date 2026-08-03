@@ -879,6 +879,20 @@ pre {
   text-decoration: none;
 }
 
+.card-filtrar {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 22px;
+  margin: 16px 36px;
+}
+.Label-Filtrar {
+  font-weight: 700;
+  color: #34465f;
+  padding: 8px 0;
+  
+}
 
 .logout-icon {
   width: 48px;

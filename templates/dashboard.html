@@ -170,6 +170,23 @@
             <h1>INICIO</h1>
             <p>Resumen general de tu cuenta personal.</p>
           </div>
+
+          <div class="dashboard-filter">
+            <select id="periodoFiltro">
+              <option value="mes">Este mes</option>
+              <option value="mes_anterior">Mes pasado</option>
+              <option value="7dias">Últimos 7 días</option>
+              <option value="30dias">Últimos 30 días</option>
+              <option value="anio">Este año</option>
+              <option value="personalizado">Personalizado</option>
+            </select>
+
+            <input type="date" id="fechaDesde" hidden />
+
+            <input type="date" id="fechaHasta" hidden />
+
+            <button id="aplicarFiltro" type="button" hidden>Aplicar</button>
+          </div>
         </section>
         <div class="stats-grid personal-stats">
           <article class="stat-card">
@@ -234,7 +251,6 @@
           <div class="section-head">
             <div>
               <h2>Resumen por cuentas</h2>
-              
             </div>
           </div>
           <div class="table-scroll">
@@ -482,21 +498,35 @@
               <h2>Movimientos personales</h2>
             </div>
             <div class="actions report-actions">
-              <input type="date" id="desde" /><input
-                type="date"
-                id="hasta"
-              />
+              <select id="reportePeriodo">
+                <option value="todos">Todo</option>
+                <option value="mes">Este mes</option>
+                <option value="mes_anterior">Mes pasado</option>
+                <option value="7dias">Últimos 7 días</option>
+                <option value="30dias">Últimos 30 días</option>
+                <option value="anio">Este año</option>
+                <option value="personalizado">Personalizado</option>
+              </select>
+
+              <input type="date" id="desde" hidden />
+              <input type="date" id="hasta" hidden />
+              <button id="aplicarReporte" type="button" hidden>Aplicar</button>
+
               <a
                 class="btn secondary small"
                 id="reportePdfGeneral"
                 href="/reportes/movimientos/pdf"
-                >Movimientos PDF</a
-              ><a
+              >
+                Movimientos PDF
+              </a>
+
+              <a
                 class="btn secondary small"
                 id="reporteExcelGeneral"
                 href="/reportes/movimientos/excel"
-                >Movimientos Excel</a
               >
+                Movimientos Excel
+              </a>
             </div>
           </div>
           <div class="table-scroll">
